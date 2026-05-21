@@ -1,0 +1,400 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2577
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier;\f1\froman\fcharset0 Times-Roman;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 <!DOCTYPE html>\
+<html>\
+\
+<head>\
+<meta charset="UTF-8">\
+<title>Incoming Shipment Planner</title>\
+\
+<style>\
+\
+body\{\
+margin:0;\
+font-family:Arial,sans-serif;\
+background:#0b1220;\
+color:white;\
+padding:20px;\
+\}\
+\
+h1\{\
+margin-top:0;\
+\}\
+\
+.cards\{\
+display:grid;\
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));\
+gap:20px;\
+margin-bottom:20px;\
+\}\
+\
+.card\{\
+background:#1f2937;\
+padding:20px;\
+border-radius:12px;\
+\}\
+\
+input,select\{\
+width:100%;\
+padding:10px;\
+margin-top:10px;\
+border:none;\
+border-radius:8px;\
+background:#374151;\
+color:white;\
+box-sizing:border-box;\
+\}\
+\
+button\{\
+margin-top:10px;\
+padding:12px;\
+border:none;\
+border-radius:8px;\
+background:#2563eb;\
+color:white;\
+cursor:pointer;\
+width:100%;\
+\}\
+\
+button:hover\{\
+background:#1d4ed8;\
+\}\
+\
+table\{\
+width:100%;\
+border-collapse:collapse;\
+margin-top:20px;\
+\}\
+\
+th,td\{\
+border:1px solid #374151;\
+padding:10px;\
+text-align:left;\
+\}\
+\
+th\{\
+background:#111827;\
+\}\
+\
+.delete-btn\{\
+background:#dc2626;\
+padding:8px 12px;\
+width:auto;\
+\}\
+\
+.warning\{\
+background:#7f1d1d;\
+\}\
+\
+</style>\
+\
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>\
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>\
+\
+</head>\
+\
+<body>\
+\
+<h1>Incoming Shipment Planner</h1>\
+\
+<div class="cards">\
+\
+<div class="card">\
+\
+<input type="text" id="poInput" placeholder="PO Number">\
+\
+<input type="text" id="skuInput" placeholder="SKU">\
+\
+<input type="text" id="styleInput" placeholder="Style">\
+\
+<input type="text" id="colourInput" placeholder="Colour">\
+\
+<input type="date" id="etaInput">\
+\
+<input type="text" id="dispatchWeekInput" placeholder="Dispatch Week">\
+\
+<input type="number" id="palletInput" placeholder="Estimated Pallets">\
+\
+<select id="poTypeInput">\
+<option value="Repeat">Repeat</option>\
+<option value="New">New</option>\
+</select>\
+\
+<input type="text" id="locationInput" placeholder="Storage Location">\
+\
+<button onclick="addShipment()">Add Shipment</button>\
+\
+</div>\
+\
+</div>\
+\
+<table id="shipmentTable">\
+\
+<tr>\
+<th>PO</th>\
+<th>SKU</th>\
+<th>Style</th>\
+<th>Colour</th>\
+<th>ETA</th>\
+<th>Dispatch Week</th>\
+<th>Est Pallets</th>\
+<th>PO Type</th>\
+<th>Storage Location</th>\
+<th>Status</th>\
+<th>Delete</th>\
+</tr>\
+\
+</table>\
+\
+<script>\
+\
+const firebaseConfig = \{\
+apiKey: "YOUR_API_KEY",\
+authDomain: "YOUR_AUTH_DOMAIN",\
+projectId: "YOUR_PROJECT_ID",\
+storageBucket: "YOUR_STORAGE_BUCKET",\
+messagingSenderId: "YOUR_MESSAGING_SENDER_ID",\
+appId: "YOUR_APP_ID"\
+\};\
+\
+firebase.initializeApp(firebaseConfig);\
+\
+const db = firebase.firestore();\
+\
+function addShipment()\{\
+\
+const po = document.getElementById('poInput').value;\
+const sku = document.getElementById('skuInput').value;\
+const style = document.getElementById('styleInput').value;\
+const colour = document.getElementById('colourInput').value;\
+const eta = document.getElementById('etaInput').value;\
+const dispatchWeek = document.getElementById('dispatchWeekInput').value;\
+const pallets = document.getElementById('palletInput').value;\
+const poType = document.getElementById('poTypeInput').value;\
+const location = document.getElementById('locationInput').value;\
+\
+const row = document.getElementById('shipmentTable').insertRow();\
+\
+row.innerHTML = `\
+<td contenteditable="true">$\{po\}</td>\
+<td contenteditable="true">$\{sku\}</td>\
+<td contenteditable="true">$\{style\}</td>\
+<td contenteditable="true">$\{colour\}</td>\
+<td contenteditable="true">$\{eta\}</td>\
+<td contenteditable="true">$\{dispatchWeek\}</td>\
+<td contenteditable="true">$\{pallets\}</td>\
+<td contenteditable="true">$\{poType\}</td>\
+<td contenteditable="true">$\{location\}</td>\
+\
+<td>\
+<select>\
+<option>In Transit</option>\
+<option>Arrived</option>\
+</select>\
+</td>\
+\
+<td>\
+<button class="delete-btn">Delete</button>\
+</td>\
+`;\
+\
+setupRow(row);\
+\
+checkWarnings();\
+saveAll();\
+\
+clearInputs();\
+\
+\}\
+\
+function setupRow(row)\{\
+\
+row.querySelectorAll('td[contenteditable="true"]').forEach(cell=>\{\
+\
+cell.addEventListener('input',()=>\{\
+\
+checkWarnings();\
+saveAll();\
+\
+\});\
+\
+\});\
+\
+const select = row.querySelector('select');\
+\
+select.addEventListener('change',()=>\{\
+\
+checkWarnings();\
+saveAll();\
+\
+\});\
+\
+const deleteBtn = row.querySelector('.delete-btn');\
+\
+deleteBtn.addEventListener('click',()=>\{\
+\
+row.remove();\
+\
+saveAll();\
+\
+\});\
+\
+\}\
+\
+function clearInputs()\{\
+\
+document.getElementById('poInput').value='';\
+document.getElementById('skuInput').value='';\
+document.getElementById('styleInput').value='';\
+document.getElementById('colourInput').value='';\
+document.getElementById('etaInput').value='';\
+document.getElementById('dispatchWeekInput').value='';\
+document.getElementById('palletInput').value='';\
+document.getElementById('locationInput').value='';\
+\
+\}\
+\
+function checkWarnings()\{\
+\
+const rows = document.querySelectorAll('#shipmentTable tr');\
+\
+rows.forEach((row,index)=>\{\
+\
+if(index===0)return;\
+\
+row.classList.remove('warning');\
+\
+const etaText = row.cells[4].innerText;\
+\
+if(!etaText)return;\
+\
+const status = row.cells[9].querySelector('select').value;\
+\
+const etaDate = new Date(etaText);\
+const today = new Date();\
+\
+etaDate.setHours(0,0,0,0);\
+today.setHours(0,0,0,0);\
+\
+const diffDays = (etaDate - today) / (1000 * 60 * 60 * 24);\
+\
+if(diffDays <= 7 && diffDays >= 0 && status === 'In Transit')\{\
+\
+row.classList.add('warning');\
+\
+\}\
+\
+\});\
+\
+\}\
+\
+async function saveAll()\{\
+\
+const shipments = [];\
+\
+document.querySelectorAll('#shipmentTable tr').forEach((row,index)=>\{\
+\
+if(index===0)return;\
+\
+const cells = row.querySelectorAll('td');\
+\
+shipments.push(\{\
+\
+po: cells[0].innerText,\
+sku: cells[1].innerText,\
+style: cells[2].innerText,\
+colour: cells[3].innerText,\
+eta: cells[4].innerText,\
+dispatchWeek: cells[5].innerText,\
+pallets: cells[6].innerText,\
+poType: cells[7].innerText,\
+location: cells[8].innerText,\
+status: cells[9].querySelector('select').value\
+\
+\});\
+\
+\});\
+\
+await db.collection("incomingShipments").doc("main").set(\{\
+shipments\
+\});\
+\
+\}\
+\
+async function loadAll()\{\
+\
+const snapshot = await db.collection("incomingShipments").doc("main").get();\
+\
+if(!snapshot.exists)return;\
+\
+const data = snapshot.data();\
+\
+if(!data.shipments)return;\
+\
+data.shipments.forEach(item=>\{\
+\
+const row = document.getElementById('shipmentTable').insertRow();\
+\
+row.innerHTML = `\
+<td contenteditable="true">$\{item.po\}</td>\
+<td contenteditable="true">$\{item.sku\}</td>\
+<td contenteditable="true">$\{item.style\}</td>\
+<td contenteditable="true">$\{item.colour\}</td>\
+<td contenteditable="true">$\{item.eta\}</td>\
+<td contenteditable="true">$\{item.dispatchWeek\}</td>\
+<td contenteditable="true">$\{item.pallets\}</td>\
+<td contenteditable="true">$\{item.poType\}</td>\
+<td contenteditable="true">$\{item.location\}</td>\
+\
+<td>\
+<select>\
+<option $\{item.status === 'In Transit' ? 'selected' : ''\}>In Transit</option>\
+<option $\{item.status === 'Arrived' ? 'selected' : ''\}>Arrived</option>\
+</select>\
+</td>\
+\
+<td>\
+<button class="delete-btn">Delete</button>\
+</td>\
+`;\
+\
+setupRow(row);\
+\
+\});\
+\
+checkWarnings();\
+\
+\}\
+\
+window.onload = async function()\{\
+\
+await loadAll();\
+\
+\}\
+\
+</script>\
+\
+</body>\
+\
+</html>\
+\
+\pard\pardeftab720\partightenfactor0
+
+\f1 \cf2 \
+\
+\
+\
+\
+\
+\
+\
+\
+\
+}
