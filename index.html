@@ -1,52 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Advanced Incoming Shipment Planner</title>
 
 <style>
-
-*{
-box-sizing:border-box;
-}
+*{box-sizing:border-box;}
 
 body{
 margin:0;
 font-family:Arial,sans-serif;
 background:#0b1220;
 color:white;
+}
+
+.sidebar{
+position:fixed;
+top:0;
+left:0;
+width:240px;
+height:100vh;
+background:#111827;
 padding:20px;
+overflow-y:auto;
+transition:0.3s;
+z-index:1000;
 }
 
-h1{
-margin-top:0;
-font-size:38px;
+.sidebar.hidden{
+left:-240px;
 }
 
-.topbar{
-display:flex;
-gap:15px;
-flex-wrap:wrap;
-margin-bottom:20px;
-}
-
-.topbar input,
-.topbar select,
-.topbar button{
+.sidebar button{
+width:100%;
 padding:12px;
+margin-bottom:10px;
 border:none;
 border-radius:10px;
 background:#1f2937;
 color:white;
+cursor:pointer;
 }
 
-.topbar button{
+.sidebar button:hover{
 background:#2563eb;
+}
+
+#menuToggle{
+position:fixed;
+top:15px;
+left:15px;
+z-index:2000;
+padding:12px 16px;
+border:none;
+border-radius:10px;
+background:#2563eb;
+color:white;
 cursor:pointer;
+}
+
+.main{
+margin-left:260px;
+padding:20px;
+transition:0.3s;
+}
+
+.main.full{
+margin-left:20px;
+}
+
+.page{
+display:none;
+}
+
+.page.active{
+display:block;
+}
+
+#financialWeekBox{
+position:fixed;
+top:15px;
+right:15px;
+background:#111827;
+padding:12px 18px;
+border-radius:10px;
+font-weight:bold;
+z-index:2000;
 }
 
 .dashboard-grid{
@@ -60,32 +100,29 @@ margin-bottom:20px;
 background:#111827;
 padding:20px;
 border-radius:16px;
-box-shadow:0 4px 15px rgba(0,0,0,0.3);
-}
-
-.card h2{
-margin:0;
-font-size:16px;
-color:#9ca3af;
 }
 
 .big-number{
-font-size:34px;
+font-size:32px;
 font-weight:bold;
 margin-top:10px;
+}
+
+.topbar{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:20px;
 }
 
 .form-grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:15px;
+gap:12px;
 margin-bottom:20px;
 }
 
-input,
-select,
-textarea{
-width:100%;
+input,select,textarea,button{
 padding:12px;
 border:none;
 border-radius:10px;
@@ -93,17 +130,9 @@ background:#1f2937;
 color:white;
 }
 
-button{
-padding:12px;
-border:none;
-border-radius:10px;
+.add-btn{
 background:#2563eb;
-color:white;
 cursor:pointer;
-}
-
-button:hover{
-background:#1d4ed8;
 }
 
 .table-wrap{
@@ -114,278 +143,165 @@ table{
 width:100%;
 border-collapse:collapse;
 background:#111827;
-border-radius:16px;
-overflow:hidden;
-min-width:2100px;
+min-width:2300px;
+}
+
+th,td{
+padding:12px;
+border-top:1px solid #374151;
+text-align:left;
 }
 
 th{
 background:#1f2937;
-padding:14px;
-text-align:left;
-position:sticky;
-top:0;
-}
-
-td{
-padding:12px;
-border-top:1px solid #374151;
+cursor:pointer;
 }
 
 .warning{
 background:#7f1d1d !important;
 }
 
-.unallocated{
-background:#78350f !important;
-}
-
 .arrived{
 background:#14532d !important;
 }
 
+.unallocated{
+background:#78350f !important;
+}
+
 .delete-btn{
 background:#dc2626;
+cursor:pointer;
 }
 
-.mobile-note{
-margin-top:10px;
-color:#9ca3af;
+.restore-btn{
+background:#059669;
+cursor:pointer;
 }
-
-@media(max-width:900px){
-
-body{
-padding:10px;
-}
-
-h1{
-font-size:28px;
-}
-
-.card{
-padding:15px;
-}
-
-}
-
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 </head>
-
 <body>
 
-<button id="menuToggle" onclick="toggleMenu()" style="
-position:fixed;
-top:15px;
-left:15px;
-z-index:2000;
-padding:12px 16px;
-background:#2563eb;
-border:none;
-border-radius:10px;
-color:white;
-cursor:pointer;
-">
-☰
-</button>
-
-<div id="sidebar" style="
-position:fixed;
-top:0;
-left:0;
-width:240px;
-height:100vh;
-background:#111827;
-padding:20px;
-z-index:1500;pointer-events:auto;
-transition:0.3s;
-overflow-y:auto;
-">
-
-<h2 style="margin-top:50px;">Navigation</h2>
-
-<button type="button" onclick="showPage('mainPage')" style="
-width:100%;
-margin-bottom:10px;
-padding:12px;
-background:#1f2937;
-border:none;
-border-radius:10px;
-color:white;
-cursor:pointer;
-">
-Main Shipments
-</button>
-
-<button type="button" onclick="showPage('archivePage')" style="
-width:100%;
-margin-bottom:10px;
-padding:12px;
-background:#1f2937;
-border:none;
-border-radius:10px;
-color:white;
-cursor:pointer;
-">
-Archive
-</button>
-
-</div>
-
-<div id="contentWrapper" style="
-margin-left:260px;
-transition:0.3s;
-position:relative;
-z-index:1;
-">
-
-
-<div id="financialWeekBox" style="
-position:fixed;
-top:20px;
-right:20px;
-background:#111827;
-padding:14px 20px;
-border-radius:12px;
-font-weight:bold;
-z-index:999;
-">
-FY Week: Loading...
-</div>
-
-
-</div>
-
 <script>
-
 const PASSWORD = "warehouse123";
-
 const enteredPassword = prompt("Enter Password");
 
 if(enteredPassword !== PASSWORD){
-
-document.body.innerHTML = `
-<div style="
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-font-size:40px;
-background:#0b1220;
-color:white;
-">
-Access Denied
-</div>
-`;
-
+document.body.innerHTML = "<h1 style='padding:40px'>Access Denied</h1>";
 throw new Error("Access Denied");
-
 }
-
 </script>
 
-<h1>Advanced Incoming Shipment Planner</h1>
+<button id="menuToggle" onclick="toggleMenu()">☰</button>
 
-<div class="topbar">
+<div id="financialWeekBox">FY Week</div>
 
-<input type="text" id="searchInput" placeholder="Search anything..." oninput="filterTable()">
+<div class="sidebar" id="sidebar">
 
-<select id="warehouseFilter" onchange="filterTable()">
-<option value="">All Warehouses</option>
-<option value="Seven Hills">Seven Hills</option>
-<option value="Main Warehouse">Main Warehouse</option>
-<option value="Overflow">Overflow</option>
-</select>
+<h2>Navigation</h2>
 
-<button onclick="sortByETA()">Sort By ETA</button>
-<button onclick="exportCSV()">Export CSV</button>
+<button onclick="showPage('mainPage')">Main Shipments</button>
+<button onclick="showPage('archivePage')">Archive</button>
 
 </div>
+
+<div class="main" id="main">
+
+<div id="mainPage" class="page active">
+
+<h1>Advanced Incoming Shipment Planner</h1>
 
 <div class="dashboard-grid">
 
 <div class="card">
-<h2>Total Purchase Orders</h2>
+<h3>Total Purchase Orders</h3>
 <div class="big-number" id="totalPOs">0</div>
 </div>
 
 <div class="card">
-<h2>Arrived Purchase Orders</h2>
+<h3>Arrived Purchase Orders</h3>
 <div class="big-number" id="arrivedPOs">0</div>
 </div>
 
 <div class="card">
-<h2>Total Estimated Pallets</h2>
+<h3>Total Estimated Pallets</h3>
 <div class="big-number" id="totalPallets">0</div>
 </div>
 
 <div class="card">
-<h2>Total Quantity Overall</h2>
+<h3>Total Quantity Overall</h3>
 <div class="big-number" id="totalQty">0</div>
 </div>
 
 <div class="card">
-<h2>Pallets Arriving Within 7 Days</h2>
+<h3>Pallets Next 7 Days</h3>
 <div class="big-number" id="urgentPallets">0</div>
 </div>
 
 <div class="card">
-<h2>Quantity Next 7 Days</h2>
+<h3>Quantity Next 7 Days</h3>
 <div class="big-number" id="urgentQty">0</div>
 </div>
 
 <div class="card">
-<h2>Unallocated Rows</h2>
+<h3>Unallocated Rows</h3>
 <div class="big-number" id="unallocatedRows">0</div>
 </div>
 
 <div class="card">
-<h2>Week Dispatch Totals</h2>
+<h3>Dispatch Weeks Active</h3>
 <div class="big-number" id="weekTotals">0</div>
 </div>
 
 </div>
 
-<div class="card">
+<div class="topbar">
+
+<input type="text" id="searchInput" placeholder="Search..." oninput="filterTable()">
+
+<select id="warehouseFilter" onchange="filterTable()">
+<option value="">All Warehouses</option>
+<option>Seven Hills</option>
+<option>Main Warehouse</option>
+<option>Overflow</option>
+</select>
+
+<button class="add-btn" onclick="exportCSV()">Export CSV</button>
+
+</div>
 
 <div class="form-grid">
 
-<input type="text" id="shipmentInput" placeholder="Shipment Number">
-<input type="text" id="poInput" placeholder="PO Number">
-<input type="text" id="skuInput" placeholder="SKU">
-<input type="text" id="styleInput" placeholder="Style">
-<input type="text" id="colourInput" placeholder="Colour">
-<input type="date" id="etaInput">
-<select id="dispatchWeekInput"></select>
-<input type="number" id="palletInput" placeholder="Estimated Pallets">
-<input type="number" id="qtyInput" placeholder="Total Quantity">
+<input id="shipmentInput" placeholder="Shipment">
+<input id="poInput" placeholder="PO">
+<input id="skuInput" placeholder="SKU">
+<input id="styleInput" placeholder="Style">
+<input id="colourInput" placeholder="Colour">
+<input id="etaInput" type="date">
 
-<select id="poTypeInput">
-<option value="Repeat">Repeat</option>
-<option value="New">New</option>
-</select>
+<select id="dispatchWeekInput"></select>
+
+<input id="palletInput" type="number" placeholder="Pallets">
+<input id="qtyInput" type="number" placeholder="Quantity">
 
 <select id="warehouseInput">
-<option value="Seven Hills">Seven Hills</option>
-<option value="Main Warehouse">Main Warehouse</option>
-<option value="Overflow">Overflow</option>
+<option>Seven Hills</option>
+<option>Main Warehouse</option>
+<option>Overflow</option>
 </select>
 
-<input type="text" id="locationInput" placeholder="Storage Location">
-
-<textarea id="notesInput" placeholder="Notes / Comments"></textarea>
-
-</div>
-
-<button onclick="addShipment()">Add Shipment</button>
+<input id="locationInput" placeholder="Storage Location">
+<textarea id="notesInput" placeholder="Notes"></textarea>
 
 </div>
 
-<br>
+<button class="add-btn" onclick="addShipment()">Add Shipment</button>
+
+<br><br>
 
 <div class="table-wrap">
 
@@ -396,13 +312,12 @@ throw new Error("Access Denied");
 <th onclick="sortTable(1)">PO</th>
 <th onclick="sortTable(2)">SKU</th>
 <th onclick="sortTable(3)">Style</th>
-<th>Colour</th>
+<th onclick="sortTable(4)">Colour</th>
 <th onclick="sortTable(5)">ETA</th>
 <th onclick="sortTable(6)">Dispatch Week</th>
-<th>Est Pallets</th>
-<th>Quantity</th>
-<th>PO Type</th>
-<th>Warehouse</th>
+<th onclick="sortTable(7)">Pallets</th>
+<th onclick="sortTable(8)">Qty</th>
+<th onclick="sortTable(9)">Warehouse</th>
 <th>Storage Location</th>
 <th>Current Location</th>
 <th>Action</th>
@@ -415,28 +330,26 @@ throw new Error("Access Denied");
 
 </div>
 
-
 </div>
 
-<div id='archivePage' style='display:none;'>
+<div id="archivePage" class="page">
 
-<h2>Archive</h2>
+<h1>Archive</h1>
 
 <div class="table-wrap">
 
 <table id="archiveTable">
 
 <tr>
-<th onclick="sortTable(0)">Shipment</th>
+<th>Shipment</th>
 <th>PO</th>
 <th>SKU</th>
 <th>Style</th>
 <th>Colour</th>
 <th>ETA</th>
 <th>Dispatch Week</th>
-<th>Est Pallets</th>
-<th>Quantity</th>
-<th>PO Type</th>
+<th>Pallets</th>
+<th>Qty</th>
 <th>Warehouse</th>
 <th>Storage Location</th>
 <th>Current Location</th>
@@ -451,6 +364,9 @@ throw new Error("Access Denied");
 
 </div>
 
+</div>
+
+</div>
 
 <script>
 
@@ -464,13 +380,12 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
 
 for(let i=1;i<=52;i++){
 const option=document.createElement('option');
 option.textContent=`Week ${i}`;
-document.getElementById('dispatchWeekInput').appendChild(option);
+dispatchWeekInput.appendChild(option);
 }
 
 function getFinancialWeek(){
@@ -488,61 +403,64 @@ fyStart = new Date(today.getFullYear()-1,6,1);
 const diffDays = Math.floor((today - fyStart)/(1000*60*60*24));
 const week = Math.floor(diffDays/7)+1;
 
-document.getElementById('financialWeekBox').innerText =
-`FY Week: ${week}`;
+financialWeekBox.innerText = `FY Week: ${week}`;
 
 }
 
 getFinancialWeek();
 
+function toggleMenu(){
+sidebar.classList.toggle('hidden');
+main.classList.toggle('full');
+}
 
+function showPage(pageId){
+
+document.querySelectorAll('.page').forEach(page=>{
+page.classList.remove('active');
+});
+
+document.getElementById(pageId).classList.add('active');
+
+}
 
 function addShipment(){
 
-const shipment = document.getElementById('shipmentInput').value;
-const po = document.getElementById('poInput').value;
-const sku = document.getElementById('skuInput').value;
-const style = document.getElementById('styleInput').value;
-const colour = document.getElementById('colourInput').value;
-const eta = document.getElementById('etaInput').value;
-const dispatchWeek = document.getElementById('dispatchWeekInput').value;
-const pallets = document.getElementById('palletInput').value;
-const qty = document.getElementById('qtyInput').value;
-const poType = document.getElementById('poTypeInput').value;
-const warehouse = document.getElementById('warehouseInput').value;
-const location = document.getElementById('locationInput').value;
-const notes = document.getElementById('notesInput').value;
-
-const row = document.getElementById('shipmentTable').insertRow();
+const row = shipmentTable.insertRow();
 
 row.innerHTML = `
-<td contenteditable="true">${shipment}</td>
-<td contenteditable="true">${po}</td>
-<td contenteditable="true">${sku}</td>
-<td contenteditable="true">${style}</td>
-<td contenteditable="true">${colour}</td>
-<td contenteditable="true">${eta}</td>
-<td contenteditable="true">${dispatchWeek}</td>
-<td contenteditable="true">${pallets}</td>
-<td contenteditable="true">${qty}</td>
-<td contenteditable="true">${poType}</td>
-<td contenteditable="true">${warehouse}</td>
-<td contenteditable="true">${location}</td>
+<td contenteditable="true">${shipmentInput.value}</td>
+<td contenteditable="true">${poInput.value}</td>
+<td contenteditable="true">${skuInput.value}</td>
+<td contenteditable="true">${styleInput.value}</td>
+<td contenteditable="true">${colourInput.value}</td>
+<td contenteditable="true">${etaInput.value}</td>
+<td contenteditable="true">${dispatchWeekInput.value}</td>
+<td contenteditable="true">${palletInput.value}</td>
+<td contenteditable="true">${qtyInput.value}</td>
+<td contenteditable="true">${warehouseInput.value}</td>
+<td contenteditable="true">${locationInput.value}</td>
 <td contenteditable="true"></td>
+
 <td>
-<select class="action-select">
+<select>
 <option>No Action Required</option>
 <option>Relocated</option>
 </select>
 </td>
+
 <td>
 <select class="status-select">
 <option>In Transit</option>
 <option>Arrived</option>
 </select>
 </td>
-<td contenteditable="true">${notes}</td>
-<td><button class="delete-btn">Delete</button></td>
+
+<td contenteditable="true">${notesInput.value}</td>
+
+<td>
+<button class="delete-btn" onclick="deleteRow(this)">Delete</button>
+</td>
 `;
 
 setupRow(row);
@@ -553,63 +471,6 @@ clearInputs();
 
 }
 
-function setupRow(row){
-
-row.querySelectorAll('td[contenteditable="true"]').forEach(cell=>{
-
-cell.addEventListener('input',()=>{
-refreshDashboard();
-saveAll();
-});
-
-});
-
-row.querySelectorAll('select').forEach(select=>{
-
-select.addEventListener('change',()=>{
-
-if(select.classList.contains('status-select') && select.value === 'Arrived'){
-moveToArchive(row);
-return;
-}
-
-refreshDashboard();
-saveAll();
-
-});
-
-});
-
-row.querySelector('.delete-btn').addEventListener('click',()=>{
-row.remove();
-refreshDashboard();
-saveAll();
-});
-
-}
-
-
-function moveToArchive(row){
-
-const archiveRow = document.getElementById('archiveTable').insertRow();
-
-archiveRow.classList.add('arrived');
-
-archiveRow.innerHTML = row.innerHTML
-.replace(/<button class="delete-btn">Delete<\/button>/g,'')
-.replace(/contenteditable="true"/g,'')
-
-+ `<td><button onclick="restoreShipment(this)">Restore</button></td>
-<td><button class="delete-btn" onclick="deleteArchiveRow(this)">Delete</button></td>`;
-
-row.remove();
-
-refreshDashboard();
-saveAll();
-
-}
-
-
 function clearInputs(){
 
 shipmentInput.value='';
@@ -618,7 +479,6 @@ skuInput.value='';
 styleInput.value='';
 colourInput.value='';
 etaInput.value='';
-dispatchWeekInput.value='';
 palletInput.value='';
 qtyInput.value='';
 locationInput.value='';
@@ -626,214 +486,66 @@ notesInput.value='';
 
 }
 
-function refreshDashboard(){
+function setupRow(row){
 
-let totalPOs = 0;
-let arrivedPOs = 0;
-let totalPallets = 0;
-let totalQty = 0;
-let urgentPallets = 0;
-let urgentQty = 0;
-let unallocatedRows = 0;
+row.querySelectorAll('td[contenteditable="true"]').forEach(cell=>{
 
-const uniqueWeeks = new Set();
-
-const rows = document.querySelectorAll('#shipmentTable tr');
-
-rows.forEach((row,index)=>{
-
-if(index===0)return;
-
-row.className = '';
-
-const pallets = Number(row.cells[7].innerText || 0);
-const qty = Number(row.cells[8].innerText || 0);
-const location = row.cells[11].innerText.trim();
-const status = row.cells[14].querySelector('select').value;
-const etaText = row.cells[5].innerText;
-const week = row.cells[6].innerText;
-
-uniqueWeeks.add(week);
-
-if(status === 'Arrived'){
-row.classList.add('arrived');
-arrivedPOs++;
-}
-
-if(location === ''){
-row.classList.add('unallocated');
-unallocatedRows++;
-}
-
-if(etaText){
-
-const etaDate = new Date(etaText);
-const today = new Date();
-
-etaDate.setHours(0,0,0,0);
-today.setHours(0,0,0,0);
-
-const diffDays = (etaDate - today)/(1000*60*60*24);
-
-if(diffDays <= 7 && diffDays >= 0 && status === 'In Transit'){
-row.classList.add('warning');
-urgentPallets += pallets;
-urgentQty += qty;
-}
-
-}
-
-totalPOs++;
-totalPallets += pallets;
-totalQty += qty;
-
-});
-
-document.getElementById('totalPOs').innerText = totalPOs;
-document.getElementById('arrivedPOs').innerText = arrivedPOs;
-document.getElementById('totalPallets').innerText = totalPallets.toLocaleString();
-document.getElementById('totalQty').innerText = totalQty.toLocaleString();
-document.getElementById('urgentPallets').innerText = urgentPallets.toLocaleString();
-document.getElementById('urgentQty').innerText = urgentQty.toLocaleString();
-document.getElementById('unallocatedRows').innerText = unallocatedRows;
-document.getElementById('weekTotals').innerText = uniqueWeeks.size;
-
-}
-
-async function saveAll(){
-
-const shipments = [];
-const archive = [];
-
-const rows = document.querySelectorAll('#shipmentTable tr');
-
-rows.forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells = row.querySelectorAll('td');
-
-shipments.push({
-shipment: cells[0].innerText,
-po: cells[1].innerText,
-sku: cells[2].innerText,
-style: cells[3].innerText,
-colour: cells[4].innerText,
-eta: cells[5].innerText,
-dispatchWeek: cells[6].innerText,
-pallets: cells[7].innerText,
-qty: cells[8].innerText,
-poType: cells[9].innerText,
-warehouse: cells[10].innerText,
-location: cells[11].innerText,
-currentLocation: cells[12].innerText,
-action: cells[13].querySelector('select').value,
-status: cells[14].querySelector('select').value,
-notes: cells[15].innerText
+cell.addEventListener('input',()=>{
+saveAll();
+refreshDashboard();
 });
 
 });
 
+row.querySelector('.status-select').addEventListener('change',function(){
 
-document.querySelectorAll('#archiveTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells = row.querySelectorAll('td');
-
-archive.push({
-shipment: cells[0].innerText,
-po: cells[1].innerText
-});
-
-});
-
-await db.collection('advancedIncomingPlanner').doc('main').set({shipments,archive});
-
+if(this.value === 'Arrived'){
+moveToArchive(row);
 }
 
-async function loadAll(){
-
-const snapshot = await db.collection('advancedIncomingPlanner').doc('main').get();
-
-if(!snapshot.exists)return;
-
-const data = snapshot.data();
-
-if(!data.shipments)return;
-
-data.shipments.forEach(item=>{
-
-const row = document.getElementById('shipmentTable').insertRow();
-
-row.innerHTML = `
-<td contenteditable="true">${item.shipment}</td>
-<td contenteditable="true">${item.po}</td>
-<td contenteditable="true">${item.sku}</td>
-<td contenteditable="true">${item.style}</td>
-<td contenteditable="true">${item.colour}</td>
-<td contenteditable="true">${item.eta}</td>
-<td contenteditable="true">${item.dispatchWeek}</td>
-<td contenteditable="true">${item.pallets}</td>
-<td contenteditable="true">${item.qty || 0}</td>
-<td contenteditable="true">${item.poType}</td>
-<td contenteditable="true">${item.warehouse}</td>
-<td contenteditable="true">${item.location}</td>
-<td contenteditable="true">${item.currentLocation || ''}</td>
-<td>
-<select class="action-select">
-<option ${item.action === 'Relocated' ? 'selected' : ''}>Relocated</option>
-<option ${item.action !== 'Relocated' ? 'selected' : ''}>No Action Required</option>
-</select>
-</td>
-<td>
-<select class="status-select">
-<option ${item.status === 'In Transit' ? 'selected' : ''}>In Transit</option>
-<option ${item.status === 'Arrived' ? 'selected' : ''}>Arrived</option>
-</select>
-</td>
-<td contenteditable="true">${item.notes}</td>
-<td><button class="delete-btn">Delete</button></td>
-`;
-
-setupRow(row);
-
-});
-
+saveAll();
 refreshDashboard();
 
-}
-
-
-
-
-
-function toggleMenu(){
-
-const sidebar = document.getElementById('sidebar');
-const content = document.getElementById('contentWrapper');
-
-if(sidebar.style.left === '-240px'){
-
-sidebar.style.left = '0';
-content.style.marginLeft = '260px';
-
-}else{
-
-sidebar.style.left = '-240px';
-content.style.marginLeft = '20px';
+});
 
 }
 
-}
+function moveToArchive(row){
 
+const archiveRow = archiveTable.insertRow();
 
-function showPage(pageId){
+archiveRow.classList.add('arrived');
 
-document.getElementById('mainPage').style.display='none';
-document.getElementById('archivePage').style.display='none';
+archiveRow.innerHTML = `
+<td>${row.cells[0].innerText}</td>
+<td>${row.cells[1].innerText}</td>
+<td>${row.cells[2].innerText}</td>
+<td>${row.cells[3].innerText}</td>
+<td>${row.cells[4].innerText}</td>
+<td>${row.cells[5].innerText}</td>
+<td>${row.cells[6].innerText}</td>
+<td>${row.cells[7].innerText}</td>
+<td>${row.cells[8].innerText}</td>
+<td>${row.cells[9].innerText}</td>
+<td>${row.cells[10].innerText}</td>
+<td>${row.cells[11].innerText}</td>
+<td>${row.cells[12].querySelector('select').value}</td>
+<td>Arrived</td>
+<td>${row.cells[14].innerText}</td>
 
-document.getElementById(pageId).style.display='block';
+<td>
+<button class="restore-btn" onclick="restoreShipment(this)">Restore</button>
+</td>
+
+<td>
+<button class="delete-btn" onclick="deleteArchive(this)">Delete</button>
+</td>
+`;
+
+row.remove();
+
+saveAll();
+refreshDashboard();
 
 }
 
@@ -841,7 +553,7 @@ function restoreShipment(btn){
 
 const row = btn.closest('tr');
 
-const newRow = document.getElementById('shipmentTable').insertRow();
+const newRow = shipmentTable.insertRow();
 
 newRow.innerHTML = `
 <td contenteditable="true">${row.cells[0].innerText}</td>
@@ -856,12 +568,11 @@ newRow.innerHTML = `
 <td contenteditable="true">${row.cells[9].innerText}</td>
 <td contenteditable="true">${row.cells[10].innerText}</td>
 <td contenteditable="true">${row.cells[11].innerText}</td>
-<td contenteditable="true">${row.cells[12].innerText}</td>
 
 <td>
-<select class="action-select">
-<option>No Action Required</option>
-<option ${row.cells[13].innerText === 'Relocated' ? 'selected' : ''}>Relocated</option>
+<select>
+<option ${row.cells[12].innerText === 'No Action Required' ? 'selected' : ''}>No Action Required</option>
+<option ${row.cells[12].innerText === 'Relocated' ? 'selected' : ''}>Relocated</option>
 </select>
 </td>
 
@@ -872,7 +583,7 @@ newRow.innerHTML = `
 </select>
 </td>
 
-<td contenteditable="true">${row.cells[15].innerText}</td>
+<td contenteditable="true">${row.cells[14].innerText}</td>
 
 <td>
 <button class="delete-btn" onclick="deleteRow(this)">Delete</button>
@@ -883,20 +594,221 @@ setupRow(newRow);
 
 row.remove();
 
-refreshDashboard();
 saveAll();
+refreshDashboard();
 
 }
 
-function deleteArchiveRow(btn){
+function deleteArchive(btn){
 
 btn.closest('tr').remove();
 
+saveAll();
 refreshDashboard();
+
+}
+
+function deleteRow(btn){
+
+btn.closest('tr').remove();
+
+saveAll();
+refreshDashboard();
+
+}
+
+function refreshDashboard(){
+
+let totalPOs = shipmentTable.rows.length - 1;
+let arrivedPOs = archiveTable.rows.length - 1;
+let totalPallets = 0;
+let totalQty = 0;
+let urgentPallets = 0;
+let urgentQty = 0;
+let unallocatedRows = 0;
+
+const uniqueWeeks = new Set();
+
+Array.from(shipmentTable.rows).slice(1).forEach(row=>{
+
+const pallets = Number(row.cells[7].innerText || 0);
+const qty = Number(row.cells[8].innerText || 0);
+
+totalPallets += pallets;
+totalQty += qty;
+
+const week = row.cells[6].innerText;
+uniqueWeeks.add(week);
+
+const location = row.cells[10].innerText.trim();
+
+row.classList.remove('warning');
+row.classList.remove('unallocated');
+
+if(location === ''){
+row.classList.add('unallocated');
+unallocatedRows++;
+}
+
+const eta = row.cells[5].innerText;
+
+if(eta){
+
+const etaDate = new Date(eta);
+const today = new Date();
+
+etaDate.setHours(0,0,0,0);
+today.setHours(0,0,0,0);
+
+const diffDays = (etaDate - today)/(1000*60*60*24);
+
+if(diffDays <= 7 && diffDays >= 0){
+row.classList.add('warning');
+urgentPallets += pallets;
+urgentQty += qty;
+}
+
+}
+
+});
+
+document.getElementById('totalPOs').innerText = totalPOs;
+document.getElementById('arrivedPOs').innerText = arrivedPOs;
+document.getElementById('totalPallets').innerText = totalPallets.toLocaleString();
+document.getElementById('totalQty').innerText = totalQty.toLocaleString();
+document.getElementById('urgentPallets').innerText = urgentPallets.toLocaleString();
+document.getElementById('urgentQty').innerText = urgentQty.toLocaleString();
+document.getElementById('unallocatedRows').innerText = unallocatedRows;
+document.getElementById('weekTotals').innerText = uniqueWeeks.size;
+
+}
+
+function filterTable(){
+
+const search = searchInput.value.toLowerCase();
+const warehouse = warehouseFilter.value;
+
+Array.from(shipmentTable.rows).slice(1).forEach(row=>{
+
+const matchesSearch = row.innerText.toLowerCase().includes(search);
+const matchesWarehouse = warehouse === '' || row.cells[9].innerText === warehouse;
+
+row.style.display = matchesSearch && matchesWarehouse ? '' : 'none';
+
+});
+
+}
+
+function sortTable(column){
+
+const rows = Array.from(shipmentTable.rows).slice(1);
+
+rows.sort((a,b)=>{
+
+return a.cells[column].innerText.localeCompare(
+b.cells[column].innerText,
+undefined,
+{numeric:true}
+);
+
+});
+
+rows.forEach(row=>shipmentTable.appendChild(row));
+
 saveAll();
 
 }
 
+function exportCSV(){
+
+let csv=[];
+
+document.querySelectorAll('#shipmentTable tr').forEach(row=>{
+
+const cols=row.querySelectorAll('th,td');
+
+const data=[];
+
+cols.forEach(col=>{
+
+if(col.querySelector('select')){
+data.push(col.querySelector('select').value);
+}else{
+data.push(col.innerText);
+}
+
+});
+
+csv.push(data.join(','));
+
+});
+
+const blob=new Blob([csv.join('\n')],{type:'text/csv'});
+const url=URL.createObjectURL(blob);
+
+const a=document.createElement('a');
+
+a.href=url;
+a.download='shipments.csv';
+a.click();
+
+}
+
+async function saveAll(){
+
+const active=[];
+const archive=[];
+
+Array.from(shipmentTable.rows).slice(1).forEach(row=>{
+active.push(row.innerHTML);
+});
+
+Array.from(archiveTable.rows).slice(1).forEach(row=>{
+archive.push(row.innerHTML);
+});
+
+await db.collection('planner').doc('main').set({
+active,
+archive
+});
+
+}
+
+async function loadAll(){
+
+const snapshot = await db.collection('planner').doc('main').get();
+
+if(!snapshot.exists)return;
+
+const data = snapshot.data();
+
+if(data.active){
+
+data.active.forEach(item=>{
+
+const row = shipmentTable.insertRow();
+row.innerHTML = item;
+
+setupRow(row);
+
+});
+
+}
+
+if(data.archive){
+
+data.archive.forEach(item=>{
+
+const row = archiveTable.insertRow();
+row.innerHTML = item;
+
+});
+
+}
+
+refreshDashboard();
+
+}
 
 window.onload = async function(){
 
@@ -907,6 +819,5 @@ refreshDashboard();
 
 </script>
 
-</div>
 </body>
 </html>
