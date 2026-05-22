@@ -178,6 +178,70 @@ padding:15px;
 
 <body>
 
+<button id="menuToggle" onclick="toggleMenu()" style="
+position:fixed;
+top:15px;
+left:15px;
+z-index:2000;
+padding:12px 16px;
+background:#2563eb;
+border:none;
+border-radius:10px;
+color:white;
+cursor:pointer;
+">
+☰
+</button>
+
+<div id="sidebar" style="
+position:fixed;
+top:0;
+left:0;
+width:240px;
+height:100vh;
+background:#111827;
+padding:20px;
+z-index:1500;
+transition:0.3s;
+overflow-y:auto;
+">
+
+<h2 style="margin-top:50px;">Navigation</h2>
+
+<button onclick="showPage('mainPage')" style="
+width:100%;
+margin-bottom:10px;
+padding:12px;
+background:#1f2937;
+border:none;
+border-radius:10px;
+color:white;
+cursor:pointer;
+">
+Main Shipments
+</button>
+
+<button onclick="showPage('archivePage')" style="
+width:100%;
+margin-bottom:10px;
+padding:12px;
+background:#1f2937;
+border:none;
+border-radius:10px;
+color:white;
+cursor:pointer;
+">
+Archive
+</button>
+
+</div>
+
+<div id="contentWrapper" style="
+margin-left:260px;
+transition:0.3s;
+">
+
+
 <div id="financialWeekBox" style="
 position:fixed;
 top:20px;
@@ -740,6 +804,28 @@ refreshDashboard();
 
 
 
+
+
+function toggleMenu(){
+
+const sidebar = document.getElementById('sidebar');
+const content = document.getElementById('contentWrapper');
+
+if(sidebar.style.left === '-240px'){
+
+sidebar.style.left = '0';
+content.style.marginLeft = '260px';
+
+}else{
+
+sidebar.style.left = '-240px';
+content.style.marginLeft = '20px';
+
+}
+
+}
+
+
 function showPage(pageId){
 
 document.getElementById('mainPage').style.display='none';
@@ -819,5 +905,6 @@ refreshDashboard();
 
 </script>
 
+</div>
 </body>
 </html>
