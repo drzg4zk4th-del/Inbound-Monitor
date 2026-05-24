@@ -48,11 +48,6 @@ background:#081120;
 border-right:1px solid #1e293b;
 padding:20px;
 z-index:1000;
-transition:0.3s;
-}
-
-.sidebar.collapsed{
-transform:translateX(-100%);
 }
 
 .logo-btn{
@@ -63,26 +58,13 @@ border:none;
 border-radius:12px;
 color:white;
 font-size:18px;
+margin-bottom:30px;
 cursor:pointer;
-}
-
-.floating-toggle{
-position:fixed;
-top:20px;
-left:20px;
-z-index:2000;
-width:42px !important;
-height:42px !important;
-padding:0 !important;
-display:flex;
-align-items:center;
-justify-content:center;
 }
 
 .sidebar h2{
 font-size:14px;
 margin-bottom:20px;
-margin-top:30px;
 color:#60a5fa;
 }
 
@@ -113,11 +95,6 @@ margin-left:220px;
 padding:20px;
 height:100vh;
 overflow:auto;
-transition:0.3s;
-}
-
-.main.expanded{
-margin-left:0;
 }
 
 .page{
@@ -180,9 +157,8 @@ margin-bottom:16px;
 .yellow{color:#facc15;}
 .orange{color:#fb923c;}
 .red{color:#f87171;}
-
 .virtual-pink{
-color:#4ade80;
+color:#e8c3ae;
 }
 
 .card h3{
@@ -312,16 +288,13 @@ margin-left:6px;
 }
 
 </style>
-  
 </head>
 
 <body>
 
 <div class="sidebar">
 
-<button class="logo-btn floating-toggle" onclick="toggleSidebar()">
-☰
-</button>
+<button class="logo-btn">☰</button>
 
 <h2>NAVIGATION</h2>
 
@@ -654,7 +627,7 @@ new firebase.auth.GoogleAuthProvider();
 
 auth.onAuthStateChanged(user => {
 
-f(user){
+if(user){
 
 console.log("Logged in:", user.email);
 
@@ -727,20 +700,6 @@ page.classList.remove('active');
 });
 
 document.getElementById(pageId).classList.add('active');
-
-}
-
-function toggleSidebar(){
-
-const sidebar =
-document.querySelector('.sidebar');
-
-const main =
-document.querySelector('.main');
-
-sidebar.classList.toggle('collapsed');
-
-main.classList.toggle('expanded');
 
 }
 
