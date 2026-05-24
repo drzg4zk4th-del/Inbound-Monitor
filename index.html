@@ -48,6 +48,32 @@ background:#081120;
 border-right:1px solid #1e293b;
 padding:20px;
 z-index:1000;
+transition:left 0.3s ease;
+}
+
+.sidebar.hidden{
+left:-220px;
+}
+
+.main{
+margin-left:220px;
+padding:20px;
+height:100vh;
+overflow:auto;
+transition:margin-left 0.3s ease;
+}
+
+.main.full{
+margin-left:0;
+}
+
+.floating-toggle{
+position:fixed;
+top:20px;
+left:20px;
+z-index:2000;
+margin-bottom:0 !important;
+box-shadow:0 0 15px rgba(0,0,0,0.4);
 }
 
 .logo-btn{
@@ -294,7 +320,9 @@ margin-left:6px;
 
 <div class="sidebar">
 
-<button class="logo-btn">☰</button>
+<button class="logo-btn floating-toggle" onclick="toggleSidebar()">
+☰
+</button>
 
 <h2>NAVIGATION</h2>
 
@@ -1747,6 +1775,20 @@ originalRefreshDashboard();
 updateDispatchProjection();
 
 };
+
+function toggleSidebar(){
+
+const sidebar =
+document.querySelector('.sidebar');
+
+const main =
+document.querySelector('.main');
+
+sidebar.classList.toggle('hidden');
+
+main.classList.toggle('full');
+
+}
 
 </script>
 
