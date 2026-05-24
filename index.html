@@ -1237,15 +1237,20 @@ archiveRow.innerHTML = `
 <td>${row.cells[4].innerHTML}</td>
 <td>${row.cells[5].innerHTML}</td>
 <td>${row.cells[6].innerHTML}</td>
-<td>${row.cells[7].innerHTML}</td>
-<td>${row.cells[10].innerHTML}</td>
-<td>${row.cells[9].innerHTML}</td>
-<td>${row.cells[10].innerHTML}</td>
-<td>${row.cells[13].innerHTML}</td>
-<td>${row.cells[14].innerHTML}</td>
-<td>${row.cells[13].innerHTML}</td>
-<td>${row.cells[14].innerHTML}</td>
-<td>${row.cells[15].innerHTML}</td>
+
+<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
+<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
+<td>${row.cells[9].innerHTML}</td> <!-- Qty -->
+
+<td>${row.cells[10].innerHTML}</td> <!-- Warehouse -->
+<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
+
+<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
+<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
+
+<td>${row.cells[14].innerHTML}</td> <!-- Action -->
+<td>${row.cells[15].innerHTML}</td> <!-- Status -->
+<td>${row.cells[16].innerHTML}</td> 
 
 <td>
 <button class="restore-btn" onclick="restoreRow(this)">
@@ -1282,15 +1287,21 @@ newRow.innerHTML = `
 <td>${row.cells[4].innerHTML}</td>
 <td>${row.cells[5].innerHTML}</td>
 <td>${row.cells[6].innerHTML}</td>
-<td>${row.cells[7].innerHTML}</td>
-<td>${row.cells[10].innerHTML}</td>
-<td>${row.cells[9].innerHTML}</td>
-<td>${row.cells[10].innerHTML}</td>
-<td>${row.cells[13].innerHTML}</td>
-<td>${row.cells[14].innerHTML}</td>
-<td>${row.cells[13].innerHTML}</td>
-<td>${row.cells[14].innerHTML}</td>
-<td>${row.cells[15].innerHTML}</td>
+
+<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
+<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
+<td>${row.cells[9].innerHTML}</td> <!-- Qty -->
+
+<td>${row.cells[10].innerHTML}</td> <!-- Warehouse -->
+<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
+
+<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
+<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
+
+<td>${row.cells[14].innerHTML}</td> <!-- Action -->
+<td>${row.cells[15].innerHTML}</td> <!-- Status -->
+<td>${row.cells[16].innerHTML}</td> 
+
 
 <td>
 <button class="delete-btn" onclick="deleteRow(this)">
