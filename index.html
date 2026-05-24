@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 let currentSort = {
 index:null,
@@ -1016,6 +1017,19 @@ appId: "1:1016653351453:web:a2a1f597844adf51ba54f4"
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
+
+const auth = firebase.auth();
+
+const provider =
+new firebase.auth.GoogleAuthProvider();
+
+auth.signInWithPopup(provider)
+.then(()=>{
+console.log("Logged in");
+})
+.catch(error=>{
+console.error(error);
+});
 
 for(let i=1;i<=52;i++){
 const option=document.createElement('option');
