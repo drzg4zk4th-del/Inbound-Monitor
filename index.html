@@ -1060,58 +1060,152 @@ document.getElementById(pageId).classList.add('active');
 
 }
 
-function addShipment(){
+function createRow(data){
 
 const row = shipmentTable.insertRow(-1);
 
 row.innerHTML = `
-<td contenteditable="true">${shipmentInput.value}</td>
-<td contenteditable="true">${poInput.value}</td>
-<td contenteditable="true">${skuInput.value}</td>
-<td contenteditable="true">${styleInput.value}</td>
-<td contenteditable="true">${colourInput.value}</td>
-<td contenteditable="true">${etaInput.value}</td>
-<td contenteditable="true">${dispatchWeekInput.value}</td>
-<td contenteditable="true">${palletInput.value}</td>
-<td contenteditable="true">${packsPalletInput.value}</td>
-<td contenteditable="true">${qtyInput.value}</td>
+<td contenteditable="true">${data.shipment || ''}</td>
+<td contenteditable="true">${data.po || ''}</td>
+<td contenteditable="true">${data.sku || ''}</td>
+<td contenteditable="true">${data.style || ''}</td>
+<td contenteditable="true">${data.colour || ''}</td>
+<td contenteditable="true">${data.eta || ''}</td>
+<td contenteditable="true">${data.dispatchWeek || ''}</td>
+
+<td contenteditable="true">${data.loosePallets || 0}</td>
+<td contenteditable="true">${data.packPallets || 0}</td>
+<td contenteditable="true">${data.qty || 0}</td>
 
 <td>
 <select class="premium-select">
-<option ${warehouseInput.value === 'Seven Hills Warehouse' ? 'selected' : ''}>Seven Hills Warehouse</option>
-<option ${warehouseInput.value === 'Virtual Warehouse' ? 'selected' : ''}>Virtual Warehouse</option>
+<option ${
+data.warehouse === 'Seven Hills Warehouse'
+? 'selected'
+: ''
+}>
+Seven Hills Warehouse
+</option>
+
+<option ${
+data.warehouse === 'Virtual Warehouse'
+? 'selected'
+: ''
+}>
+Virtual Warehouse
+</option>
 </select>
 </td>
 
 <td>
 <select class="premium-select priority-select">
-<option ${priorityInput.value === 'Normal' ? 'selected' : ''}>Normal</option>
-<option ${priorityInput.value === 'Urgent Despatch' ? 'selected' : ''}>Urgent Despatch</option>
-<option ${priorityInput.value === 'Pure Excess Only' ? 'selected' : ''}>Pure Excess Only</option>
-<option ${priorityInput.value === 'Arrived Early' ? 'selected' : ''}>Arrived Early</option>
+
+<option ${
+data.priority === 'Normal'
+? 'selected'
+: ''
+}>
+Normal
+</option>
+
+<option ${
+data.priority === 'Urgent Despatch'
+? 'selected'
+: ''
+}>
+Urgent Despatch
+</option>
+
+<option ${
+data.priority === 'Pure Excess Only'
+? 'selected'
+: ''
+}>
+Pure Excess Only
+</option>
+
+<option ${
+data.priority === 'Arrived Early'
+? 'selected'
+: ''
+}>
+Arrived Early
+</option>
+
 </select>
 </td>
 
-<td contenteditable="true">${locationInput.value}</td>
-<td contenteditable="true">${currentLocationInput.value}</td>
+<td contenteditable="true">
+${data.location || ''}
+</td>
+
+<td contenteditable="true">
+${data.currentLocation || ''}
+</td>
 
 <td>
 <select class="premium-select">
-<option ${actionInput.value === 'No Action Required' ? 'selected' : ''}>No Action Required</option>
-<option ${actionInput.value === 'New Shelf Required' ? 'selected' : ''}>New Shelf Required</option>
-<option ${actionInput.value === 'Relocation Inprogress' ? 'selected' : ''}>Relocation Inprogress</option>
-<option ${actionInput.value === 'Additional Colour Space Required' ? 'selected' : ''}>Additional Colour Space Required</option>
+
+<option ${
+data.action === 'No Action Required'
+? 'selected'
+: ''
+}>
+No Action Required
+</option>
+
+<option ${
+data.action === 'New Shelf Required'
+? 'selected'
+: ''
+}>
+New Shelf Required
+</option>
+
+<option ${
+data.action === 'Relocation Inprogress'
+? 'selected'
+: ''
+}>
+Relocation Inprogress
+</option>
+
+<option ${
+data.action === 'Additional Colour Space Required'
+? 'selected'
+: ''
+}>
+Additional Colour Space Required
+</option>
+
 </select>
 </td>
 
 <td>
 <select class="premium-select status-select">
-<option>In Transit</option>
-<option>Arrived</option>
+
+<option ${
+data.status === 'In Transit'
+? 'selected'
+: ''
+}>
+In Transit
+</option>
+
+<option ${
+data.status === 'Arrived'
+? 'selected'
+: ''
+}>
+Arrived
+</option>
+
 </select>
 </td>
 
-<td contenteditable="true"></td>
+<td contenteditable="true">
+${data.notes || ''}
+</td>
 
 <td>
 <button class="delete-btn" onclick="deleteRow(this)">
@@ -1119,6 +1213,41 @@ row.innerHTML = `
 </button>
 </td>
 `;
+
+setupRow(row);
+
+return row;
+
+}
+
+function addShipment(){
+
+const row = createRow({
+
+shipment: shipmentInput.value,
+po: poInput.value,
+sku: skuInput.value,
+style: styleInput.value,
+colour: colourInput.value,
+eta: etaInput.value,
+dispatchWeek: dispatchWeekInput.value,
+
+loosePallets: palletInput.value,
+packPallets: packsPalletInput.value,
+qty: qtyInput.value,
+
+warehouse: warehouseInput.value,
+priority: priorityInput.value,
+
+location: locationInput.value,
+currentLocation: currentLocationInput.value,
+
+action: actionInput.value,
+status: 'In Transit',
+
+notes: notesInput.value
+
+});
 
 setupRow(row);
 
@@ -1512,7 +1641,7 @@ const pallets =
 incomingPallets + packsPallets;
 
 const qty =
-Number(row.cells[10].innerText || 0);
+Number(row.cells[9].innerText || 0);
 
 palletsTotal += pallets;
 qtyTotal += qty;
@@ -1529,7 +1658,7 @@ sevenIncoming += pallets;
 }
 
 const location =
-row.cells[14].innerText.trim();
+row.cells[12].innerText.trim();
 
 if(location === ''){
 unallocatedCount++;
@@ -1654,7 +1783,26 @@ const archive = [];
 Array.from(shipmentTable.rows)
 .slice(1)
 .forEach(row=>{
-active.push(`<tr>${row.innerHTML}</tr>`);
+active.push({
+shipment: row.cells[0].innerText,
+po: row.cells[1].innerText,
+sku: row.cells[2].innerText,
+style: row.cells[3].innerText,
+colour: row.cells[4].innerText,
+eta: row.cells[5].innerText,
+dispatchWeek: row.cells[6].innerText,
+loosePallets: row.cells[7].innerText,
+packPallets: row.cells[8].innerText,
+qty: row.cells[9].innerText,
+warehouse: row.cells[10].querySelector('select').value,
+priority: row.cells[11].querySelector('select').value,
+location: row.cells[12].innerText,
+currentLocation: row.cells[13].innerText,
+action: row.cells[14].querySelector('select').value,
+status: row.cells[15].querySelector('select').value,
+notes: row.cells[16].innerText
+});
+
 });
 
 Array.from(archiveTable.rows)
@@ -1703,11 +1851,7 @@ if(data.active){
 
 data.active.forEach(item=>{
 
-const temp = document.createElement('tbody');
-
-temp.innerHTML = item;
-
-const row = temp.querySelector('tr');
+const row = createRow(item);
 
 shipmentTable.appendChild(row);
 
@@ -1740,10 +1884,6 @@ const temp = document.createElement('tbody');
 temp.innerHTML = item;
 
 const row = temp.querySelector('tr');
-
-while(row.cells.length > 18){
-row.deleteCell(row.cells.length - 1);
-}
 
 archiveTable.appendChild(row);
 
