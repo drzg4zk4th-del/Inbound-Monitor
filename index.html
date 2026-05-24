@@ -106,6 +106,13 @@ transform:translateX(-220px);
 transition:0.3s;
 }
 
+.floating-toggle{
+position:fixed;
+top:20px;
+left:20px;
+z-index:2000;
+}
+
 .main{
 transition:0.3s;
 }
@@ -311,9 +318,11 @@ margin-left:6px;
 
 <div class="sidebar">
 
-<button class="logo-btn" onclick="toggleSidebar()">
+<button class="logo-btn floating-toggle" onclick="toggleSidebar()">
 ☰
 </button>
+
+<div class="sidebar">
 
 <h2>NAVIGATION</h2>
 
