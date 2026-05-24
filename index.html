@@ -101,6 +101,19 @@ height:100vh;
 overflow:auto;
 }
 
+.sidebar.collapsed{
+transform:translateX(-220px);
+transition:0.3s;
+}
+
+.main{
+transition:0.3s;
+}
+
+.main.expanded{
+margin-left:0;
+}
+
 .page{
 display:none;
 }
@@ -298,7 +311,9 @@ margin-left:6px;
 
 <div class="sidebar">
 
-<button class="logo-btn">☰</button>
+<button class="logo-btn" onclick="toggleSidebar()">
+☰
+</button>
 
 <h2>NAVIGATION</h2>
 
@@ -708,6 +723,20 @@ page.classList.remove('active');
 });
 
 document.getElementById(pageId).classList.add('active');
+
+}
+
+function toggleSidebar(){
+
+const sidebar =
+document.querySelector('.sidebar');
+
+const main =
+document.querySelector('.main');
+
+sidebar.classList.toggle('collapsed');
+
+main.classList.toggle('expanded');
 
 }
 
