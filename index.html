@@ -314,7 +314,7 @@ Archive
 
 <div class="header">
 
-<button onclick="logout()">
+<button type="button" onclick="logout(); return false;">
 Sign Out
 </button>
 
@@ -644,12 +644,18 @@ console.error(error);
 
 function logout(){
 
-auth.signOut()
+firebase.auth().signOut()
 .then(()=>{
+
 console.log("Logged out");
+
+location.reload();
+
 })
 .catch(error=>{
+
 console.error(error);
+
 });
 
 }
