@@ -26,7 +26,6 @@ font-family:Arial,sans-serif;
 background:#020817;
 color:white;
 overflow:hidden;
-display:none;
 }
 
 body::before{
@@ -657,15 +656,11 @@ new firebase.auth.GoogleAuthProvider();
 
 auth.onAuthStateChanged(user => {
 
-if(user){
-
-document.body.style.display = 'block';
+f(user){
 
 console.log("Logged in:", user.email);
 
 }else{
-
-document.body.style.display = 'none';
 
 auth.signInWithPopup(provider)
 .catch(error=>{
