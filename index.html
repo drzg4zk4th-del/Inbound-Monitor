@@ -1072,6 +1072,7 @@ row.innerHTML = `
 <td contenteditable="true">${dispatchWeekInput.value}</td>
 <td contenteditable="true">${palletInput.value}</td>
 <td contenteditable="true">${packsPalletInput.value}</td>
+<td>${Math.max((Number(palletInput.value||0)-Number(packsPalletInput.value||0)),0)}</td>
 <td contenteditable="true">${qtyInput.value}</td>
 
 <td>
