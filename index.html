@@ -15,6 +15,10 @@
 
 <style>
 
+body{
+display:none;
+}
+  
 *{
 margin:0;
 padding:0;
@@ -629,9 +633,13 @@ auth.onAuthStateChanged(user => {
 
 if(user){
 
+document.body.style.display = 'block';
+
 console.log("Logged in:", user.email);
 
 }else{
+
+document.body.style.display = 'none';
 
 auth.signInWithPopup(provider)
 .catch(error=>{
