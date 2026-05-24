@@ -652,18 +652,29 @@ const auth = firebase.auth();
 const provider =
 new firebase.auth.GoogleAuthProvider();
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
 
 if(user){
 
 console.log("Logged in:", user.email);
 
+await loadAll();
+
+refreshDashboard();
+
 }else{
 
-auth.signInWithPopup(provider)
-.catch(error=>{
-console.error(error);
-});
+try{
+
+await auth.signInWithPopup(provider);
+
+}catch(error){
+
+console.error("Login Error:", error);
+
+alert("Google sign in failed");
+
+}
 
 }
 
@@ -1560,14 +1571,6 @@ archiveTable.appendChild(row);
 });
 
 }
-
-refreshDashboard();
-
-}
-
-window.onload = async function(){
-
-await loadAll();
 
 refreshDashboard();
 
