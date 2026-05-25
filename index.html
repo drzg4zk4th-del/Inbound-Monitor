@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Seven Hills Recovery Dashboard</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#0b1220;
+color:white;
+}
+
+.sidebar{
+position:fixed;
+top:0;
+left:0;
+width:250px;
+height:100vh;
+background:#111827;
+padding:20px;
+box-sizing:border-box;
+overflow-y:auto;
+}
+
+.sidebar.hidden{
+display:none;
+}
+
+.sidebar h1{
+font-size:22px;
+margin-top:0;
+}
+
+.sidebar button{
+width:100%;
+padding:12px;
+margin-bottom:10px;
+border:none;
+border-radius:8px;
+background:#1f2937;
+color:white;
+cursor:pointer;
+text-align:left;
+}
+
+.sidebar button:hover{
+background:#2563eb;
+}
+
+.main{
+margin-left:270px;
+padding:20px;
+}
+
+.main.full{
+margin-left:20px;
+}
+
+.section{
+display:none;
+}
+
+.section.active{
+display:block;
+}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+gap:20px;
+}
+
+.card{
+background:#1f2937;
+padding:20px;
+border-radius:12px;
+}
+
+.big-number{
+font-size:34px;
+font-weight:bold;
+}
+
+.small-text{
+color:#9ca3af;
+margin-top:8px;
+}
+
+input, textarea{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+background:#374151;
+color:white;
+box-sizing:border-box;
+}
+
+.action{
+margin-top:10px;
+padding:10px 16px;
+border:none;
+border-radius:8px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+}
+
+.delete-btn{
+background:#dc2626;
+border:none;
+padding:6px 10px;
+border-radius:6px;
+color:white;
+cursor:pointer;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:15px;
+}
+
+th,td{
+border:1px solid #374151;
+padding:10px;
+vertical-align:top;
+}
+
+#menuToggle{
+position:fixed;
+top:10px;
+right:10px;
+z-index:9999;
+}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+</head>
+
+<body>
+
+<button id="menuToggle" class="action" onclick="toggleMenu()">☰ Menu</button>
+
+<div class="sidebar" id="sidebar">
+
+<h1>Seven Hills Recovery</h1>
+
+<button class="action" onclick="logout()">
+Sign Out
+</button>
+
+<button onclick="showSection('dashboard')">Dashboard</button>
+<button onclick="showSection('receipting')">Receipting Tracker</button>
+<button onclick="showSection('sorting')">Sorting Progress</button>
+<button onclick="showSection('finalboxes')">Final Box Count Per Style</button>
+<button onclick="showSection('labour')">Labour Tracker</button>
+<button onclick="showSection('plan')">Recovery Plan</button>
+<button onclick="showSection('supplies')">Supplies Checklist</button>
+
+</div>
+
+<div class="main" id="main">
+
+<div id="dashboard" class="section active">
+
+<h1>Console Recovery Dashboard</h1>
+
+<input type="number" id="totalPalletsInput" placeholder="Update Total Pallets">
+<input type="number" id="totalBoxesInput" placeholder="Update Total Boxes">
+<input type="number" id="transitUnitsInput" placeholder="Update Units In Transit">
+
+<button class="action" onclick="updateTotals()">Update Totals</button>
+
+<div class="cards">
+
+<div class="card">
+<h2>Total Pallets</h2>
+<div class="big-number" id="totalPallets">103</div>
+</div>
+
+<div class="card">
+<h2>Total Boxes</h2>
+<div class="big-number" id="totalBoxes">3000</div>
+</div>
+
+<div class="card">
+<h2>Units In Transit</h2>
+<div class="big-number" id="unitsTransit">0</div>
+</div>
+
+<div class="card">
+<h2>Receipted Pallets</h2>
+<div class="big-number" id="receipted">0</div>
+<div class="small-text" id="receiptedPercent">0%</div>
+</div>
+
+<div class="card">
+<h2>Receipted Boxes</h2>
+<div class="big-number" id="receiptedBoxes">0</div>
+<div class="small-text" id="boxPercent">0%</div>
+</div>
+
+<div class="card">
+<h2>Receipted Units</h2>
+<div class="big-number" id="receiptedUnits">0</div>
+<div class="small-text" id="unitsPercent">0%</div>
+</div>
+
+<div class="card">
+<h2>Rough Sorted</h2>
+<div class="big-number" id="rough">0</div>
+<div class="small-text" id="roughPercent">0%</div>
+</div>
+
+<div class="card">
+<h2>Finished Styles</h2>
+<div class="big-number" id="finishedStyles">0</div>
+</div>
+
+<div class="card">
+<h2>Total Labour Hours</h2>
+<div class="big-number" id="labourTotal">0</div>
+</div>
+
+<div class="card">
+<h2>Pallets Per Hour</h2>
+<div class="big-number" id="palletsPerHour">0</div>
+</div>
+
+<div class="card">
+<h2>Boxes Per Hour</h2>
+<div class="big-number" id="boxesPerHour">0</div>
+</div>
+
+<div class="card">
+<h2>Estimated 8hr Days Remaining</h2>
+<div class="big-number" id="daysRemaining">0</div>
+</div>
+
+</div>
+</div>
+
+<div id="receipting" class="section">
+<h1>Receipting Tracker</h1>
+
+<input type="date" id="receiptDate">
+<input type="number" id="receiptInput" placeholder="Receipted pallets">
+<input type="number" id="boxInput" placeholder="Receipted boxes">
+<input type="number" id="unitsInput" placeholder="Receipted units">
+
+<button class="action" onclick="updateReceipts()">Add Entry</button>
+
+<table id="receiptingTable">
+<tr>
+<th>Date</th>
+<th>Pallets</th>
+<th>Boxes</th>
+<th>Total Units</th>
+<th>Delete</th>
+</tr>
+</table>
+</div>
+
+<div id="sorting" class="section">
+<h1>Sorting Progress</h1>
+
+<input type="date" id="sortingDate">
+<input type="number" id="roughInput" placeholder="Rough sorted pallets">
+
+<button class="action" onclick="updateSorting()">Add Entry</button>
+
+<table id="sortingTable">
+<tr>
+<th>Date</th>
+<th>Pallets</th>
+<th>Delete</th>
+</tr>
+</table>
+</div>
+
+<div id="finalboxes" class="section">
+<h1>Final Box Count Per Style</h1>
+
+<input type="text" id="styleName" placeholder="Style name">
+<input type="number" id="styleBoxes" placeholder="Total boxes">
+
+<button class="action" onclick="addStyle()">Add Style</button>
+
+<table id="styleTable">
+<tr>
+<th>Style</th>
+<th>Boxes</th>
+<th>Delete</th>
+</tr>
+</table>
+</div>
+
+<div id="labour" class="section">
+<h1>Labour Tracker</h1>
+
+<input type="date" id="labourDate">
+<input type="text" id="staffName" placeholder="Staff name">
+<input type="number" id="hoursWorked" placeholder="Hours worked">
+
+<button class="action" onclick="addLabour()">Add Entry</button>
+
+<table id="labourTable">
+<tr>
+<th>Date</th>
+<th>Staff</th>
+<th>Hours</th>
+<th>Delete</th>
+</tr>
+</table>
+</div>
+
+<div id="plan" class="section">
+<h1>Recovery Plan</h1>
+
+<table id="planTable">
+<tr>
+<th>Date</th>
+<th>Plan</th>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 25/05/26</td>
+<td contenteditable="true">48 storage pallets delivered to Seven Hills. <br>Set up supplies in Afternoon for scanning Tuesday.</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 26/05/26</td>
+<td contenteditable="true">30 unreceipted pallets relocated. <br>12+ pallets receipted.</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 27/05/26</td>
+<td contenteditable="true">30 receipted pallets relocated. <br>12+ pallets receipted. Possible 24 pallets if Chris comes.</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 28/05/26</td>
+<td contenteditable="true">Print replen. If accessories small, go directly to Seven Hills.</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 29/05/26</td>
+<td contenteditable="true">12+ pallets receipted.&nbsp;</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Saturday 30/05/26</td>
+<td contenteditable="true">12+ pallets receipted. Possible 24 pallets if second person comes.&nbsp;</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Sunday 31/05/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 01/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 02/06/26</td>
+<td contenteditable="true">Rough Sorting A - Z</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 03/06/26</td>
+<td contenteditable="true">Rough Sorting A - Z</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 04/06/26</td>
+<td contenteditable="true">Rough Sorting A - Z</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 05/06/26</td>
+<td contenteditable="true">Detailed Sorting&nbsp;</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Saturday 06/06/26</td>
+<td contenteditable="true">Detailed Sorting&nbsp;</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Sunday 07/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 08/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 09/06/26</td>
+<td contenteditable="true">Detailed Sorting&nbsp;</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 10/06/26</td>
+<td contenteditable="true">Detailed Sorting&nbsp;</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 11/06/26</td>
+<td contenteditable="true">Detailed Sorting&nbsp;</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 12/06/26</td>
+<td contenteditable="true">Start Relocating Back to Warehouse</td>
+</tr>
+
+<tr>
+<td contenteditable="true">Saturday 13/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Sunday 14/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 15/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 16/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 17/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 18/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 19/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Saturday 20/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Sunday 21/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 22/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 23/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 24/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 25/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 26/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Saturday 27/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Sunday 28/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 29/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 30/06/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 01/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 02/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 03/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Saturday 04/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Sunday 05/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 06/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 07/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 08/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 09/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 10/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Saturday 11/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Sunday 12/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 13/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 14/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 15/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 16/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 17/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Saturday 18/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Sunday 19/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 20/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 21/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 22/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 23/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 24/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Saturday 25/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Sunday 26/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Monday 27/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Tuesday 28/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Wednesday 29/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Thursday 30/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr>
+<td contenteditable="true">Friday 31/07/26</td>
+<td contenteditable="true"></td>
+</tr>
+
+</table>
+</div>
+
+<div id="supplies" class="section">
+
+<h1>Supplies Checklist</h1>
+
+<input type="text" id="supplyInput" placeholder="Add supply item">
+
+<button class="action" onclick="addSupply()">Add Supply Item</button>
+
+<table id="suppliesTable">
+<tr>
+<th>Item</th>
+<th>Ready</th>
+<th>Delete</th>
+</tr>
+<tr>
+    <td>14 Foldable Tables</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>Laptop</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>Laptop Charger</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>2 Scanners</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>Hotspot Dongle</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>Mobile Desk</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>Black Trolley for Second Scanner Station</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>3 Extension Cords</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>Power Board</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>Pallet Jack</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>2 boxes of clear wrap</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>1 box of black wrap</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>box of tape</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>tape gun</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>box of zebra rolls</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr><tr>
+    <td>box of markers</td>
+    <td><input type="checkbox"></td>
+    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+    </tr></tbody></table>
+
+</div>
+
+</div>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD9nPDHQpkPgxeQYfe-JVWemQg6CjbCBYM",
+  authDomain: "seven-hills-dashboard-e973d.firebaseapp.com",
+  projectId: "seven-hills-dashboard-e973d",
+  storageBucket: "seven-hills-dashboard-e973d.firebasestorage.app",
+  messagingSenderId: "1016653351453",
+  appId: "1:1016653351453:web:a2a1f597844adf51ba54f4"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
+const auth = firebase.auth();
+
+const provider =
+new firebase.auth.GoogleAuthProvider();
+
+auth.onAuthStateChanged(async user => {
+
+if(user){
+
+console.log("Logged in:", user.email);
+
+await loadAll();
+
+refreshMetrics();
+
+}else{
+
+try{
+
+await auth.signInWithPopup(provider);
+
+}catch(error){
+
+console.error("Login Error:", error);
+
+alert("Google sign in failed");
+
+}
+
+}
+
+});
+
+let TOTAL_PALLETS = 103;
+let TOTAL_BOXES = 3000;
+let UNITS_TRANSIT = 0;
+
+let receipted = 0;
+let receiptedBoxes = 0;
+let receiptedUnits = 0;
+let rough = 0;
+let finishedStyles = 0;
+let labourTotal = 0;
+
+function showSection(id){
+
+document.querySelectorAll('.section').forEach(section=>{
+section.classList.remove('active');
+});
+
+document.getElementById(id).classList.add('active');
+}
+
+function toggleMenu(){
+
+document.getElementById('sidebar').classList.toggle('hidden');
+document.getElementById('main').classList.toggle('full');
+}
+
+function refreshMetrics(){
+
+// RESET TOTALS
+receipted = 0;
+receiptedBoxes = 0;
+receiptedUnits = 0;
+rough = 0;
+finishedStyles = 0;
+labourTotal = 0;
+
+// RECEIPTING TOTALS
+document.querySelectorAll('#receiptingTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+const cells = row.querySelectorAll('td');
+
+receipted += Number(cells[1].innerText || 0);
+receiptedBoxes += Number(cells[2].innerText || 0);
+receiptedUnits = Number(cells[3].innerText || 0);
+
+});
+
+// SORTING TOTALS
+document.querySelectorAll('#sortingTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+const cells = row.querySelectorAll('td');
+
+rough += Number(cells[1].innerText || 0);
+
+});
+
+// STYLE TOTALS
+document.querySelectorAll('#styleTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+finishedStyles++;
+
+});
+
+// LABOUR TOTALS
+document.querySelectorAll('#labourTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+const cells = row.querySelectorAll('td');
+
+labourTotal += Number(cells[2].innerText || 0);
+
+});
+
+// UPDATE DASHBOARD
+document.getElementById('totalPallets').innerText = TOTAL_PALLETS;
+document.getElementById('totalBoxes').innerText = TOTAL_BOXES;
+document.getElementById('unitsTransit').innerText = UNITS_TRANSIT;
+
+document.getElementById('receipted').innerText = receipted;
+document.getElementById('receiptedBoxes').innerText = receiptedBoxes;
+document.getElementById('receiptedUnits').innerText = receiptedUnits;
+    document.getElementById('unitsPercent').innerText =
+UNITS_TRANSIT > 0
+? ((receiptedUnits / UNITS_TRANSIT) * 100).toFixed(1) + '%'
+: '0%';
+document.getElementById('rough').innerText = rough;
+document.getElementById('finishedStyles').innerText = finishedStyles;
+document.getElementById('labourTotal').innerText = labourTotal;
+
+// PERCENTAGES
+document.getElementById('receiptedPercent').innerText =
+((receipted / TOTAL_PALLETS) * 100).toFixed(1) + '%';
+
+document.getElementById('boxPercent').innerText =
+((receiptedBoxes / TOTAL_BOXES) * 100).toFixed(1) + '%';
+
+document.getElementById('roughPercent').innerText =
+((rough / TOTAL_PALLETS) * 100).toFixed(1) + '%';
+
+// SPEED METRICS
+let palletsPerHour = labourTotal > 0
+? (receipted / labourTotal).toFixed(2)
+: 0;
+
+let boxesPerHour = labourTotal > 0
+? (receiptedBoxes / labourTotal).toFixed(2)
+: 0;
+
+document.getElementById('palletsPerHour').innerText = palletsPerHour;
+document.getElementById('boxesPerHour').innerText = boxesPerHour;
+
+// DAYS REMAINING
+let remainingBoxes = TOTAL_BOXES - receiptedBoxes;
+
+let estimatedDays = boxesPerHour > 0
+? (remainingBoxes / (boxesPerHour * 8)).toFixed(1)
+: 0;
+
+document.getElementById('daysRemaining').innerText = estimatedDays;
+
+}
+
+async function saveAll(){
+
+const data = {
+
+TOTAL_PALLETS,
+TOTAL_BOXES,
+UNITS_TRANSIT,
+receipted,
+receiptedBoxes,
+receiptedUnits,
+rough,
+finishedStyles,
+labourTotal,
+
+receipting: [],
+sorting: [],
+styles: [],
+labour: [],
+supplies: [],
+plan: []
+
+};
+
+document.querySelectorAll('#receiptingTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+const cells=row.querySelectorAll('td');
+
+data.receipting.push({
+date:cells[0].innerText,
+pallets:cells[1].innerText,
+boxes:cells[2].innerText,
+units:cells[3].innerText
+});
+});
+
+document.querySelectorAll('#sortingTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+const cells=row.querySelectorAll('td');
+
+data.sorting.push({
+date:cells[0].innerText,
+pallets:cells[1].innerText
+});
+});
+
+document.querySelectorAll('#styleTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+const cells=row.querySelectorAll('td');
+
+data.styles.push({
+style:cells[0].innerText,
+boxes:cells[1].innerText
+});
+});
+
+document.querySelectorAll('#labourTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+const cells=row.querySelectorAll('td');
+
+data.labour.push({
+date:cells[0].innerText,
+staff:cells[1].innerText,
+hours:cells[2].innerText
+});
+});
+
+document.querySelectorAll('#suppliesTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+const cells=row.querySelectorAll('td');
+
+data.supplies.push({
+item:cells[0].innerText,
+checked:cells[1].querySelector('input').checked
+});
+});
+
+document.querySelectorAll('#planTable tr').forEach((row,index)=>{
+
+if(index===0)return;
+
+const cells=row.querySelectorAll('td');
+
+data.plan.push({
+date:cells[0].innerHTML,
+plan:cells[1].innerHTML
+});
+});
+
+await db.collection("dashboard").doc("main").set(data);
+}
+
+async function loadAll(){
+
+const snapshot = await db.collection("dashboard").doc("main").get();
+
+if(!snapshot.exists)return;
+
+const data = snapshot.data();
+
+TOTAL_PALLETS = data.TOTAL_PALLETS || 103;
+TOTAL_BOXES = data.TOTAL_BOXES || 3000;
+UNITS_TRANSIT = data.UNITS_TRANSIT || 0;
+
+receipted = data.receipted || 0;
+receiptedBoxes = data.receiptedBoxes || 0;
+receiptedUnits = data.receiptedUnits || 0;
+rough = data.rough || 0;
+finishedStyles = data.finishedStyles || 0;
+labourTotal = data.labourTotal || 0;
+
+data.receipting.forEach(item=>{
+
+const row=document.getElementById('receiptingTable').insertRow();
+
+row.innerHTML=`
+<td>${item.date}</td>
+<td>${item.pallets}</td>
+<td>${item.boxes}</td>
+<td>${item.units || 0}</td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+});
+
+data.sorting.forEach(item=>{
+
+const row=document.getElementById('sortingTable').insertRow();
+
+row.innerHTML=`
+<td>${item.date}</td>
+<td>${item.pallets}</td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+});
+
+data.styles.forEach(item=>{
+
+const row=document.getElementById('styleTable').insertRow();
+
+row.innerHTML=`
+<td>${item.style}</td>
+<td>${item.boxes}</td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+});
+
+data.labour.forEach(item=>{
+
+const row=document.getElementById('labourTable').insertRow();
+
+row.innerHTML=`
+<td>${item.date}</td>
+<td>${item.staff}</td>
+<td>${item.hours}</td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+});
+
+data.supplies.forEach(item=>{
+
+const row=document.getElementById('suppliesTable').insertRow();
+
+row.innerHTML=`
+<td>${item.item}</td>
+<td><input type="checkbox" ${item.checked ? 'checked' : ''}></td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+
+row.querySelector('input').addEventListener('change',saveAll);
+});
+
+const planRows=document.querySelectorAll('#planTable tr');
+
+data.plan.forEach((item,index)=>{
+
+if(index+1>=planRows.length)return;
+
+planRows[index+1].cells[0].innerHTML=item.date;
+planRows[index+1].cells[1].innerHTML=item.plan;
+});
+
+refreshMetrics();
+}
+
+function updateTotals(){
+
+TOTAL_PALLETS = Number(document.getElementById('totalPalletsInput').value || TOTAL_PALLETS);
+TOTAL_BOXES = Number(document.getElementById('totalBoxesInput').value || TOTAL_BOXES);
+UNITS_TRANSIT = Number(document.getElementById('transitUnitsInput').value || UNITS_TRANSIT);
+
+refreshMetrics();
+saveAll();
+}
+
+function updateReceipts(){
+
+const date = document.getElementById('receiptDate').value;
+const pallets = Number(document.getElementById('receiptInput').value || 0);
+const boxes = Number(document.getElementById('boxInput').value || 0);
+const unitsAdded = Number(document.getElementById('unitsInput').value || 0);
+
+// FIND LAST TOTAL
+let runningUnits = 0;
+
+const rows = document.querySelectorAll('#receiptingTable tr');
+
+if(rows.length > 1){
+
+const lastRow = rows[rows.length - 1];
+runningUnits = Number(lastRow.cells[3].innerText || 0);
+
+}
+
+// ADD NEW UNITS
+runningUnits += unitsAdded;
+
+const row = document.getElementById('receiptingTable').insertRow();
+
+row.innerHTML = `
+<td>${date}</td>
+<td>${pallets}</td>
+<td>${boxes}</td>
+<td>${runningUnits}</td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+
+refreshMetrics();
+saveAll();
+
+}
+
+function updateSorting(){
+
+const date=document.getElementById('sortingDate').value;
+const pallets=Number(document.getElementById('roughInput').value||0);
+
+rough+=pallets;
+
+const row=document.getElementById('sortingTable').insertRow();
+
+row.innerHTML=`
+<td>${date}</td>
+<td>${pallets}</td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+
+refreshMetrics();
+saveAll();
+}
+
+function addStyle(){
+
+const style=document.getElementById('styleName').value;
+const boxes=document.getElementById('styleBoxes').value;
+
+finishedStyles++;
+
+const row=document.getElementById('styleTable').insertRow();
+
+row.innerHTML=`
+<td>${style}</td>
+<td>${boxes}</td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+
+refreshMetrics();
+saveAll();
+}
+
+function addLabour(){
+
+const date=document.getElementById('labourDate').value;
+const staff=document.getElementById('staffName').value;
+const hours=Number(document.getElementById('hoursWorked').value||0);
+
+labourTotal+=hours;
+
+const row=document.getElementById('labourTable').insertRow();
+
+row.innerHTML=`
+<td>${date}</td>
+<td>${staff}</td>
+<td>${hours}</td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+
+refreshMetrics();
+saveAll();
+}
+
+function addSupply(){
+
+const item=document.getElementById('supplyInput').value;
+
+if(item==='')return;
+
+const row=document.getElementById('suppliesTable').insertRow();
+
+row.innerHTML=`
+<td>${item}</td>
+<td><input type="checkbox"></td>
+<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
+`;
+
+row.querySelector('input').addEventListener('change',saveAll);
+
+document.getElementById('supplyInput').value='';
+
+saveAll();
+}
+
+document.querySelectorAll('#planTable td').forEach(cell=>{
+
+cell.addEventListener('input',saveAll);
+});
+
+window.onload=function(){
+
+refreshMetrics();
+
+}
+
+function logout(){
+
+firebase.auth().signOut()
+.then(()=>{
+
+console.log("Logged out");
+
+location.reload();
+
+})
+.catch(error=>{
+
+console.error(error);
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
