@@ -1,3 +1,114 @@
+
+
+
+
+
+
+
+
+
+index(4).html
+File
+can i make this visible to public with the authication stuff - they can see but not edit
+
+
+index (1)(1).html
+File
+did i break this dashboard with this rule as it not loading data 
+
+I’ve updated the Seven Hills dashboard with:
+
+Public guest viewing
+
+Manual Google Sign In
+
+Sign Out button
+
+Viewer mode restrictions
+
+Edit access only for authenticated users
+
+Guest users cannot edit/save
+
+Download the updated Seven Hills dashboard 
+
+
+
+
+
+index (2)(1).html
+File
+can you update the inbound dashboard as well and also will this need a rule change as well
+
+try again
+
+I’ve updated the inbound dashboard with:
+
+Public guest viewing
+
+Manual Sign In button
+
+Viewer mode restrictions
+
+Edit access only after login
+
+Guest users cannot edit/save
+
+And yes — this dashboard still uses:
+
+db.collection("dashboard").doc("main")
+
+
+So your existing Firestore rule for /dashboard/{document=**} already covers it.
+No additional rule change is needed.
+
+Download the updated inbound dashboard 
+
+
+
+
+
+Pasted text(20).txt
+Document
+ok can you make this dashboard public facing but only editable by certain emails 
+
+
+I’ve updated the shipment planner dashboard with:
+
+Public guest viewing
+
+Manual Google Sign In
+
+Viewer mode restrictions
+
+Edit access only after login
+
+Guest users cannot edit/save
+
+This dashboard uses:
+
+db.collection('planner').doc('main')
+
+
+So you will also need to add this Firestore rule:
+
+match /planner/{document=**} {
+
+  allow read: if true;
+
+  allow write: if
+    request.auth != null
+    &&
+    request.auth.token.email in [
+      "greenupmarco@gmail.com",
+      "billiniretailwarehouse@gmail.com"
+    ];
+
+}
+You can add that underneath your existing dashboard rules.
+
+Download the updated shipment planner dashboard 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -312,6 +423,23 @@ min-width:100%;
 margin-left:6px;
 }
 
+
+
+.viewer-mode .add-btn,
+.viewer-mode .delete-btn,
+.viewer-mode [contenteditable="true"]{
+pointer-events:none;
+opacity:0.6;
+}
+
+.viewer-mode input,
+.viewer-mode textarea,
+.viewer-mode select{
+pointer-events:none;
+opacity:0.7;
+}
+
+
 </style>
 </head>
 
@@ -340,6 +468,10 @@ Archive
 <div class="main">
 
 <div class="header">
+
+<button type="button" onclick="login(); return false;">
+Sign In
+</button>
 
 <button type="button" onclick="logout(); return false;">
 Sign Out
@@ -658,11 +790,23 @@ if(user){
 
 console.log("Logged in:", user.email);
 
+document.body.classList.remove("viewer-mode");
+
+}else{
+
+console.log("Viewing as guest");
+
+document.body.classList.add("viewer-mode");
+
+}
+
 await loadAll();
 
 refreshDashboard();
 
-}else{
+});
+
+async function login(){
 
 try{
 
@@ -670,15 +814,13 @@ await auth.signInWithPopup(provider);
 
 }catch(error){
 
-console.error("Login Error:", error);
+console.error(error);
 
-alert("Google sign in failed");
-
-}
+alert("Login failed");
 
 }
 
-});
+}
 
 function logout(){
 
@@ -1796,3 +1938,5 @@ main.classList.toggle('full');
 
 </body>
 </html>
+
+
