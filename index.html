@@ -1,779 +1,632 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Seven Hills Recovery Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Incoming Shipment Planner</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-body{
+
+*{
 margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
 font-family:Arial,sans-serif;
-background:#0b1220;
+background:#020817;
 color:white;
+overflow:hidden;
+}
+
+body::before{
+content:'';
+position:fixed;
+inset:0;
+background:
+radial-gradient(circle at top left,#1d4ed833,transparent 30%),
+radial-gradient(circle at bottom right,#06b6d422,transparent 30%);
+pointer-events:none;
 }
 
 .sidebar{
 position:fixed;
-top:0;
 left:0;
-width:250px;
+top:0;
+width:220px;
 height:100vh;
-background:#111827;
+background:#081120;
+border-right:1px solid #1e293b;
 padding:20px;
-box-sizing:border-box;
-overflow-y:auto;
+z-index:1000;
+transition:left 0.3s ease;
 }
 
-.sidebar.hidden{
-display:none;
+.main{
+margin-left:220px;
+padding:20px;
+height:100vh;
+overflow:auto;
+transition:margin-left 0.3s ease;
 }
 
-.sidebar h1{
-font-size:22px;
-margin-top:0;
-}
-
-.sidebar button{
-width:100%;
-padding:12px;
-margin-bottom:10px;
+.logo-btn{
+width:42px;
+height:42px;
+background:#2563eb;
 border:none;
-border-radius:8px;
-background:#1f2937;
+border-radius:12px;
+color:white;
+font-size:18px;
+margin-bottom:30px;
+cursor:pointer;
+}
+
+.sidebar h2{
+font-size:14px;
+margin-bottom:20px;
+color:#60a5fa;
+}
+
+.sidebar button:not(.floating-toggle){
+width:100%;
+padding:14px;
+margin-bottom:12px;
+background:#0f172a;
+border:1px solid #1e293b;
+border-radius:14px;
 color:white;
 cursor:pointer;
+font-size:15px;
 text-align:left;
+transition:0.2s;
 }
 
 .sidebar button:hover{
 background:#2563eb;
 }
 
-.main{
-margin-left:270px;
-padding:20px;
+.sidebar button i{
+margin-right:10px;
+}
+
+.sidebar.hidden{
+left:-220px;
 }
 
 .main.full{
-margin-left:20px;
+margin-left:0;
 }
 
-.section{
+.floating-toggle{
+position:fixed;
+top:20px;
+left:20px;
+z-index:2000;
+width:42px !important;
+height:42px;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:0 !important;
+margin-bottom:0 !important;
+box-shadow:0 0 15px rgba(0,0,0,0.4);
+}
+
+.page{
 display:none;
 }
 
-.section.active{
+.page.active{
 display:block;
 }
 
-.cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-gap:20px;
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:24px;
 }
 
-.card{
-background:#1f2937;
-padding:20px;
-border-radius:12px;
+.header h1{
+font-size:42px;
+font-weight:800;
 }
 
-.big-number{
-font-size:34px;
+#financialWeekBox{
+background:#0f172a;
+padding:14px 20px;
+border-radius:14px;
+border:1px solid #1e293b;
 font-weight:bold;
 }
 
-.small-text{
-color:#9ca3af;
-margin-top:8px;
+.dashboard-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:18px;
+margin-bottom:22px;
 }
 
-input, textarea{
-width:100%;
-padding:10px;
+.card{
+background:linear-gradient(145deg,#0f172a,#071226);
+border:1px solid #1e293b;
+border-radius:22px;
+padding:22px;
+position:relative;
+overflow:hidden;
+box-shadow:0 0 20px rgba(0,0,0,0.35);
+}
+
+.shipment-master-card{
+grid-column:span 3;
+}
+
+.metric-icon{
+font-size:26px;
+margin-bottom:16px;
+}
+
+.green{color:#4ade80;}
+.blue{color:#38bdf8;}
+.purple{color:#c084fc;}
+.yellow{color:#facc15;}
+.orange{color:#fb923c;}
+.red{color:#f87171;}
+.virtual-pink{
+color:#e8c3ae;
+}
+
+.card h3{
+font-size:15px;
+margin-bottom:10px;
+}
+
+.big-number{
+font-size:42px;
+font-weight:800;
+margin-bottom:6px;
+}
+
+.metric-sub{
+font-size:13px;
+color:#94a3b8;
+}
+
+.capacity-danger{
+border:2px solid #ef4444 !important;
+background:#3b0a0a !important;
+}
+
+.capacity-inputs{
+display:flex;
+flex-direction:column;
+gap:12px;
+margin-top:14px;
+}
+
+.percent-text{
+font-size:26px;
+font-weight:800;
 margin-top:10px;
-border:none;
-border-radius:8px;
-background:#374151;
+}
+
+input,select,textarea,button{
+padding:12px;
+border-radius:12px;
+border:1px solid #334155;
+background:#0f172a;
 color:white;
-box-sizing:border-box;
+font-size:14px;
 }
 
-.action{
-margin-top:10px;
-padding:10px 16px;
-border:none;
-border-radius:8px;
+.form-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:12px;
+margin-bottom:20px;
+}
+
+.add-btn{
 background:#2563eb;
-color:white;
 cursor:pointer;
+font-weight:bold;
+margin-bottom:20px;
 }
 
-.delete-btn{
-background:#dc2626;
-border:none;
-padding:6px 10px;
-border-radius:6px;
-color:white;
-cursor:pointer;
+.table-wrap{
+overflow:auto;
+max-height:60vh;
+border-radius:18px;
+border:1px solid #1e293b;
+margin-top:20px;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:15px;
+min-width:3200px;
+background:#071226;
 }
 
 th,td{
-border:1px solid #374151;
-padding:10px;
-vertical-align:top;
+padding:14px;
+border-bottom:1px solid #1e293b;
+text-align:left;
+white-space:nowrap;
 }
 
-#menuToggle{
-position:fixed;
-top:10px;
-right:10px;
-z-index:9999;
+th{
+position:sticky;
+top:0;
+background:#0f172a;
+z-index:5;
 }
 
-
-.viewer-mode .action,
-.viewer-mode .delete-btn,
-.viewer-mode [contenteditable="true"]{
-pointer-events:none;
-opacity:0.6;
+tr:hover{
+background:#13203a;
 }
 
-.viewer-mode input,
-.viewer-mode textarea,
-.viewer-mode select{
-pointer-events:none;
-opacity:0.7;
+td[contenteditable="true"]:focus{
+background:#1e293b;
+outline:none;
 }
 
+.premium-select{
+width:100%;
+}
+
+.urgent-row{
+background:#831843 !important;
+}
+
+.warning-row{
+background:#713f12 !important;
+}
+
+.delete-btn{
+background:#dc2626;
+cursor:pointer;
+}
+
+.restore-btn{
+background:#16a34a;
+cursor:pointer;
+}
+
+.shipment-group-table{
+width:100%;
+min-width:100%;
+}
+
+.shipment-group-table button{
+margin-left:6px;
+}
 
 </style>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 </head>
 
 <body>
 
-<button id="menuToggle" class="action" onclick="toggleMenu()">☰ Menu</button>
+<div class="sidebar">
 
-<div class="sidebar" id="sidebar">
-
-<h1>Seven Hills Recovery</h1>
-
-<button class="action" onclick="login()">
-Sign In
+<button class="logo-btn floating-toggle" onclick="toggleSidebar()">
+☰
 </button>
 
-<button class="action" onclick="logout()">
+<h2>NAVIGATION</h2>
+
+<button onclick="showPage('mainPage')">
+<i class="fa-solid fa-box"></i>
+Main Shipments
+</button>
+
+<button onclick="showPage('archivePage')">
+<i class="fa-solid fa-box-archive"></i>
+Archive
+</button>
+
+</div>
+
+<div class="main">
+
+<div class="header">
+
+<button type="button" onclick="logout(); return false;">
 Sign Out
 </button>
 
-<button onclick="showSection('dashboard')">Dashboard</button>
-<button onclick="showSection('receipting')">Receipting Tracker</button>
-<button onclick="showSection('sorting')">Sorting Progress</button>
-<button onclick="showSection('finalboxes')">Final Box Count Per Style</button>
-<button onclick="showSection('labour')">Labour Tracker</button>
-<button onclick="showSection('plan')">Recovery Plan</button>
-<button onclick="showSection('supplies')">Supplies Checklist</button>
+<h1>Advanced Incoming Shipment Planner</h1>
+
+<div id="financialWeekBox">
+FY Week
+</div>
 
 </div>
 
-<div class="main" id="main">
+<div id="mainPage" class="page active">
 
-<div id="dashboard" class="section active">
-
-<h1>Console Recovery Dashboard</h1>
-
-<input type="number" id="totalPalletsInput" placeholder="Update Total Pallets">
-<input type="number" id="totalBoxesInput" placeholder="Update Total Boxes">
-<input type="number" id="transitUnitsInput" placeholder="Update Units In Transit">
-
-<button class="action" onclick="updateTotals()">Update Totals</button>
-
-<div class="cards">
+<div class="dashboard-grid">
 
 <div class="card">
-<h2>Total Pallets</h2>
-<div class="big-number" id="totalPallets">103</div>
+<div class="metric-icon green"><i class="fa-solid fa-clipboard"></i></div>
+<h3>Total Purchase Orders</h3>
+<div class="big-number" id="totalPOs">0</div>
+<div class="metric-sub">All active shipments</div>
 </div>
 
 <div class="card">
-<h2>Total Boxes</h2>
-<div class="big-number" id="totalBoxes">3000</div>
+<div class="metric-icon blue"><i class="fa-solid fa-circle-check"></i></div>
+<h3>Arrived Purchase Orders</h3>
+<div class="big-number" id="arrivedPOs">0</div>
+<div class="metric-sub">Archived shipments</div>
 </div>
 
 <div class="card">
-<h2>Units In Transit</h2>
-<div class="big-number" id="unitsTransit">0</div>
+<div class="metric-icon purple"><i class="fa-solid fa-boxes-stacked"></i></div>
+<h3>Total Estimated Pallets</h3>
+<div class="big-number" id="totalPallets">0</div>
+<div class="metric-sub">All active shipments</div>
 </div>
 
 <div class="card">
-<h2>Receipted Pallets</h2>
-<div class="big-number" id="receipted">0</div>
-<div class="small-text" id="receiptedPercent">0%</div>
+<div class="metric-icon yellow"><i class="fa-solid fa-cube"></i></div>
+<h3>Total Quantity Overall</h3>
+<div class="big-number" id="totalQty">0</div>
+<div class="metric-sub">All active shipments</div>
 </div>
 
 <div class="card">
-<h2>Receipted Boxes</h2>
-<div class="big-number" id="receiptedBoxes">0</div>
-<div class="small-text" id="boxPercent">0%</div>
+<div class="metric-icon blue"><i class="fa-solid fa-truck-fast"></i></div>
+<h3>Pallets Next 7 Days</h3>
+<div class="big-number" id="urgentPallets">0</div>
+<div class="metric-sub">Urgent incoming pallets</div>
 </div>
 
 <div class="card">
-<h2>Receipted Units</h2>
-<div class="big-number" id="receiptedUnits">0</div>
-<div class="small-text" id="unitsPercent">0%</div>
+<div class="metric-icon orange"><i class="fa-solid fa-location-dot"></i></div>
+<h3>Unallocated Rows</h3>
+<div class="big-number" id="unallocatedRows">0</div>
+<div class="metric-sub">Missing storage locations</div>
 </div>
 
 <div class="card">
-<h2>Rough Sorted</h2>
-<div class="big-number" id="rough">0</div>
-<div class="small-text" id="roughPercent">0%</div>
+<div class="metric-icon red"><i class="fa-solid fa-calendar-week"></i></div>
+<h3>Dispatch Weeks Active</h3>
+<div class="big-number" id="weekTotals">0</div>
+<div class="metric-sub">Unique active weeks</div>
 </div>
 
-<div class="card">
-<h2>Finished Styles</h2>
-<div class="big-number" id="finishedStyles">0</div>
+<div class="card" id="virtualCard">
+
+<div class="metric-icon green">
+<i class="fa-solid fa-warehouse"></i>
 </div>
 
-<div class="card">
-<h2>Total Labour Hours</h2>
-<div class="big-number" id="labourTotal">0</div>
+<h3>Virtual Warehouse Capacity</h3>
+
+<div class="capacity-inputs">
+
+<div>
+<div class="metric-sub">Current Usage</div>
+<input type="number" id="virtualTaken" value="0" oninput="refreshDashboard();saveAll()">
 </div>
 
-<div class="card">
-<h2>Pallets Per Hour</h2>
-<div class="big-number" id="palletsPerHour">0</div>
-</div>
-
-<div class="card">
-<h2>Boxes Per Hour</h2>
-<div class="big-number" id="boxesPerHour">0</div>
-</div>
-
-<div class="card">
-<h2>Estimated 8hr Days Remaining</h2>
-<div class="big-number" id="daysRemaining">0</div>
+<div>
+<div class="metric-sub">Total Capacity</div>
+<input type="number" id="virtualCapacity" value="1200" oninput="refreshDashboard();saveAll()">
 </div>
 
 </div>
+
+<div class="big-number" id="virtualUsage">0 / 1200</div>
+
+<div class="percent-text green" id="virtualPercent">0%</div>
 </div>
 
-<div id="receipting" class="section">
-<h1>Receipting Tracker</h1>
+<div class="card" id="sevenHillsCard">
 
-<input type="date" id="receiptDate">
-<input type="number" id="receiptInput" placeholder="Receipted pallets">
-<input type="number" id="boxInput" placeholder="Receipted boxes">
-<input type="number" id="unitsInput" placeholder="Receipted units">
-
-<button class="action" onclick="updateReceipts()">Add Entry</button>
-
-<table id="receiptingTable">
-<tr>
-<th>Date</th>
-<th>Pallets</th>
-<th>Boxes</th>
-<th>Total Units</th>
-<th>Delete</th>
-</tr>
-</table>
+<div class="metric-icon green">
+<i class="fa-solid fa-warehouse"></i>
 </div>
 
-<div id="sorting" class="section">
-<h1>Sorting Progress</h1>
+<h3>Seven Hills Warehouse Capacity</h3>
 
-<input type="date" id="sortingDate">
-<input type="number" id="roughInput" placeholder="Rough sorted pallets">
+<div class="capacity-inputs">
 
-<button class="action" onclick="updateSorting()">Add Entry</button>
-
-<table id="sortingTable">
-<tr>
-<th>Date</th>
-<th>Pallets</th>
-<th>Delete</th>
-</tr>
-</table>
+<div>
+<div class="metric-sub">Current Usage</div>
+<input type="number" id="sevenHillsTaken" value="0" oninput="refreshDashboard();saveAll()">
 </div>
 
-<div id="finalboxes" class="section">
-<h1>Final Box Count Per Style</h1>
-
-<input type="text" id="styleName" placeholder="Style name">
-<input type="number" id="styleBoxes" placeholder="Total boxes">
-
-<button class="action" onclick="addStyle()">Add Style</button>
-
-<table id="styleTable">
-<tr>
-<th>Style</th>
-<th>Boxes</th>
-<th>Delete</th>
-</tr>
-</table>
+<div>
+<div class="metric-sub">Total Capacity</div>
+<input type="number" id="sevenHillsCapacity" value="1400" oninput="refreshDashboard();saveAll()">
 </div>
 
-<div id="labour" class="section">
-<h1>Labour Tracker</h1>
-
-<input type="date" id="labourDate">
-<input type="text" id="staffName" placeholder="Staff name">
-<input type="number" id="hoursWorked" placeholder="Hours worked">
-
-<button class="action" onclick="addLabour()">Add Entry</button>
-
-<table id="labourTable">
-<tr>
-<th>Date</th>
-<th>Staff</th>
-<th>Hours</th>
-<th>Delete</th>
-</tr>
-</table>
 </div>
 
-<div id="plan" class="section">
-<h1>Recovery Plan</h1>
+<div class="big-number" id="sevenHillsUsage">0 / 1400</div>
 
-<table id="planTable">
-<tr>
-<th>Date</th>
-<th>Plan</th>
-</tr>
-
-<tr>
-<td contenteditable="true">Monday 25/05/26</td>
-<td contenteditable="true">48 storage pallets delivered to Seven Hills. <br>Set up supplies in Afternoon for scanning Tuesday.</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Tuesday 26/05/26</td>
-<td contenteditable="true">30 unreceipted pallets relocated. <br>12+ pallets receipted.</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Wednesday 27/05/26</td>
-<td contenteditable="true">30 receipted pallets relocated. <br>12+ pallets receipted. Possible 24 pallets if Chris comes.</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Thursday 28/05/26</td>
-<td contenteditable="true">Print replen. If accessories small, go directly to Seven Hills.</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Friday 29/05/26</td>
-<td contenteditable="true">12+ pallets receipted.&nbsp;</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Saturday 30/05/26</td>
-<td contenteditable="true">12+ pallets receipted. Possible 24 pallets if second person comes.&nbsp;</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Sunday 31/05/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Monday 01/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Tuesday 02/06/26</td>
-<td contenteditable="true">Rough Sorting A - Z</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Wednesday 03/06/26</td>
-<td contenteditable="true">Rough Sorting A - Z</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Thursday 04/06/26</td>
-<td contenteditable="true">Rough Sorting A - Z</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Friday 05/06/26</td>
-<td contenteditable="true">Detailed Sorting&nbsp;</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Saturday 06/06/26</td>
-<td contenteditable="true">Detailed Sorting&nbsp;</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Sunday 07/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Monday 08/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Tuesday 09/06/26</td>
-<td contenteditable="true">Detailed Sorting&nbsp;</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Wednesday 10/06/26</td>
-<td contenteditable="true">Detailed Sorting&nbsp;</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Thursday 11/06/26</td>
-<td contenteditable="true">Detailed Sorting&nbsp;</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Friday 12/06/26</td>
-<td contenteditable="true">Start Relocating Back to Warehouse</td>
-</tr>
-
-<tr>
-<td contenteditable="true">Saturday 13/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Sunday 14/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Monday 15/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Tuesday 16/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Wednesday 17/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Thursday 18/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Friday 19/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Saturday 20/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Sunday 21/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Monday 22/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Tuesday 23/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Wednesday 24/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Thursday 25/06/26</td>
-<td contenteditable="true"></td>
-</tr>
+<div class="percent-text green" id="sevenPercent">0%</div>
 
-<tr>
-<td contenteditable="true">Friday 26/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Saturday 27/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Sunday 28/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Monday 29/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Tuesday 30/06/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Wednesday 01/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Thursday 02/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Friday 03/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Saturday 04/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Sunday 05/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Monday 06/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Tuesday 07/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Wednesday 08/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Thursday 09/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Friday 10/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Saturday 11/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Sunday 12/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Monday 13/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Tuesday 14/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Wednesday 15/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Thursday 16/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Friday 17/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Saturday 18/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Sunday 19/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Monday 20/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Tuesday 21/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Wednesday 22/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Thursday 23/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Friday 24/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Saturday 25/07/26</td>
-<td contenteditable="true"></td>
-</tr>
-
-<tr>
-<td contenteditable="true">Sunday 26/07/26</td>
-<td contenteditable="true"></td>
-</tr>
+</div>
 
-<tr>
-<td contenteditable="true">Monday 27/07/26</td>
-<td contenteditable="true"></td>
-</tr>
+<div class="card shipment-master-card">
 
-<tr>
-<td contenteditable="true">Tuesday 28/07/26</td>
-<td contenteditable="true"></td>
-</tr>
+<div class="metric-icon blue">
+<i class="fa-solid fa-layer-group"></i>
+</div>
 
-<tr>
-<td contenteditable="true">Wednesday 29/07/26</td>
-<td contenteditable="true"></td>
-</tr>
+<h3>Shipment Overview</h3>
 
-<tr>
-<td contenteditable="true">Thursday 30/07/26</td>
-<td contenteditable="true"></td>
-</tr>
+<table class="shipment-group-table" id="shipmentOverviewTable">
 
 <tr>
-<td contenteditable="true">Friday 31/07/26</td>
-<td contenteditable="true"></td>
+<th onclick="sortTable(this)" style="cursor:pointer;">Shipment ↕</th>
+<th>Rows</th>
+<th>Total Pallets</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">ETA ↕</th>
+<th>Bulk ETA Update</th>
+<th>Bulk Arrive</th>
 </tr>
 
 </table>
+
 </div>
 
-<div id="supplies" class="section">
+</div>
 
-<h1>Supplies Checklist</h1>
+<div class="form-grid">
 
-<input type="text" id="supplyInput" placeholder="Add supply item">
+<input id="shipmentInput" placeholder="Shipment">
+<input id="poInput" placeholder="PO">
+<input id="skuInput" placeholder="SKU">
+<input id="styleInput" placeholder="Style">
+<input id="colourInput" placeholder="Colour">
+<input id="etaInput" type="date">
 
-<button class="action" onclick="addSupply()">Add Supply Item</button>
+<select id="dispatchWeekInput"></select>
 
-<table id="suppliesTable">
+<input id="palletInput" type="number" placeholder="Loose Pallets">
+<input id="packsPalletInput" type="number" placeholder="Packs Pallets">
+<input id="qtyInput" type="number" placeholder="Quantity">
+
+<select id="warehouseInput">
+<option>Seven Hills Warehouse</option>
+<option>Virtual Warehouse</option>
+</select>
+
+<select id="priorityInput">
+<option>Normal</option>
+<option>Urgent Despatch</option>
+<option>Pure Excess Only</option>
+<option>Arrived Early</option>
+</select>
+
+<input id="locationInput" placeholder="Storage Location">
+<input id="currentLocationInput" placeholder="Current Location">
+
+<select id="actionInput">
+<option>No Action Required</option>
+<option>New Shelf Required</option>
+<option>Relocation Inprogress</option>
+<option>Additional Colour Space Required</option>
+</select>
+
+<textarea id="notesInput" placeholder="Notes"></textarea>
+
+</div>
+
+<button class="add-btn" onclick="addShipment()">
+<i class="fa-solid fa-plus"></i>
+Add Shipment
+</button>
+
+
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+
+<input
+id="searchInput"
+placeholder="Search shipments..."
+oninput="applyFilters()"
+style="max-width:280px;"
+>
+
+<select id="priorityFilter" onchange="applyFilters()">
+<option value="">All Priorities</option>
+<option>Urgent Despatch</option>
+<option>Pure Excess Only</option>
+<option>Arrived Early</option>
+<option>Normal</option>
+</select>
+
+<select id="warningFilter" onchange="applyFilters()">
+<option value="">All Rows</option>
+<option value="missing">Missing Current Location</option>
+</select>
+
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+<div class="metric-icon">📤</div>
+<h3>Projected PACKS Outbound Pallets By Dispatch Week</h3>
+<div id="dispatchProjectionContainer"></div>
+</div>
+
+<div class="table-wrap">
+
+<table id="shipmentTable">
+
 <tr>
-<th>Item</th>
-<th>Ready</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Shipment ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">PO ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">SKU ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Style ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Colour ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">ETA ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Dispatch Week ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Pallets ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Packs Pallets ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Warehouse ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Priority ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Storage Location ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Current Location ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Action ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Status ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Notes ↕</th>
 <th>Delete</th>
 </tr>
+
+</table>
+
+</div>
+
+</div>
+
+<div id="archivePage" class="page">
+
+<h1 style="margin-bottom:20px;">Archive</h1>
+
+<div class="table-wrap">
+
+<table id="archiveTable">
+
 <tr>
-    <td>14 Foldable Tables</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>Laptop</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>Laptop Charger</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>2 Scanners</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>Hotspot Dongle</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>Mobile Desk</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>Black Trolley for Second Scanner Station</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>3 Extension Cords</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>Power Board</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>Pallet Jack</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>2 boxes of clear wrap</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>1 box of black wrap</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>box of tape</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>tape gun</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>box of zebra rolls</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr><tr>
-    <td>box of markers</td>
-    <td><input type="checkbox"></td>
-    <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
-    </tr></tbody></table>
+<th onclick="sortTable(this)" style="cursor:pointer;">Shipment ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">PO ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">SKU ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Style ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Colour ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">ETA ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Dispatch Week ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Pallets ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Packs Pallets ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Warehouse ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Priority ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Storage Location ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Current Location ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Action ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Status ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Notes ↕</th>
+<th>Restore</th>
+<th>Delete</th>
+</tr>
+
+</table>
+
+</div>
 
 </div>
 
@@ -782,12 +635,12 @@ Sign Out
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD9nPDHQpkPgxeQYfe-JVWemQg6CjbCBYM",
-  authDomain: "seven-hills-dashboard-e973d.firebaseapp.com",
-  projectId: "seven-hills-dashboard-e973d",
-  storageBucket: "seven-hills-dashboard-e973d.firebasestorage.app",
-  messagingSenderId: "1016653351453",
-  appId: "1:1016653351453:web:a2a1f597844adf51ba54f4"
+apiKey: "AIzaSyD9nPDHQpkPgxeQYfe-JVWemQg6CjbCBYM",
+authDomain: "seven-hills-dashboard-e973d.firebaseapp.com",
+projectId: "seven-hills-dashboard-e973d",
+storageBucket: "seven-hills-dashboard-e973d.firebasestorage.app",
+messagingSenderId: "1016653351453",
+appId: "1:1016653351453:web:a2a1f597844adf51ba54f4"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -795,8 +648,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const auth = firebase.auth();
-
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
 const provider =
 new firebase.auth.GoogleAuthProvider();
@@ -807,23 +658,11 @@ if(user){
 
 console.log("Logged in:", user.email);
 
-document.body.classList.remove("viewer-mode");
-
-}else{
-
-console.log("Viewing as guest");
-
-document.body.classList.add("viewer-mode");
-
-}
-
 await loadAll();
 
-refreshMetrics();
+refreshDashboard();
 
-});
-
-async function login(){
+}else{
 
 try{
 
@@ -831,466 +670,14 @@ await auth.signInWithPopup(provider);
 
 }catch(error){
 
-console.error(error);
+console.error("Login Error:", error);
 
-alert("Login failed");
-
-}
+alert("Google sign in failed");
 
 }
 
-let TOTAL_PALLETS = 103;
-let TOTAL_BOXES = 3000;
-let UNITS_TRANSIT = 0;
-
-let receipted = 0;
-let receiptedBoxes = 0;
-let receiptedUnits = 0;
-let rough = 0;
-let finishedStyles = 0;
-let labourTotal = 0;
-
-function showSection(id){
-
-document.querySelectorAll('.section').forEach(section=>{
-section.classList.remove('active');
-});
-
-document.getElementById(id).classList.add('active');
 }
 
-function toggleMenu(){
-
-document.getElementById('sidebar').classList.toggle('hidden');
-document.getElementById('main').classList.toggle('full');
-}
-
-function refreshMetrics(){
-
-// RESET TOTALS
-receipted = 0;
-receiptedBoxes = 0;
-receiptedUnits = 0;
-rough = 0;
-finishedStyles = 0;
-labourTotal = 0;
-
-// RECEIPTING TOTALS
-document.querySelectorAll('#receiptingTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells = row.querySelectorAll('td');
-
-receipted += Number(cells[1].innerText || 0);
-receiptedBoxes += Number(cells[2].innerText || 0);
-receiptedUnits = Number(cells[3].innerText || 0);
-
-});
-
-// SORTING TOTALS
-document.querySelectorAll('#sortingTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells = row.querySelectorAll('td');
-
-rough += Number(cells[1].innerText || 0);
-
-});
-
-// STYLE TOTALS
-document.querySelectorAll('#styleTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-finishedStyles++;
-
-});
-
-// LABOUR TOTALS
-document.querySelectorAll('#labourTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells = row.querySelectorAll('td');
-
-labourTotal += Number(cells[2].innerText || 0);
-
-});
-
-// UPDATE DASHBOARD
-document.getElementById('totalPallets').innerText = TOTAL_PALLETS;
-document.getElementById('totalBoxes').innerText = TOTAL_BOXES;
-document.getElementById('unitsTransit').innerText = UNITS_TRANSIT;
-
-document.getElementById('receipted').innerText = receipted;
-document.getElementById('receiptedBoxes').innerText = receiptedBoxes;
-document.getElementById('receiptedUnits').innerText = receiptedUnits;
-    document.getElementById('unitsPercent').innerText =
-UNITS_TRANSIT > 0
-? ((receiptedUnits / UNITS_TRANSIT) * 100).toFixed(1) + '%'
-: '0%';
-document.getElementById('rough').innerText = rough;
-document.getElementById('finishedStyles').innerText = finishedStyles;
-document.getElementById('labourTotal').innerText = labourTotal;
-
-// PERCENTAGES
-document.getElementById('receiptedPercent').innerText =
-((receipted / TOTAL_PALLETS) * 100).toFixed(1) + '%';
-
-document.getElementById('boxPercent').innerText =
-((receiptedBoxes / TOTAL_BOXES) * 100).toFixed(1) + '%';
-
-document.getElementById('roughPercent').innerText =
-((rough / TOTAL_PALLETS) * 100).toFixed(1) + '%';
-
-// SPEED METRICS
-let palletsPerHour = labourTotal > 0
-? (receipted / labourTotal).toFixed(2)
-: 0;
-
-let boxesPerHour = labourTotal > 0
-? (receiptedBoxes / labourTotal).toFixed(2)
-: 0;
-
-document.getElementById('palletsPerHour').innerText = palletsPerHour;
-document.getElementById('boxesPerHour').innerText = boxesPerHour;
-
-// DAYS REMAINING
-let remainingBoxes = TOTAL_BOXES - receiptedBoxes;
-
-let estimatedDays = boxesPerHour > 0
-? (remainingBoxes / (boxesPerHour * 8)).toFixed(1)
-: 0;
-
-document.getElementById('daysRemaining').innerText = estimatedDays;
-
-}
-
-async function saveAll(){
-
-const data = {
-
-TOTAL_PALLETS,
-TOTAL_BOXES,
-UNITS_TRANSIT,
-receipted,
-receiptedBoxes,
-receiptedUnits,
-rough,
-finishedStyles,
-labourTotal,
-
-receipting: [],
-sorting: [],
-styles: [],
-labour: [],
-supplies: [],
-plan: []
-
-};
-
-document.querySelectorAll('#receiptingTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells=row.querySelectorAll('td');
-
-data.receipting.push({
-date:cells[0].innerText,
-pallets:cells[1].innerText,
-boxes:cells[2].innerText,
-units:cells[3].innerText
-});
-});
-
-document.querySelectorAll('#sortingTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells=row.querySelectorAll('td');
-
-data.sorting.push({
-date:cells[0].innerText,
-pallets:cells[1].innerText
-});
-});
-
-document.querySelectorAll('#styleTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells=row.querySelectorAll('td');
-
-data.styles.push({
-style:cells[0].innerText,
-boxes:cells[1].innerText
-});
-});
-
-document.querySelectorAll('#labourTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells=row.querySelectorAll('td');
-
-data.labour.push({
-date:cells[0].innerText,
-staff:cells[1].innerText,
-hours:cells[2].innerText
-});
-});
-
-document.querySelectorAll('#suppliesTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells=row.querySelectorAll('td');
-
-data.supplies.push({
-item:cells[0].innerText,
-checked:cells[1].querySelector('input').checked
-});
-});
-
-document.querySelectorAll('#planTable tr').forEach((row,index)=>{
-
-if(index===0)return;
-
-const cells=row.querySelectorAll('td');
-
-data.plan.push({
-date:cells[0].innerHTML,
-plan:cells[1].innerHTML
-});
-});
-
-await db.collection("dashboard").doc("main").set(data);
-}
-
-async function loadAll(){
-
-const snapshot = await db.collection("dashboard").doc("main").get();
-
-if(!snapshot.exists)return;
-
-const data = snapshot.data();
-
-TOTAL_PALLETS = data.TOTAL_PALLETS || 103;
-TOTAL_BOXES = data.TOTAL_BOXES || 3000;
-UNITS_TRANSIT = data.UNITS_TRANSIT || 0;
-
-receipted = data.receipted || 0;
-receiptedBoxes = data.receiptedBoxes || 0;
-receiptedUnits = data.receiptedUnits || 0;
-rough = data.rough || 0;
-finishedStyles = data.finishedStyles || 0;
-labourTotal = data.labourTotal || 0;
-
-data.receipting.forEach(item=>{
-
-const row=document.getElementById('receiptingTable').insertRow();
-
-row.innerHTML=`
-<td>${item.date}</td>
-<td>${item.pallets}</td>
-<td>${item.boxes}</td>
-<td>${item.units || 0}</td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-});
-
-data.sorting.forEach(item=>{
-
-const row=document.getElementById('sortingTable').insertRow();
-
-row.innerHTML=`
-<td>${item.date}</td>
-<td>${item.pallets}</td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-});
-
-data.styles.forEach(item=>{
-
-const row=document.getElementById('styleTable').insertRow();
-
-row.innerHTML=`
-<td>${item.style}</td>
-<td>${item.boxes}</td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-});
-
-data.labour.forEach(item=>{
-
-const row=document.getElementById('labourTable').insertRow();
-
-row.innerHTML=`
-<td>${item.date}</td>
-<td>${item.staff}</td>
-<td>${item.hours}</td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-});
-
-data.supplies.forEach(item=>{
-
-const row=document.getElementById('suppliesTable').insertRow();
-
-row.innerHTML=`
-<td>${item.item}</td>
-<td><input type="checkbox" ${item.checked ? 'checked' : ''}></td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-
-row.querySelector('input').addEventListener('change',saveAll);
-});
-
-const planRows=document.querySelectorAll('#planTable tr');
-
-data.plan.forEach((item,index)=>{
-
-if(index+1>=planRows.length)return;
-
-planRows[index+1].cells[0].innerHTML=item.date;
-planRows[index+1].cells[1].innerHTML=item.plan;
-});
-
-refreshMetrics();
-}
-
-function updateTotals(){
-
-TOTAL_PALLETS = Number(document.getElementById('totalPalletsInput').value || TOTAL_PALLETS);
-TOTAL_BOXES = Number(document.getElementById('totalBoxesInput').value || TOTAL_BOXES);
-UNITS_TRANSIT = Number(document.getElementById('transitUnitsInput').value || UNITS_TRANSIT);
-
-refreshMetrics();
-saveAll();
-}
-
-function updateReceipts(){
-
-const date = document.getElementById('receiptDate').value;
-const pallets = Number(document.getElementById('receiptInput').value || 0);
-const boxes = Number(document.getElementById('boxInput').value || 0);
-const unitsAdded = Number(document.getElementById('unitsInput').value || 0);
-
-// FIND LAST TOTAL
-let runningUnits = 0;
-
-const rows = document.querySelectorAll('#receiptingTable tr');
-
-if(rows.length > 1){
-
-const lastRow = rows[rows.length - 1];
-runningUnits = Number(lastRow.cells[3].innerText || 0);
-
-}
-
-// ADD NEW UNITS
-runningUnits += unitsAdded;
-
-const row = document.getElementById('receiptingTable').insertRow();
-
-row.innerHTML = `
-<td>${date}</td>
-<td>${pallets}</td>
-<td>${boxes}</td>
-<td>${runningUnits}</td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-
-refreshMetrics();
-saveAll();
-
-}
-
-function updateSorting(){
-
-const date=document.getElementById('sortingDate').value;
-const pallets=Number(document.getElementById('roughInput').value||0);
-
-rough+=pallets;
-
-const row=document.getElementById('sortingTable').insertRow();
-
-row.innerHTML=`
-<td>${date}</td>
-<td>${pallets}</td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-
-refreshMetrics();
-saveAll();
-}
-
-function addStyle(){
-
-const style=document.getElementById('styleName').value;
-const boxes=document.getElementById('styleBoxes').value;
-
-finishedStyles++;
-
-const row=document.getElementById('styleTable').insertRow();
-
-row.innerHTML=`
-<td>${style}</td>
-<td>${boxes}</td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-
-refreshMetrics();
-saveAll();
-}
-
-function addLabour(){
-
-const date=document.getElementById('labourDate').value;
-const staff=document.getElementById('staffName').value;
-const hours=Number(document.getElementById('hoursWorked').value||0);
-
-labourTotal+=hours;
-
-const row=document.getElementById('labourTable').insertRow();
-
-row.innerHTML=`
-<td>${date}</td>
-<td>${staff}</td>
-<td>${hours}</td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-
-refreshMetrics();
-saveAll();
-}
-
-function addSupply(){
-
-const item=document.getElementById('supplyInput').value;
-
-if(item==='')return;
-
-const row=document.getElementById('suppliesTable').insertRow();
-
-row.innerHTML=`
-<td>${item}</td>
-<td><input type="checkbox"></td>
-<td><button class="delete-btn" onclick="this.closest('tr').remove();refreshMetrics();saveAll();">Delete</button></td>
-`;
-
-row.querySelector('input').addEventListener('change',saveAll);
-
-document.getElementById('supplyInput').value='';
-
-saveAll();
-}
-
-document.querySelectorAll('#planTable td').forEach(cell=>{
-
-cell.addEventListener('input',saveAll);
 });
 
 function logout(){
@@ -1308,6 +695,1100 @@ location.reload();
 console.error(error);
 
 });
+
+}
+
+for(let i=1;i<=52;i++){
+const option=document.createElement('option');
+option.textContent=`Week ${i}`;
+dispatchWeekInput.appendChild(option);
+}
+
+function getFinancialWeek(){
+
+const today = new Date();
+
+const fyStartMonth = 6;
+
+let fyStart;
+
+if(today.getMonth() >= fyStartMonth){
+fyStart = new Date(today.getFullYear(),fyStartMonth,1);
+}else{
+fyStart = new Date(today.getFullYear()-1,fyStartMonth,1);
+}
+
+const diffDays =
+Math.floor((today - fyStart)/(1000*60*60*24));
+
+const week =
+Math.floor(diffDays / 7) + 1;
+
+financialWeekBox.innerHTML =
+`<i class="fa-regular fa-calendar"></i> FY Week: ${week}`;
+
+}
+
+getFinancialWeek();
+
+function showPage(pageId){
+
+document.querySelectorAll('.page').forEach(page=>{
+page.classList.remove('active');
+});
+
+document.getElementById(pageId).classList.add('active');
+
+}
+
+function createRow(data){
+
+const row = shipmentTable.insertRow(-1);
+
+row.innerHTML = `
+<td contenteditable="true">${data.shipment || ''}</td>
+<td contenteditable="true">${data.po || ''}</td>
+<td contenteditable="true">${data.sku || ''}</td>
+<td contenteditable="true">${data.style || ''}</td>
+<td contenteditable="true">${data.colour || ''}</td>
+<td contenteditable="true">${data.eta || ''}</td>
+<td contenteditable="true">${data.dispatchWeek || ''}</td>
+
+<td contenteditable="true">${data.loosePallets || 0}</td>
+<td contenteditable="true">${data.packPallets || 0}</td>
+<td contenteditable="true">${data.qty || 0}</td>
+
+<td>
+<select class="premium-select">
+<option ${
+data.warehouse === 'Seven Hills Warehouse'
+? 'selected'
+: ''
+}>
+Seven Hills Warehouse
+</option>
+
+<option ${
+data.warehouse === 'Virtual Warehouse'
+? 'selected'
+: ''
+}>
+Virtual Warehouse
+</option>
+</select>
+</td>
+
+<td>
+<select class="premium-select priority-select">
+
+<option ${
+data.priority === 'Normal'
+? 'selected'
+: ''
+}>
+Normal
+</option>
+
+<option ${
+data.priority === 'Urgent Despatch'
+? 'selected'
+: ''
+}>
+Urgent Despatch
+</option>
+
+<option ${
+data.priority === 'Pure Excess Only'
+? 'selected'
+: ''
+}>
+Pure Excess Only
+</option>
+
+<option ${
+data.priority === 'Arrived Early'
+? 'selected'
+: ''
+}>
+Arrived Early
+</option>
+
+</select>
+</td>
+
+<td contenteditable="true">
+${data.location || ''}
+</td>
+
+<td contenteditable="true">
+${data.currentLocation || ''}
+</td>
+
+<td>
+<select class="premium-select">
+
+<option ${
+data.action === 'No Action Required'
+? 'selected'
+: ''
+}>
+No Action Required
+</option>
+
+<option ${
+data.action === 'New Shelf Required'
+? 'selected'
+: ''
+}>
+New Shelf Required
+</option>
+
+<option ${
+data.action === 'Relocation Inprogress'
+? 'selected'
+: ''
+}>
+Relocation Inprogress
+</option>
+
+<option ${
+data.action === 'Additional Colour Space Required'
+? 'selected'
+: ''
+}>
+Additional Colour Space Required
+</option>
+
+</select>
+</td>
+
+<td>
+<select class="premium-select status-select">
+
+<option ${
+data.status === 'In Transit'
+? 'selected'
+: ''
+}>
+In Transit
+</option>
+
+<option ${
+data.status === 'Arrived'
+? 'selected'
+: ''
+}>
+Arrived
+</option>
+
+</select>
+</td>
+
+<td contenteditable="true">
+${data.notes || ''}
+</td>
+
+<td>
+<button class="delete-btn" onclick="deleteRow(this)">
+<i class="fa-solid fa-trash"></i>
+</button>
+</td>
+`;
+
+setupRow(row);
+
+return row;
+
+}
+
+function addShipment(){
+
+const row = createRow({
+
+shipment: shipmentInput.value,
+po: poInput.value,
+sku: skuInput.value,
+style: styleInput.value,
+colour: colourInput.value,
+eta: etaInput.value,
+dispatchWeek: dispatchWeekInput.value,
+
+loosePallets: palletInput.value,
+packPallets: packsPalletInput.value,
+qty: qtyInput.value,
+
+warehouse: warehouseInput.value,
+priority: priorityInput.value,
+
+location: locationInput.value,
+currentLocation: currentLocationInput.value,
+
+action: actionInput.value,
+status: 'In Transit',
+
+notes: notesInput.value
+
+});
+
+setupRow(row);
+
+clearInputs();
+
+refreshDashboard();
+
+saveAll();
+
+}
+
+
+
+function recalculateExcess(row){
+
+const incoming =
+Number(row.cells[7].innerText || 0);
+
+const packs =
+Number(row.cells[8].innerText || 0);
+
+row.cells[9].innerText =
+Math.max(incoming - packs,0);
+
+}
+
+
+function setupRow(row){
+
+const prioritySelect =
+row.querySelector('.priority-select');
+
+function applyRowColours(){
+
+row.classList.remove(
+'urgent-row',
+'warning-row'
+);
+
+const currentLocation =
+row.cells[15].innerText.trim();
+
+if(
+prioritySelect &&
+prioritySelect.value === 'Urgent Despatch'
+){
+
+row.classList.add('urgent-row');
+
+}
+else if(currentLocation === ''){
+
+row.classList.add('warning-row');
+
+}
+
+}
+
+applyRowColours();
+
+row.querySelectorAll('td[contenteditable="true"]').forEach(cell=>{
+
+cell.addEventListener('input',()=>{
+
+applyRowColours();
+
+refreshDashboard();
+
+saveAll();
+
+});
+
+});
+
+row.querySelectorAll('select').forEach(select=>{
+
+select.addEventListener('change',()=>{
+
+applyRowColours();
+
+refreshDashboard();
+
+saveAll();
+
+});
+
+});
+
+const statusSelect =
+row.querySelector('.status-select');
+
+if(statusSelect){
+
+statusSelect.addEventListener('change',()=>{
+
+if(statusSelect.value === 'Arrived'){
+
+moveToArchive(row);
+
+}
+
+});
+
+}
+
+}
+
+function moveToArchive(row){
+
+const archiveRow =
+archiveTable.insertRow(-1);
+
+archiveRow.innerHTML = `
+<td>${row.cells[0].innerHTML}</td>
+<td>${row.cells[1].innerHTML}</td>
+<td>${row.cells[2].innerHTML}</td>
+<td>${row.cells[3].innerHTML}</td>
+<td>${row.cells[4].innerHTML}</td>
+<td>${row.cells[5].innerHTML}</td>
+<td>${row.cells[6].innerHTML}</td>
+
+<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
+<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
+<td>${row.cells[9].innerHTML}</td> <!-- Qty -->
+
+<td>${row.cells[10].innerHTML}</td> <!-- Warehouse -->
+<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
+
+<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
+<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
+
+<td>${row.cells[14].innerHTML}</td> <!-- Action -->
+<td>${row.cells[15].innerHTML}</td> <!-- Status -->
+<td>${row.cells[16].innerHTML}</td> 
+
+<td>
+<button class="restore-btn" onclick="restoreRow(this)">
+Restore
+</button>
+</td>
+
+<td>
+<button class="delete-btn" onclick="deleteRow(this)">
+<i class="fa-solid fa-trash"></i>
+</button>
+</td>
+`;
+
+row.remove();
+
+refreshDashboard();
+saveAll();
+
+}
+
+function restoreRow(btn){
+
+const row = btn.closest('tr');
+
+const newRow =
+shipmentTable.insertRow(-1);
+
+newRow.innerHTML = `
+<td>${row.cells[0].innerHTML}</td>
+<td>${row.cells[1].innerHTML}</td>
+<td>${row.cells[2].innerHTML}</td>
+<td>${row.cells[3].innerHTML}</td>
+<td>${row.cells[4].innerHTML}</td>
+<td>${row.cells[5].innerHTML}</td>
+<td>${row.cells[6].innerHTML}</td>
+
+<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
+<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
+<td>${row.cells[9].innerHTML}</td> <!-- Qty -->
+
+<td>${row.cells[10].innerHTML}</td> <!-- Warehouse -->
+<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
+
+<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
+<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
+
+<td>${row.cells[14].innerHTML}</td> <!-- Action -->
+<td>${row.cells[15].innerHTML}</td> <!-- Status -->
+<td>${row.cells[16].innerHTML}</td> 
+
+
+<td>
+<button class="delete-btn" onclick="deleteRow(this)">
+<i class="fa-solid fa-trash"></i>
+</button>
+</td>
+`;
+
+setupRow(newRow);
+
+row.remove();
+
+refreshDashboard();
+saveAll();
+
+}
+
+function deleteRow(btn){
+
+btn.closest('tr').remove();
+
+refreshDashboard();
+saveAll();
+
+}
+
+function clearInputs(){
+
+shipmentInput.value='';
+poInput.value='';
+skuInput.value='';
+styleInput.value='';
+colourInput.value='';
+etaInput.value='';
+palletInput.value='';
+qtyInput.value='';
+locationInput.value='';
+currentLocationInput.value='';
+notesInput.value='';
+
+}
+
+function updateShipmentETA(shipment,newDate){
+
+const rows =
+Array.from(shipmentTable.rows).slice(1);
+
+rows.forEach(row=>{
+
+if(row.cells[0].innerText === shipment){
+
+row.cells[5].innerText = newDate;
+
+}
+
+});
+
+refreshDashboard();
+saveAll();
+
+}
+
+function arriveShipment(shipment){
+
+const rows =
+Array.from(shipmentTable.rows).slice(1);
+
+rows.forEach(row=>{
+
+if(row.cells[0].innerText === shipment){
+
+moveToArchive(row);
+
+}
+
+});
+
+refreshDashboard();
+saveAll();
+
+}
+
+function refreshShipmentOverview(){
+
+shipmentOverviewTable.innerHTML = `
+<tr>
+<th onclick="sortTable(this)" style="cursor:pointer;">Shipment ↕</th>
+<th>Rows</th>
+<th>Total Pallets</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">ETA ↕</th>
+<th>Bulk ETA Update</th>
+<th>Bulk Arrive</th>
+</tr>
+`;
+
+const rows =
+Array.from(shipmentTable.rows).slice(1);
+
+const groups = {};
+
+rows.forEach(row=>{
+
+const shipment =
+row.cells[0].innerText.trim();
+
+if(shipment === '') return;
+
+const incomingPallets =
+Number(row.cells[7].innerText || 0);
+
+const packsPallets =
+Number(row.cells[8].innerText || 0);
+
+const pallets =
+incomingPallets + packsPallets;
+
+const eta =
+row.cells[5].innerText;
+
+if(!groups[shipment]){
+
+groups[shipment] = {
+rows:0,
+pallets:0,
+eta:eta
+};
+
+}
+
+groups[shipment].rows++;
+groups[shipment].pallets += pallets;
+
+});
+
+Object.keys(groups).forEach(shipment=>{
+
+const data = groups[shipment];
+
+const row =
+shipmentOverviewTable.insertRow(-1);
+
+row.innerHTML = `
+<td>${shipment}</td>
+<td>${data.rows}</td>
+<td>${data.pallets}</td>
+<td>${data.eta}</td>
+
+<td>
+<input type="date" id="eta-${shipment}">
+
+<button onclick="
+updateShipmentETA(
+'${shipment}',
+document.getElementById('eta-${shipment}').value
+)
+">
+Update
+</button>
+</td>
+
+<td>
+
+<button
+class="restore-btn"
+onclick="arriveShipment('${shipment}')"
+>
+
+Mark All Arrived
+
+</button>
+
+</td>
+`;
+
+});
+
+}
+
+function refreshDashboard(){
+
+const rows =
+Array.from(shipmentTable.rows).slice(1);
+
+const archiveRows =
+Array.from(archiveTable.rows).slice(1);
+
+let palletsTotal = 0;
+let qtyTotal = 0;
+let urgentPalletsTotal = 0;
+let unallocatedCount = 0;
+
+let virtualIncoming = 0;
+let sevenIncoming = 0;
+
+const weeks = new Set();
+
+rows.forEach(row=>{
+
+const incomingPallets =
+Number(row.cells[7].innerText || 0);
+
+const packsPallets =
+Number(row.cells[8].innerText || 0);
+
+const pallets =
+incomingPallets + packsPallets;
+
+const qty =
+Number(row.cells[9].innerText || 0);
+
+palletsTotal += pallets;
+qtyTotal += qty;
+
+const warehouse =
+row.cells[10]
+.querySelector('select')
+.value;
+
+if(warehouse === 'Virtual Warehouse'){
+virtualIncoming += pallets;
+}else{
+sevenIncoming += pallets;
+}
+
+const location =
+row.cells[12].innerText.trim();
+
+if(location === ''){
+unallocatedCount++;
+}
+
+const week =
+row.cells[6].innerText;
+
+if(week !== ''){
+weeks.add(week);
+}
+
+const eta =
+row.cells[5].innerText;
+
+if(eta){
+
+const etaDate = new Date(eta);
+const today = new Date();
+
+const diff =
+(etaDate - today)/(1000*60*60*24);
+
+if(diff <= 7 && diff >= 0){
+urgentPalletsTotal += pallets;
+}
+
+}
+
+});
+
+document.getElementById('totalPOs').innerText =
+rows.length;
+
+document.getElementById('arrivedPOs').innerText =
+archiveRows.length;
+
+document.getElementById('totalPallets').innerText =
+palletsTotal.toLocaleString();
+
+document.getElementById('totalQty').innerText =
+qtyTotal.toLocaleString();
+
+document.getElementById('urgentPallets').innerText =
+urgentPalletsTotal.toLocaleString();
+
+document.getElementById('unallocatedRows').innerText =
+unallocatedCount;
+
+document.getElementById('weekTotals').innerText =
+weeks.size;
+
+const virtualTaken =
+Number(document.getElementById('virtualTaken').value || 0);
+
+const virtualCapacity =
+Number(document.getElementById('virtualCapacity').value || 0);
+
+const sevenTaken =
+Number(document.getElementById('sevenHillsTaken').value || 0);
+
+const sevenCapacity =
+Number(document.getElementById('sevenHillsCapacity').value || 0);
+
+const virtualTotal =
+virtualTaken + virtualIncoming;
+
+const sevenTotal =
+sevenTaken + sevenIncoming;
+
+document.getElementById('virtualUsage').innerText =
+`${virtualTotal} / ${virtualCapacity}`;
+
+document.getElementById('sevenHillsUsage').innerText =
+`${sevenTotal} / ${sevenCapacity}`;
+
+const virtualPercent =
+virtualCapacity > 0
+? Math.round((virtualTotal / virtualCapacity) * 100)
+: 0;
+
+const sevenPercent =
+sevenCapacity > 0
+? Math.round((sevenTotal / sevenCapacity) * 100)
+: 0;
+
+document.getElementById('virtualPercent').innerText =
+`${virtualPercent}%`;
+
+document.getElementById('sevenPercent').innerText =
+`${sevenPercent}%`;
+
+document.getElementById('virtualCard')
+.classList.remove('capacity-danger');
+
+document.getElementById('sevenHillsCard')
+.classList.remove('capacity-danger');
+
+if(virtualTotal > virtualCapacity){
+
+document.getElementById('virtualCard')
+.classList.add('capacity-danger');
+
+}
+
+if(sevenTotal > sevenCapacity){
+
+document.getElementById('sevenHillsCard')
+.classList.add('capacity-danger');
+
+}
+
+refreshShipmentOverview();
+
+}
+
+async function saveAll(){
+
+const active = [];
+const archive = [];
+
+Array.from(shipmentTable.rows)
+.slice(1)
+.forEach(row=>{
+active.push({
+shipment: row.cells[0].innerText,
+po: row.cells[1].innerText,
+sku: row.cells[2].innerText,
+style: row.cells[3].innerText,
+colour: row.cells[4].innerText,
+eta: row.cells[5].innerText,
+dispatchWeek: row.cells[6].innerText,
+loosePallets: row.cells[7].innerText,
+packPallets: row.cells[8].innerText,
+qty: row.cells[9].innerText,
+warehouse: row.cells[10].querySelector('select').value,
+priority: row.cells[11].querySelector('select').value,
+location: row.cells[12].innerText,
+currentLocation: row.cells[13].innerText,
+action: row.cells[14].querySelector('select').value,
+status: row.cells[15].querySelector('select').value,
+notes: row.cells[16].innerText
+});
+
+});
+
+Array.from(archiveTable.rows)
+.slice(1)
+.forEach(row=>{
+archive.push(`<tr>${row.innerHTML}</tr>`);
+});
+
+await db.collection('planner').doc('main').set({
+
+active,
+archive,
+
+virtualTaken: virtualTaken.value,
+virtualCapacity: virtualCapacity.value,
+
+sevenTaken: sevenHillsTaken.value,
+sevenCapacity: sevenHillsCapacity.value
+
+});
+
+}
+
+async function loadAll(){
+
+const snapshot =
+await db.collection('planner').doc('main').get();
+
+if(!snapshot.exists)return;
+
+const data = snapshot.data();
+
+virtualTaken.value =
+data.virtualTaken || 0;
+
+virtualCapacity.value =
+data.virtualCapacity || 1200;
+
+sevenHillsTaken.value =
+data.sevenTaken || 0;
+
+sevenHillsCapacity.value =
+data.sevenCapacity || 1400;
+
+if(data.active){
+
+data.active.forEach(item=>{
+
+const row = createRow(item);
+
+shipmentTable.appendChild(row);
+
+row.querySelectorAll('td').forEach((cell,index)=>{
+
+if(
+index !== 9 &&
+index !== 10 &&
+index !== 13 &&
+index !== 14 &&
+index !== 16
+){
+cell.setAttribute('contenteditable','true');
+}
+
+});
+
+setupRow(row);
+
+});
+
+}
+
+if(data.archive){
+
+data.archive.forEach(item=>{
+
+const temp = document.createElement('tbody');
+
+temp.innerHTML = item;
+
+const row = temp.querySelector('tr');
+
+archiveTable.appendChild(row);
+
+});
+
+}
+
+refreshDashboard();
+
+}
+
+
+
+let currentSort = {
+index:null,
+asc:true
+};
+
+function sortTable(header){
+
+const table = document.getElementById('shipmentTable');
+
+const headers =
+Array.from(table.rows[0].cells);
+
+const index =
+headers.indexOf(header);
+
+const rows =
+Array.from(table.rows).slice(1);
+
+const asc =
+currentSort.index === index
+? !currentSort.asc
+: true;
+
+currentSort = {
+index:index,
+asc:asc
+};
+
+rows.sort((a,b)=>{
+
+let aVal =
+a.cells[index].innerText.trim();
+
+let bVal =
+b.cells[index].innerText.trim();
+
+const aNum = parseFloat(aVal);
+const bNum = parseFloat(bVal);
+
+if(!isNaN(aNum) && !isNaN(bNum)){
+
+return asc
+? aNum - bNum
+: bNum - aNum;
+
+}
+
+return asc
+? aVal.localeCompare(bVal)
+: bVal.localeCompare(aVal);
+
+});
+
+rows.forEach(row=>{
+table.appendChild(row);
+});
+
+}
+
+function applyFilters(){
+
+const search =
+document.getElementById('searchInput')
+.value
+.toLowerCase();
+
+const priority =
+document.getElementById('priorityFilter')
+.value;
+
+const warning =
+document.getElementById('warningFilter')
+.value;
+
+const rows =
+Array.from(shipmentTable.rows).slice(1);
+
+rows.forEach(row=>{
+
+const text =
+row.innerText.toLowerCase();
+
+const priorityText =
+row.querySelector('.priority-select')
+? row.querySelector('.priority-select').value
+: '';
+
+const currentLocation =
+row.cells[15].innerText.trim();
+
+let visible = true;
+
+if(search && !text.includes(search)){
+visible = false;
+}
+
+if(priority && priorityText !== priority){
+visible = false;
+}
+
+if(
+warning === 'missing' &&
+currentLocation !== ''
+){
+visible = false;
+}
+
+row.style.display =
+visible ? '' : 'none';
+
+});
+
+}
+
+function updateDispatchProjection(){
+
+const container =
+document.getElementById(
+'dispatchProjectionContainer'
+);
+
+if(!container) return;
+
+const rows =
+Array.from(shipmentTable.rows).slice(1);
+
+const projections = {};
+
+rows.forEach(row=>{
+
+const week =
+row.cells[6].innerText.trim();
+
+const incomingPallets =
+Number(row.cells[7].innerText || 0);
+
+const packsPallets =
+Number(row.cells[8].innerText || 0);
+
+const pallets =
+incomingPallets + packsPallets;
+
+if(week === '') return;
+
+if(!projections[week]){
+projections[week] = 0;
+}
+
+projections[week] += packsPallets;
+
+});
+
+let html = `
+<table style="width:100%;min-width:100%;">
+<tr>
+<th>Dispatch Week</th>
+<th>Projected Outbound Pallets</th>
+</tr>
+`;
+
+Object.keys(projections)
+.sort((a,b)=>{
+
+const aNum =
+Number(a.replace('Week ',''));
+
+const bNum =
+Number(b.replace('Week ',''));
+
+return aNum - bNum;
+
+})
+.forEach(week=>{
+
+html += `
+<tr>
+<td>${week}</td>
+<td>${projections[week]}</td>
+</tr>
+`;
+
+});
+
+html += '</table>';
+
+container.innerHTML = html;
+
+}
+
+const originalRefreshDashboard =
+refreshDashboard;
+
+refreshDashboard = function(){
+
+originalRefreshDashboard();
+
+updateDispatchProjection();
+
+};
+
+function toggleSidebar(){
+
+const sidebar =
+document.querySelector('.sidebar');
+
+const main =
+document.querySelector('.main');
+
+sidebar.classList.toggle('hidden');
+
+main.classList.toggle('full');
 
 }
 
