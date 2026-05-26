@@ -137,6 +137,23 @@ top:10px;
 right:10px;
 z-index:9999;
 }
+
+
+.viewer-mode .action,
+.viewer-mode .delete-btn,
+.viewer-mode [contenteditable="true"]{
+pointer-events:none;
+opacity:0.6;
+}
+
+.viewer-mode input,
+.viewer-mode textarea,
+.viewer-mode select{
+pointer-events:none;
+opacity:0.7;
+}
+
+
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -152,6 +169,10 @@ z-index:9999;
 <div class="sidebar" id="sidebar">
 
 <h1>Seven Hills Recovery</h1>
+
+<button class="action" onclick="login()">
+Sign In
+</button>
 
 <button class="action" onclick="logout()">
 Sign Out
@@ -786,11 +807,23 @@ if(user){
 
 console.log("Logged in:", user.email);
 
+document.body.classList.remove("viewer-mode");
+
+}else{
+
+console.log("Viewing as guest");
+
+document.body.classList.add("viewer-mode");
+
+}
+
 await loadAll();
 
 refreshMetrics();
 
-}else{
+});
+
+async function login(){
 
 try{
 
@@ -798,15 +831,13 @@ await auth.signInWithPopup(provider);
 
 }catch(error){
 
-console.error("Login Error:", error);
+console.error(error);
 
-alert("Google sign in failed");
-
-}
+alert("Login failed");
 
 }
 
-});
+}
 
 let TOTAL_PALLETS = 103;
 let TOTAL_BOXES = 3000;
