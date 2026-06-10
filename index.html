@@ -352,6 +352,11 @@ Main Shipments
 Archive
 </button>
 
+<button onclick="showPage('qcRejectedPage')">
+<i class="fa-solid fa-triangle-exclamation"></i>
+QC Rejected
+</button>
+
 </div>
 
 <div class="main">
@@ -615,6 +620,42 @@ style="max-width:280px;"
 
 </div>
 
+<div id="qcRejectedPage" class="page">
+
+<h1 style="margin-bottom:20px;">QC Rejected</h1>
+
+<div class="table-wrap">
+
+<table id="qcRejectedTable">
+
+<tr>
+<th>Shipment</th>
+<th>PO</th>
+<th>SKU</th>
+<th>Style</th>
+<th>Colour</th>
+<th>ETA</th>
+<th>Dispatch Week</th>
+<th>Pallets</th>
+<th>Packs Pallets</th>
+<th>Qty</th>
+<th>Warehouse</th>
+<th>Priority</th>
+<th>Storage Location</th>
+<th>Current Location</th>
+<th>Action</th>
+<th>Status</th>
+<th>Notes</th>
+<th>Archive</th>
+<th>Delete</th>
+</tr>
+
+</table>
+
+</div>
+
+</div>
+  
 <div id="archivePage" class="page">
 
 <h1 style="margin-bottom:20px;">Archive</h1>
@@ -905,6 +946,14 @@ In Transit
 </option>
 
 <option ${
+data.status === 'QC Rejected'
+? 'selected'
+: ''
+}>
+QC Rejected
+</option>
+
+<option ${
 data.status === 'Arrived'
 ? 'selected'
 : ''
@@ -1055,6 +1104,12 @@ if(statusSelect){
 
 statusSelect.addEventListener('change',()=>{
 
+if(statusSelect.value === 'QC Rejected'){
+
+moveToQCRejected(row);
+
+}
+
 if(statusSelect.value === 'Arrived'){
 
 moveToArchive(row);
@@ -1067,6 +1122,117 @@ moveToArchive(row);
 
 }
 
+function moveToQCRejected(row){
+
+const qcRow =
+qcRejectedTable.insertRow(-1);
+
+qcRow.innerHTML = `
+<td>${row.cells[0].innerHTML}</td>
+<td>${row.cells[1].innerHTML}</td>
+<td>${row.cells[2].innerHTML}</td>
+<td>${row.cells[3].innerHTML}</td>
+<td>${row.cells[4].innerHTML}</td>
+<td>${row.cells[5].innerHTML}</td>
+<td>${row.cells[6].innerHTML}</td>
+
+<td>${row.cells[7].innerHTML}</td>
+<td>${row.cells[8].innerHTML}</td>
+<td>${row.cells[9].innerHTML}</td>
+
+<td>${row.cells[10].innerHTML}</td>
+<td>${row.cells[11].innerHTML}</td>
+
+<td>${row.cells[12].innerHTML}</td>
+<td>${row.cells[13].innerHTML}</td>
+
+<td>${row.cells[14].innerHTML}</td>
+
+<td>QC Rejected</td>
+
+<td>${row.cells[16].innerHTML}</td>
+
+<td>
+<button
+class="restore-btn"
+onclick="moveQCRejectedToArchive(this)">
+Arrived
+</button>
+</td>
+
+<td>
+<button
+class="delete-btn"
+onclick="deleteRow(this)">
+<i class="fa-solid fa-trash"></i>
+</button>
+</td>
+`;
+
+row.remove();
+
+refreshDashboard();
+saveAll();
+
+}
+
+function moveQCRejectedToArchive(btn){
+
+const row =
+btn.closest('tr');
+
+const archiveRow =
+archiveTable.insertRow(-1);
+
+archiveRow.innerHTML = `
+<td>${row.cells[0].innerHTML}</td>
+<td>${row.cells[1].innerHTML}</td>
+<td>${row.cells[2].innerHTML}</td>
+<td>${row.cells[3].innerHTML}</td>
+<td>${row.cells[4].innerHTML}</td>
+<td>${row.cells[5].innerHTML}</td>
+<td>${row.cells[6].innerHTML}</td>
+
+<td>${row.cells[7].innerHTML}</td>
+<td>${row.cells[8].innerHTML}</td>
+<td>${row.cells[9].innerHTML}</td>
+
+<td>${row.cells[10].innerHTML}</td>
+<td>${row.cells[11].innerHTML}</td>
+
+<td>${row.cells[12].innerHTML}</td>
+<td>${row.cells[13].innerHTML}</td>
+
+<td>${row.cells[14].innerHTML}</td>
+
+<td>Arrived</td>
+
+<td>${row.cells[16].innerHTML}</td>
+
+<td>
+<button
+class="restore-btn"
+onclick="restoreRow(this)">
+Restore
+</button>
+</td>
+
+<td>
+<button
+class="delete-btn"
+onclick="deleteRow(this)">
+<i class="fa-solid fa-trash"></i>
+</button>
+</td>
+`;
+
+row.remove();
+
+refreshDashboard();
+saveAll();
+
+}
+  
 function moveToArchive(row){
 
 const archiveRow =
