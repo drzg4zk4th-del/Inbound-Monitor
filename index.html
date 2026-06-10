@@ -1198,6 +1198,8 @@ row.remove();
 refreshDashboard();
 saveAll();
 
+}
+
 function moveQCRejectedToArchive(btn){
 
 const row =
@@ -1277,6 +1279,10 @@ onclick="deleteRow(this)">
 </td>
 `;
 
+if(nextRow){
+nextRow.remove();
+}
+  
 row.remove();
 
 refreshDashboard();
@@ -1836,6 +1842,16 @@ temp.innerHTML = item;
 const row =
 temp.querySelector('tr');
 
+const textarea =
+row.querySelector('textarea');
+
+if(textarea){
+
+textarea.value =
+textarea.innerHTML;
+
+}
+
 qcRejectedTable.appendChild(row);
 
 });
@@ -1846,20 +1862,17 @@ if(data.archive){
 
 data.archive.forEach(item=>{
 
-const temp = document.createElement('tbody');
+const temp =
+document.createElement('tbody');
 
 temp.innerHTML = item;
 
 const row =
 temp.querySelector('tr');
 
-const textarea =
-row.querySelector('textarea');
+archiveTable.appendChild(row);
 
-if(textarea){
-
-textarea.value =
-textarea.innerHTML;
+});
 
 }
 
