@@ -1167,18 +1167,59 @@ onclick="deleteRow(this)">
 </td>
 `;
 
+const notesRow =
+qcRejectedTable.insertRow(-1);
+
+notesRow.innerHTML = `
+<td colspan="19">
+
+<div style="
+font-weight:bold;
+margin-bottom:8px;
+">
+QC Notes
+</div>
+
+<textarea
+class="qc-notes"
+style="
+width:100%;
+min-height:100px;
+"
+placeholder="Enter QC rejection notes..."
+oninput="saveAll()"
+></textarea>
+
+</td>
+`;
+
 row.remove();
 
 refreshDashboard();
 saveAll();
-
-}
 
 function moveQCRejectedToArchive(btn){
 
 const row =
 btn.closest('tr');
 
+let qcNotes = '';
+
+const nextRow =
+row.nextElementSibling;
+
+if(
+nextRow &&
+nextRow.querySelector('.qc-notes')
+){
+
+qcNotes =
+nextRow.querySelector('.qc-notes').value;
+
+nextRow.remove();
+
+}
+  
 const archiveRow =
 archiveTable.insertRow(-1);
 
@@ -1205,7 +1246,19 @@ archiveRow.innerHTML = `
 
 <td>Arrived</td>
 
-<td>${row.cells[16].innerHTML}</td>
+<td>
+
+${row.cells[16].innerHTML}
+
+<hr>
+
+<b>QC Notes:</b>
+
+<br>
+
+${qcNotes}
+
+</td>
 
 <td>
 <button
@@ -1691,7 +1744,19 @@ archive.push(`<tr>${row.innerHTML}</tr>`);
 Array.from(qcRejectedTable.rows)
 .slice(1)
 .forEach(row=>{
-qcRejected.push(`<tr>${row.innerHTML}</tr>`);
+const textarea =
+row.querySelector('textarea');
+
+if(textarea){
+
+textarea.innerHTML =
+textarea.value;
+
+}
+
+qcRejected.push(
+`<tr>${row.innerHTML}</tr>`
+);
 });
 
 await db.collection('planner').doc('main').set({
@@ -1785,9 +1850,20 @@ const temp = document.createElement('tbody');
 
 temp.innerHTML = item;
 
-const row = temp.querySelector('tr');
+const row =
+temp.querySelector('tr');
 
-archiveTable.appendChild(row);
+const textarea =
+row.querySelector('textarea');
+
+if(textarea){
+
+textarea.value =
+textarea.innerHTML;
+
+}
+
+qcRejectedTable.appendChild(row);
 
 });
 
