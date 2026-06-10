@@ -1655,6 +1655,7 @@ async function saveAll(){
 
 const active = [];
 const archive = [];
+const qcRejected = [];
 
 Array.from(shipmentTable.rows)
 .slice(1)
@@ -1687,10 +1688,17 @@ Array.from(archiveTable.rows)
 archive.push(`<tr>${row.innerHTML}</tr>`);
 });
 
+Array.from(qcRejectedTable.rows)
+.slice(1)
+.forEach(row=>{
+qcRejected.push(`<tr>${row.innerHTML}</tr>`);
+});
+
 await db.collection('planner').doc('main').set({
 
 active,
 archive,
+qcRejected,
 
 virtualTaken: virtualTaken.value,
 virtualCapacity: virtualCapacity.value,
@@ -1751,6 +1759,24 @@ setupRow(row);
 
 }
 
+if(data.qcRejected){
+
+data.qcRejected.forEach(item=>{
+
+const temp =
+document.createElement('tbody');
+
+temp.innerHTML = item;
+
+const row =
+temp.querySelector('tr');
+
+qcRejectedTable.appendChild(row);
+
+});
+
+}
+  
 if(data.archive){
 
 data.archive.forEach(item=>{
