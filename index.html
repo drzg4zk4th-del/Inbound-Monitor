@@ -610,8 +610,7 @@ style="max-width:280px;"
 <th onclick="sortTable(this)" style="cursor:pointer;">Current Location ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Action ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Status ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Notes ↕</th>
-<th>Delete</th>
+<th onclick="sortTable(this)" style="cursor:pointer;width:400px;min-width:400px;">Notes ↕</th><th>Delete</th>
 </tr>
 
 </table>
@@ -681,8 +680,7 @@ style="max-width:280px;"
 <th onclick="sortTable(this)" style="cursor:pointer;">Current Location ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Action ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Status ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Notes ↕</th>
-<th>Restore</th>
+<th onclick="sortTable(this)" style="cursor:pointer;width:400px;min-width:400px;">Notes ↕</th><th>Restore</th>
 <th>Delete</th>
 </tr>
 
@@ -1167,32 +1165,6 @@ onclick="deleteRow(this)">
 </td>
 `;
 
-const notesRow =
-qcRejectedTable.insertRow(-1);
-
-notesRow.innerHTML = `
-<td colspan="19">
-
-<div style="
-font-weight:bold;
-margin-bottom:8px;
-">
-QC Notes
-</div>
-
-<textarea
-class="qc-notes"
-style="
-width:100%;
-min-height:100px;
-"
-placeholder="Enter QC rejection notes..."
-oninput="saveAll()"
-></textarea>
-
-</td>
-`;
-
 row.remove();
 
 refreshDashboard();
@@ -1204,23 +1176,6 @@ function moveQCRejectedToArchive(btn){
 
 const row =
 btn.closest('tr');
-
-let qcNotes = '';
-
-const nextRow =
-row.nextElementSibling;
-
-if(
-nextRow &&
-nextRow.querySelector('.qc-notes')
-){
-
-qcNotes =
-nextRow.querySelector('.qc-notes').value;
-
-nextRow.remove();
-
-}
   
 const archiveRow =
 archiveTable.insertRow(-1);
@@ -1248,19 +1203,7 @@ archiveRow.innerHTML = `
 
 <td>Arrived</td>
 
-<td>
-
-${row.cells[16].innerHTML}
-
-<hr>
-
-<b>QC Notes:</b>
-
-<br>
-
-${qcNotes}
-
-</td>
+<td>${row.cells[16].innerHTML}</td>
 
 <td>
 <button
@@ -1278,10 +1221,6 @@ onclick="deleteRow(this)">
 </button>
 </td>
 `;
-
-if(nextRow){
-nextRow.remove();
-}
   
 row.remove();
 
@@ -1750,19 +1689,11 @@ archive.push(`<tr>${row.innerHTML}</tr>`);
 Array.from(qcRejectedTable.rows)
 .slice(1)
 .forEach(row=>{
-const textarea =
-row.querySelector('textarea');
-
-if(textarea){
-
-textarea.innerHTML =
-textarea.value;
-
-}
 
 qcRejected.push(
 `<tr>${row.innerHTML}</tr>`
 );
+
 });
 
 await db.collection('planner').doc('main').set({
@@ -1841,16 +1772,6 @@ temp.innerHTML = item;
 
 const row =
 temp.querySelector('tr');
-
-const textarea =
-row.querySelector('textarea');
-
-if(textarea){
-
-textarea.value =
-textarea.innerHTML;
-
-}
 
 qcRejectedTable.appendChild(row);
 
