@@ -1855,7 +1855,10 @@ if(document.getElementById('sumStyles')){
  document.getElementById('sumUnits').innerText=sumUnits.toLocaleString();
  document.getElementById('sumPallets').innerText=sumPallets.toLocaleString();
  document.getElementById('sumUrgent').innerText=sumUrgent;
- document.getElementById('sumMissing').innerText=sumMissing;
+document.getElementById('sumMissing').innerText=sumMissing;
+
+const forecast=Math.round((sevenTotal/sevenCapacity)*100)||0;
+document.getElementById('sumForecast').innerText=forecast+'%';
 
 const sevenRemain =
 sevenCapacity - sevenTotal;
