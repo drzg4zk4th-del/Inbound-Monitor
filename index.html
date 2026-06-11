@@ -343,6 +343,11 @@ word-break:break-word;
 
 
 
+
+.qc-overdue-row{
+background:#7f1d1d !important;
+box-shadow: inset 0 0 20px rgba(239,68,68,.6);
+}
 </style>
 </head>
 
@@ -375,6 +380,8 @@ QC Rejected
 <i class="fa-solid fa-chart-line"></i>
 Next 7 Days
 </button>
+
+<button onclick="showPage('notesArchivePage')"><i class="fa-solid fa-note-sticky"></i>Weekly Notes Archive</button>
 
 </div>
 
@@ -650,6 +657,13 @@ style="max-width:280px;"
 <div id="qcRejectedPage" class="page">
 
 <h1 style="margin-bottom:20px;">QC Rejected</h1>
+<div class="dashboard-grid" style="margin-bottom:20px;">
+<div class="card"><h3>Rejected Styles</h3><div class="big-number" id="qcStyles">0</div></div>
+<div class="card"><h3>Rejected Units</h3><div class="big-number" id="qcUnits">0</div></div>
+<div class="card"><h3>Average Weeks Overdue</h3><div class="big-number" id="qcAvgOverdue">0</div></div>
+<div class="card"><h3>Units Past Due</h3><div class="big-number" id="qcPastDue">0</div></div>
+</div>
+
 
 <div class="table-wrap">
 
@@ -1760,6 +1774,32 @@ if(document.getElementById('sumStyles')){
  document.getElementById('sumQCHealth').innerText=qcHealth;
 }
 
+
+let qcUnits=0, overdueWeeks=0, overdueCount=0, unitsPastDue=0;
+const currentFYWeek=Math.floor(((new Date()-new Date((new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1),6,1))/(1000*60*60*24))/7)+1;
+
+qcRows.forEach(row=>{
+ row.classList.remove('qc-overdue-row');
+ const qty=Number(row.cells[9]?.innerText||0);
+ qcUnits+=qty;
+
+ const wk=Number((row.cells[6]?.innerText||'').replace('Week ','').trim());
+ if(wk && wk<currentFYWeek){
+   const od=currentFYWeek-wk;
+   overdueWeeks+=od;
+   overdueCount++;
+   unitsPastDue+=qty;
+   row.classList.add('qc-overdue-row');
+ }
+});
+
+if(document.getElementById('qcStyles')){
+ document.getElementById('qcStyles').innerText=qcRows.length;
+ document.getElementById('qcUnits').innerText=qcUnits.toLocaleString();
+ document.getElementById('qcAvgOverdue').innerText=overdueCount?(overdueWeeks/overdueCount).toFixed(1)+'w':'0';
+ document.getElementById('qcPastDue').innerText=unitsPastDue.toLocaleString();
+}
+
 refreshShipmentOverview();
 
 }
@@ -1769,6 +1809,7 @@ async function saveAll(){
 const active = [];
 const archive = [];
 const qcRejected = [];
+const weeklyNotes=[];
 
 Array.from(shipmentTable.rows)
 .slice(1)
@@ -1811,11 +1852,15 @@ qcRejected.push(
 
 });
 
+document.querySelectorAll('#notesArchiveTable tr').forEach((r,i)=>{
+if(i>0) weeklyNotes.push(r.innerHTML);
+});
 await db.collection('planner').doc('main').set({
 
 active,
 archive,
 qcRejected,
+weeklyNotes,
 
 virtualTaken: virtualTaken.value,
 virtualCapacity: virtualCapacity.value,
@@ -1894,6 +1939,13 @@ qcRejectedTable.appendChild(row);
 
 }
   
+if(data.weeklyNotes && document.getElementById('notesArchiveTable')){
+data.weeklyNotes.forEach(item=>{
+const row=notesArchiveTable.insertRow(-1);
+row.innerHTML=item;
+});
+}
+
 if(data.archive){
 
 data.archive.forEach(item=>{
