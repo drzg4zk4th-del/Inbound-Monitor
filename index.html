@@ -343,12 +343,6 @@ word-break:break-word;
 
 
 
-
-.qc-overdue-row{
-background:#7f1d1d !important;
-box-shadow: inset 0 0 20px rgba(239,68,68,.6);
-}
-
 </style>
 </head>
 
@@ -375,6 +369,11 @@ Archive
 <button onclick="showPage('qcRejectedPage')">
 <i class="fa-solid fa-triangle-exclamation"></i>
 QC Rejected
+</button>
+
+<button onclick="showPage('summaryPage')">
+<i class="fa-solid fa-chart-line"></i>
+Next 7 Days
 </button>
 
 </div>
@@ -652,13 +651,6 @@ style="max-width:280px;"
 
 <h1 style="margin-bottom:20px;">QC Rejected</h1>
 
-<div class="dashboard-grid" style="margin-bottom:20px;">
-<div class="card"><h3>Rejected Styles</h3><div class="big-number" id="qcStyles">0</div></div>
-<div class="card"><h3>Rejected Units</h3><div class="big-number" id="qcUnits">0</div></div>
-<div class="card"><h3>Average Weeks Overdue</h3><div class="big-number" id="qcAvgOverdue">0</div></div>
-<div class="card"><h3>Units Past Due</h3><div class="big-number" id="qcPastDue">0</div></div>
-</div>
-
 <div class="table-wrap">
 
 <table id="qcRejectedTable">
@@ -691,6 +683,27 @@ style="max-width:280px;"
 
 </div>
   
+
+<div id="summaryPage" class="page">
+
+<h1 style="margin-bottom:20px;">Next 7 Days Executive Summary</h1>
+
+<div class="dashboard-grid">
+
+<div class="card"><h3>Incoming Styles (7 Days)</h3><div class="big-number" id="sumStyles">0</div></div>
+<div class="card"><h3>Incoming Units (7 Days)</h3><div class="big-number" id="sumUnits">0</div></div>
+<div class="card"><h3>Incoming Pallets (7 Days)</h3><div class="big-number" id="sumPallets">0</div></div>
+<div class="card"><h3>Urgent Despatch</h3><div class="big-number" id="sumUrgent">0</div></div>
+
+<div class="card"><h3>QC Rejected Styles</h3><div class="big-number" id="sumQC">0</div></div>
+<div class="card"><h3>Overdue QC Styles</h3><div class="big-number" id="sumQCOverdue">0</div></div>
+<div class="card"><h3>Missing Locations</h3><div class="big-number" id="sumMissing">0</div></div>
+<div class="card"><h3>Risk Level</h3><div class="big-number" id="sumRisk">🟢</div></div>
+
+</div>
+
+</div>
+
 <div id="archivePage" class="page">
 
 <h1 style="margin-bottom:20px;">Archive</h1>
@@ -1700,35 +1713,52 @@ document.getElementById('sevenHillsCard')
 }
 
 
-let qcUnits=0;
-let overdueWeeksTotal=0;
-let overdueCount=0;
-let unitsPastDue=0;
+const today=new Date();
+let sumStyles=0,sumUnits=0,sumPallets=0,sumUrgent=0,sumMissing=0;
+rows.forEach(row=>{
+ const eta=row.cells[5].innerText;
+ const qty=Number(row.cells[9].innerText||0);
+ const pallets=(Number(row.cells[7].innerText||0)+Number(row.cells[8].innerText||0));
+ const priority=row.cells[11].querySelector('select').value;
+ const location=row.cells[12].innerText.trim();
 
+ if(location==='') sumMissing++;
+
+ if(priority==='Urgent Despatch') sumUrgent++;
+
+ if(eta){
+   const d=new Date(eta);
+   const diff=(d-today)/(1000*60*60*24);
+   if(diff>=0 && diff<=7){
+      sumStyles++;
+      sumUnits+=qty;
+      sumPallets+=pallets;
+   }
+ }
+});
+
+let qcOverdue=0;
 const currentFYWeek=Math.floor(((new Date()-new Date((new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1),6,1))/(1000*60*60*24))/7)+1;
 
 qcRows.forEach(row=>{
-row.classList.remove('qc-overdue-row');
-
-const qty=Number(row.cells[9]?.innerText||0);
-qcUnits+=qty;
-
-const weekText=(row.cells[6]?.innerText||'').replace('Week ','').trim();
-const dispatchWeek=Number(weekText);
-
-if(dispatchWeek && dispatchWeek < currentFYWeek){
-const overdue=currentFYWeek-dispatchWeek;
-overdueWeeksTotal+=overdue;
-overdueCount++;
-unitsPastDue+=qty;
-row.classList.add('qc-overdue-row');
-}
+ const week=Number((row.cells[6]?.innerText||'').replace('Week ',''));
+ if(week && week<currentFYWeek) qcOverdue++;
 });
 
-document.getElementById('qcStyles').innerText=qcRows.length;
-document.getElementById('qcUnits').innerText=qcUnits.toLocaleString();
-document.getElementById('qcAvgOverdue').innerText=overdueCount?((overdueWeeksTotal/overdueCount).toFixed(1)+'w'):'0';
-document.getElementById('qcPastDue').innerText=unitsPastDue.toLocaleString();
+if(document.getElementById('sumStyles')){
+ document.getElementById('sumStyles').innerText=sumStyles;
+ document.getElementById('sumUnits').innerText=sumUnits.toLocaleString();
+ document.getElementById('sumPallets').innerText=sumPallets;
+ document.getElementById('sumUrgent').innerText=sumUrgent;
+ document.getElementById('sumQC').innerText=qcRows.length;
+ document.getElementById('sumQCOverdue').innerText=qcOverdue;
+ document.getElementById('sumMissing').innerText=sumMissing;
+
+ let risk='🟢';
+ if(qcOverdue>5 || sumMissing>5) risk='🔴';
+ else if(qcOverdue>0 || sumMissing>0 || sumUrgent>5) risk='🟠';
+ document.getElementById('sumRisk').innerText=risk;
+}
 
 refreshShipmentOverview();
 
