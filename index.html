@@ -329,6 +329,20 @@ opacity:0.7;
 }
 
 
+#shipmentTable td:nth-child(17),
+#shipmentTable th:nth-child(17),
+#archiveTable td:nth-child(17),
+#archiveTable th:nth-child(17),
+#qcRejectedTable td:nth-child(17),
+#qcRejectedTable th:nth-child(17){
+min-width:600px;
+max-width:600px;
+white-space:normal;
+word-break:break-word;
+}
+
+
+
 </style>
 </head>
 
@@ -1146,7 +1160,7 @@ qcRow.innerHTML = `
 
 <td>QC Rejected</td>
 
-<td>${row.cells[16].innerHTML}</td>
+<td contenteditable="true">${row.cells[16].innerHTML}</td>
 
 <td>
 <button
@@ -1254,8 +1268,14 @@ archiveRow.innerHTML = `
 <td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
 
 <td>${row.cells[14].innerHTML}</td> <!-- Action -->
-<td>${row.cells[15].innerHTML}</td> <!-- Status -->
-<td>${row.cells[16].innerHTML}</td> 
+<td>
+<select class="premium-select status-select">
+<option selected>In Transit</option>
+<option>QC Rejected</option>
+<option>Arrived</option>
+</select>
+</td> <!-- Status -->
+<td contenteditable="true">${row.cells[16].innerHTML}</td> 
 
 <td>
 <button class="restore-btn" onclick="restoreRow(this)">
@@ -1304,7 +1324,13 @@ newRow.innerHTML = `
 <td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
 
 <td>${row.cells[14].innerHTML}</td> <!-- Action -->
-<td>${row.cells[15].innerHTML}</td> <!-- Status -->
+<td>
+<select class="premium-select status-select">
+<option selected>In Transit</option>
+<option>QC Rejected</option>
+<option>Arrived</option>
+</select>
+</td> <!-- Status -->
 <td>${row.cells[16].innerHTML}</td> 
 
 
