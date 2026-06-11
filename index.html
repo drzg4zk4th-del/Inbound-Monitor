@@ -405,6 +405,15 @@ FY Week
 </div>
 
 <div class="card">
+<div class="metric-icon red">
+<i class="fa-solid fa-triangle-exclamation"></i>
+</div>
+<h3>QC Rejected Styles</h3>
+<div class="big-number" id="qcRejectedCount">0</div>
+<div class="metric-sub">Styles awaiting resolution</div>
+</div>
+
+<div class="card">
 <div class="metric-icon blue"><i class="fa-solid fa-circle-check"></i></div>
 <h3>Arrived Purchase Orders</h3>
 <div class="big-number" id="arrivedPOs">0</div>
@@ -1519,6 +1528,9 @@ Array.from(shipmentTable.rows).slice(1);
 const archiveRows =
 Array.from(archiveTable.rows).slice(1);
 
+const qcRows =
+Array.from(qcRejectedTable.rows).slice(1);
+
 let palletsTotal = 0;
 let qtyTotal = 0;
 let urgentPalletsTotal = 0;
@@ -1592,6 +1604,9 @@ urgentPalletsTotal += pallets;
 
 document.getElementById('totalPOs').innerText =
 rows.length;
+
+document.getElementById('qcRejectedCount').innerText =
+qcRows.length;
 
 document.getElementById('arrivedPOs').innerText =
 archiveRows.length;
