@@ -1857,15 +1857,24 @@ if(document.getElementById('sumStyles')){
  document.getElementById('sumUrgent').innerText=sumUrgent;
  document.getElementById('sumMissing').innerText=sumMissing;
 
- const forecast=Math.round((sevenTotal/sevenCapacity)*100)||0;
- document.getElementById('sumForecast').innerText=forecast+'%';
+const sevenRemain =
+sevenCapacity - sevenTotal;
+
+const virtualRemain =
+virtualCapacity - virtualTotal;
+
+document.getElementById('sumSevenRemain').innerText =
+sevenRemain.toLocaleString();
+
+document.getElementById('sumVirtualRemain').innerText =
+virtualRemain.toLocaleString();
 
  let risk='🟢 NORMAL';
- if(sumPallets>150 || sumUrgent>30 || forecast>100){
+ if(sumPallets>150 || sumUrgent>30 || sevenRemain < 0 || virtualRemain < 0){
    risk='☠️ ALL HANDS ON DECK';
- }else if(sumPallets>100 || sumUrgent>20 || forecast>95){
+}else if(sumPallets>100 || sumUrgent>20 || sevenRemain < 100 || virtualRemain < 100){
    risk='🔴 HEAVY WEEK';
- }else if(sumPallets>50 || sumUrgent>10 || forecast>85){
+}else if(sumPallets>50 || sumUrgent>10 || sevenRemain < 200 || virtualRemain < 200){
    risk='🟠 BUSY WEEK';
  }
  document.getElementById('sumRisk').innerText=risk;
