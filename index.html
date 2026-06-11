@@ -737,6 +737,13 @@ style="max-width:280px;"
 
 <h1 style="margin-bottom:20px;">QC Rejected</h1>
 
+<div class="dashboard-grid" style="margin-bottom:20px;">
+<div class="card"><h3>Rejected Styles</h3><div class="big-number" id="qcStyles">0</div></div>
+<div class="card"><h3>Rejected Units</h3><div class="big-number" id="qcUnits">0</div></div>
+<div class="card"><h3>Average Weeks Overdue</h3><div class="big-number" id="qcAvgOverdue">0</div></div>
+<div class="card"><h3>Units Past Due</h3><div class="big-number" id="qcPastDue">0</div></div>
+</div>
+
 <div class="table-wrap">
 
 <table id="qcRejectedTable">
@@ -787,14 +794,14 @@ style="max-width:280px;"
 
 <div class="card" style="margin-top:20px;">
 <h2>Sunday → Saturday Planning Notes</h2>
-<div class="form-grid">
-<div><b>Sunday</b><textarea id="sunNote"></textarea></div>
-<div><b>Monday</b><textarea id="monNote"></textarea></div>
-<div><b>Tuesday</b><textarea id="tueNote"></textarea></div>
-<div><b>Wednesday</b><textarea id="wedNote"></textarea></div>
-<div><b>Thursday</b><textarea id="thuNote"></textarea></div>
-<div><b>Friday</b><textarea id="friNote"></textarea></div>
-<div><b>Saturday</b><textarea id="satNote"></textarea></div>
+<div style="display:flex;flex-direction:column;gap:16px;">
+<div><b>Sunday</b><textarea id="sunNote" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Monday</b><textarea id="monNote" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Tuesday</b><textarea id="tueNote" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Wednesday</b><textarea id="wedNote" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Thursday</b><textarea id="thuNote" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Friday</b><textarea id="friNote" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Saturday</b><textarea id="satNote" style="width:100%;min-height:140px;"></textarea></div>
 </div>
 <br>
 <button class="add-btn" onclick="archiveWeeklyNotes()">Archive Week Notes</button>
@@ -1870,6 +1877,34 @@ if(document.getElementById('sumStyles')){
    qcHealth='🟠 GROWING';
  }
  document.getElementById('sumQCHealth').innerText=qcHealth;
+}
+
+
+let qcUnits=0;
+let overdueWeeks=0;
+let overdueCount=0;
+let unitsPastDue=0;
+
+const currentFYWeek=Math.floor(((new Date()-new Date((new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1),6,1))/(1000*60*60*24))/7)+1;
+
+qcRows.forEach(row=>{
+ const qty=Number(row.cells[9]?.innerText||0);
+ qcUnits+=qty;
+
+ const week=Number((row.cells[6]?.innerText||'').replace('Week ','').trim());
+
+ if(week && week<currentFYWeek){
+   overdueWeeks += (currentFYWeek-week);
+   overdueCount++;
+   unitsPastDue += qty;
+ }
+});
+
+if(document.getElementById('qcStyles')){
+ document.getElementById('qcStyles').innerText = qcRows.length;
+ document.getElementById('qcUnits').innerText = qcUnits.toLocaleString();
+ document.getElementById('qcAvgOverdue').innerText = overdueCount ? ((overdueWeeks/overdueCount).toFixed(1)+'w') : '0';
+ document.getElementById('qcPastDue').innerText = unitsPastDue.toLocaleString();
 }
 
 refreshShipmentOverview();
