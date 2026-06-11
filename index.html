@@ -795,13 +795,13 @@ style="max-width:280px;"
 <div class="card" style="margin-top:20px;">
 <h2>Sunday → Saturday Planning Notes</h2>
 <div style="display:flex;flex-direction:column;gap:16px;">
-<div><b>Sunday</b><textarea id="sunNote" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Monday</b><textarea id="monNote" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Tuesday</b><textarea id="tueNote" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Wednesday</b><textarea id="wedNote" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Thursday</b><textarea id="thuNote" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Friday</b><textarea id="friNote" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Saturday</b><textarea id="satNote" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Sunday</b><textarea id="sunNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Monday</b><textarea id="monNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Tuesday</b><textarea id="tueNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Wednesday</b><textarea id="wedNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Thursday</b><textarea id="thuNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Friday</b><textarea id="friNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
+<div><b>Saturday</b><textarea id="satNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
 </div>
 <br>
 <button class="add-btn" onclick="archiveWeeklyNotes()">Archive Week Notes</button>
@@ -1916,6 +1916,7 @@ async function saveAll(){
 const active = [];
 const archive = [];
 const qcRejected = [];
+const weeklyArchive=[];
 
 Array.from(shipmentTable.rows)
 .slice(1)
@@ -1958,11 +1959,18 @@ qcRejected.push(
 
 });
 
+
+document.querySelectorAll('#notesArchiveContainer .card').forEach(card=>{
+weeklyArchive.push(card.outerHTML);
+});
+
 await db.collection('planner').doc('main').set({
 
 active,
 archive,
 qcRejected,
+weeklyArchive,
+dailyNotes:{sun:sunNote?.value||'',mon:monNote?.value||'',tue:tueNote?.value||'',wed:wedNote?.value||'',thu:thuNote?.value||'',fri:friNote?.value||'',sat:satNote?.value||''},
 
 virtualTaken: virtualTaken.value,
 virtualCapacity: virtualCapacity.value,
@@ -2041,6 +2049,23 @@ qcRejectedTable.appendChild(row);
 
 }
   
+
+if(data.dailyNotes){
+if(window.sunNote) sunNote.value=data.dailyNotes.sun||'';
+if(window.monNote) monNote.value=data.dailyNotes.mon||'';
+if(window.tueNote) tueNote.value=data.dailyNotes.tue||'';
+if(window.wedNote) wedNote.value=data.dailyNotes.wed||'';
+if(window.thuNote) thuNote.value=data.dailyNotes.thu||'';
+if(window.friNote) friNote.value=data.dailyNotes.fri||'';
+if(window.satNote) satNote.value=data.dailyNotes.sat||'';
+}
+
+if(data.weeklyArchive && document.getElementById('notesArchiveContainer')){
+data.weeklyArchive.forEach(item=>{
+document.getElementById('notesArchiveContainer').insertAdjacentHTML('beforeend',item);
+});
+}
+
 if(data.archive){
 
 data.archive.forEach(item=>{
