@@ -788,6 +788,7 @@ style="max-width:280px;"
 <div class="card"><h3>Urgent Despatch</h3><div class="big-number" id="sumUrgent">0</div></div>
 <div class="card"><h3>Seven Hills Remaining</h3><div class="big-number" id="sumSevenRemain">0</div></div>
 <div class="card"><h3>Virtual Remaining</h3><div class="big-number" id="sumVirtualRemain">0</div></div>
+<div class="card"><h3>Warehouse Capacity</h3><div class="big-number" id="sumCapacityStatus">🟢 OK</div></div>
 <div class="card"><h3>QC Status</h3><div class="big-number" id="sumQCHealth">🟢</div></div>
 <div class="card"><h3>Operations Risk</h3><div class="big-number" id="sumRisk">🟢 NORMAL</div></div>
 </div>
@@ -1869,14 +1870,24 @@ document.getElementById('sumVirtualRemain').innerText =
 virtualRemain.toLocaleString();
 
  let risk='🟢 NORMAL';
- if(sumPallets>150 || sumUrgent>30 || sevenRemain < 0 || virtualRemain < 0){
+ if(sumPallets>150 || sumUrgent>30){
    risk='☠️ ALL HANDS ON DECK';
-}else if(sumPallets>100 || sumUrgent>20 || sevenRemain < 100 || virtualRemain < 100){
+ }else if(sumPallets>100 || sumUrgent>20){
    risk='🔴 HEAVY WEEK';
-}else if(sumPallets>50 || sumUrgent>10 || sevenRemain < 200 || virtualRemain < 200){
+ }else if(sumPallets>50 || sumUrgent>10){
    risk='🟠 BUSY WEEK';
  }
  document.getElementById('sumRisk').innerText=risk;
+
+ let capacityStatus='🟢 OK';
+ if(sevenRemain < 0 || virtualRemain < 0){
+   capacityStatus='🔴 OVER CAPACITY';
+ }else if(sevenRemain < 100 || virtualRemain < 100){
+   capacityStatus='🟠 TIGHT';
+ }
+ if(document.getElementById('sumCapacityStatus')){
+   document.getElementById('sumCapacityStatus').innerText=capacityStatus;
+ }
 
  let qcHealth='🟢 UNDER CONTROL';
  if(qcRows.length>20){
