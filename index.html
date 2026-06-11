@@ -685,23 +685,17 @@ style="max-width:280px;"
   
 
 <div id="summaryPage" class="page">
-
 <h1 style="margin-bottom:20px;">Next 7 Days Executive Summary</h1>
-
 <div class="dashboard-grid">
-
 <div class="card"><h3>Incoming Styles (7 Days)</h3><div class="big-number" id="sumStyles">0</div></div>
 <div class="card"><h3>Incoming Units (7 Days)</h3><div class="big-number" id="sumUnits">0</div></div>
 <div class="card"><h3>Incoming Pallets (7 Days)</h3><div class="big-number" id="sumPallets">0</div></div>
 <div class="card"><h3>Urgent Despatch</h3><div class="big-number" id="sumUrgent">0</div></div>
-
-<div class="card"><h3>QC Rejected Styles</h3><div class="big-number" id="sumQC">0</div></div>
-<div class="card"><h3>Overdue QC Styles</h3><div class="big-number" id="sumQCOverdue">0</div></div>
+<div class="card"><h3>Warehouse Forecast</h3><div class="big-number" id="sumForecast">0%</div></div>
+<div class="card"><h3>QC Status</h3><div class="big-number" id="sumQCHealth">🟢</div></div>
 <div class="card"><h3>Missing Locations</h3><div class="big-number" id="sumMissing">0</div></div>
-<div class="card"><h3>Risk Level</h3><div class="big-number" id="sumRisk">🟢</div></div>
-
+<div class="card"><h3>Operations Risk</h3><div class="big-number" id="sumRisk">🟢 NORMAL</div></div>
 </div>
-
 </div>
 
 <div id="archivePage" class="page">
@@ -1715,6 +1709,7 @@ document.getElementById('sevenHillsCard')
 
 const today=new Date();
 let sumStyles=0,sumUnits=0,sumPallets=0,sumUrgent=0,sumMissing=0;
+
 rows.forEach(row=>{
  const eta=row.cells[5].innerText;
  const qty=Number(row.cells[9].innerText||0);
@@ -1723,7 +1718,6 @@ rows.forEach(row=>{
  const location=row.cells[12].innerText.trim();
 
  if(location==='') sumMissing++;
-
  if(priority==='Urgent Despatch') sumUrgent++;
 
  if(eta){
@@ -1737,27 +1731,33 @@ rows.forEach(row=>{
  }
 });
 
-let qcOverdue=0;
-const currentFYWeek=Math.floor(((new Date()-new Date((new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1),6,1))/(1000*60*60*24))/7)+1;
-
-qcRows.forEach(row=>{
- const week=Number((row.cells[6]?.innerText||'').replace('Week ',''));
- if(week && week<currentFYWeek) qcOverdue++;
-});
-
 if(document.getElementById('sumStyles')){
  document.getElementById('sumStyles').innerText=sumStyles;
  document.getElementById('sumUnits').innerText=sumUnits.toLocaleString();
- document.getElementById('sumPallets').innerText=sumPallets;
+ document.getElementById('sumPallets').innerText=sumPallets.toLocaleString();
  document.getElementById('sumUrgent').innerText=sumUrgent;
- document.getElementById('sumQC').innerText=qcRows.length;
- document.getElementById('sumQCOverdue').innerText=qcOverdue;
  document.getElementById('sumMissing').innerText=sumMissing;
 
- let risk='🟢';
- if(qcOverdue>5 || sumMissing>5) risk='🔴';
- else if(qcOverdue>0 || sumMissing>0 || sumUrgent>5) risk='🟠';
+ const forecast=Math.round((sevenTotal/sevenCapacity)*100)||0;
+ document.getElementById('sumForecast').innerText=forecast+'%';
+
+ let risk='🟢 NORMAL';
+ if(sumPallets>150 || sumUrgent>30 || forecast>100){
+   risk='☠️ ALL HANDS ON DECK';
+ }else if(sumPallets>100 || sumUrgent>20 || forecast>95){
+   risk='🔴 HEAVY WEEK';
+ }else if(sumPallets>50 || sumUrgent>10 || forecast>85){
+   risk='🟠 BUSY WEEK';
+ }
  document.getElementById('sumRisk').innerText=risk;
+
+ let qcHealth='🟢 UNDER CONTROL';
+ if(qcRows.length>20){
+   qcHealth='🔴 ESCALATION';
+ }else if(qcRows.length>10){
+   qcHealth='🟠 GROWING';
+ }
+ document.getElementById('sumQCHealth').innerText=qcHealth;
 }
 
 refreshShipmentOverview();
