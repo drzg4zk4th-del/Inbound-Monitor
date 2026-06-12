@@ -2020,7 +2020,10 @@ virtualTaken: virtualTaken.value,
 virtualCapacity: virtualCapacity.value,
 
 sevenTaken: sevenHillsTaken.value,
-sevenCapacity: sevenHillsCapacity.value
+sevenCapacity: sevenHillsCapacity.value,
+
+mainTaken: mainWarehouseTaken.value,
+mainCapacity: mainWarehouseCapacity.value
 
 });
 
@@ -2046,6 +2049,12 @@ data.sevenTaken || 0;
 
 sevenHillsCapacity.value =
 data.sevenCapacity || 1400;
+
+mainWarehouseTaken.value =
+data.mainTaken || 0;
+
+mainWarehouseCapacity.value =
+data.mainCapacity || 1000;
 
 if(data.active){
 
