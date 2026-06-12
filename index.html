@@ -626,6 +626,19 @@ FY Week
 
 </div>
 
+<div class="card" id="mainWarehouseCard">
+<div class="metric-icon green"><i class="fa-solid fa-warehouse"></i></div>
+<h3>Main Warehouse Capacity</h3>
+<div class="capacity-inputs">
+<div><div class="metric-sub">Current Usage</div>
+<input type="number" id="mainWarehouseTaken" value="0" oninput="refreshDashboard();saveAll()"></div>
+<div><div class="metric-sub">Total Capacity</div>
+<input type="number" id="mainWarehouseCapacity" value="1000" oninput="refreshDashboard();saveAll()"></div>
+</div>
+<div class="big-number" id="mainWarehouseUsage">0 / 1000</div>
+<div class="percent-text green" id="mainWarehousePercent">0%</div>
+</div>
+
 <div class="card shipment-master-card">
 
 <div class="metric-icon blue">
@@ -668,8 +681,10 @@ FY Week
 <input id="qtyInput" type="number" placeholder="Quantity">
 
 <select id="warehouseInput">
-<option>Seven Hills Warehouse</option>
 <option>Virtual Warehouse</option>
+<option>Seven Hills Warehouse</option>
+<option>Main Warehouse</option>
+<option>PR Warehouse</option>
 </select>
 
 <select id="priorityInput">
@@ -1023,21 +1038,10 @@ row.innerHTML = `
 
 <td>
 <select class="premium-select">
-<option ${
-data.warehouse === 'Seven Hills Warehouse'
-? 'selected'
-: ''
-}>
-Seven Hills Warehouse
-</option>
-
-<option ${
-data.warehouse === 'Virtual Warehouse'
-? 'selected'
-: ''
-}>
-Virtual Warehouse
-</option>
+<option ${data.warehouse === 'Virtual Warehouse' ? 'selected' : ''}>Virtual Warehouse</option>
+<option ${data.warehouse === 'Seven Hills Warehouse' ? 'selected' : ''}>Seven Hills Warehouse</option>
+<option ${data.warehouse === 'Main Warehouse' ? 'selected' : ''}>Main Warehouse</option>
+<option ${data.warehouse === 'PR Warehouse' ? 'selected' : ''}>PR Warehouse</option>
 </select>
 </td>
 
@@ -1338,7 +1342,7 @@ qcRow.innerHTML = `
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
 
-<td>${row.cells[16].innerHTML}</td>
+<td>${row.cells[18].innerHTML}</td>
 
 <td>QC Rejected</td>
 
@@ -1396,7 +1400,7 @@ archiveRow.innerHTML = `
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
 
-<td>${row.cells[16].innerHTML}</td>
+<td>${row.cells[18].innerHTML}</td>
 
 <td>Arrived</td>
 
@@ -1426,12 +1430,10 @@ saveAll();
 
 }
   
+
 function moveToArchive(row){
-
-const archiveRow =
-archiveTable.insertRow(-1);
-
-archiveRow.innerHTML = `
+const archiveRow=archiveTable.insertRow(-1);
+archiveRow.innerHTML=`
 <td>${row.cells[0].innerHTML}</td>
 <td>${row.cells[1].innerHTML}</td>
 <td>${row.cells[2].innerHTML}</td>
@@ -1439,98 +1441,50 @@ archiveRow.innerHTML = `
 <td>${row.cells[4].innerHTML}</td>
 <td>${row.cells[5].innerHTML}</td>
 <td>${row.cells[6].innerHTML}</td>
-
-<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
-<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
-<td>${row.cells[9].innerHTML}</td> <!-- Qty -->
-
-<td>${row.cells[10].innerHTML}</td> <!-- Warehouse -->
-<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
-
-<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
-<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
-
-<td>${row.cells[14].innerHTML}</td> <!-- Action -->
-<td>
-<select class="premium-select status-select">
-<option selected>In Transit</option>
-<option>QC Rejected</option>
-<option>Arrived</option>
-</select>
-</td> <!-- Status -->
-<td contenteditable="true">${row.cells[16].innerHTML}</td> 
-
-<td>
-<button class="restore-btn" onclick="restoreRow(this)">
-Restore
-</button>
-</td>
-
-<td>
-<button class="delete-btn" onclick="deleteRow(this)">
-<i class="fa-solid fa-trash"></i>
-</button>
-</td>
-`;
-
-row.remove();
-
-refreshDashboard();
-saveAll();
-
+<td>${row.cells[7].innerHTML}</td>
+<td>${row.cells[8].innerHTML}</td>
+<td>${row.cells[9].innerHTML}</td>
+<td>${row.cells[10].innerHTML}</td>
+<td>${row.cells[11].innerHTML}</td>
+<td>${row.cells[12].innerHTML}</td>
+<td>${row.cells[13].innerHTML}</td>
+<td>${row.cells[14].innerHTML}</td>
+<td>${row.cells[15].innerHTML}</td>
+<td>${row.cells[16].innerHTML}</td>
+<td>Arrived</td>
+<td>${row.cells[18].innerHTML}</td>
+<td><button class="restore-btn" onclick="restoreRow(this)">Restore</button></td>
+<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>`;
+row.remove(); refreshDashboard(); saveAll();
 }
 
+
 function restoreRow(btn){
-
-const row = btn.closest('tr');
-
-const newRow =
-shipmentTable.insertRow(-1);
-
-newRow.innerHTML = `
-<td>${row.cells[0].innerHTML}</td>
-<td>${row.cells[1].innerHTML}</td>
-<td>${row.cells[2].innerHTML}</td>
-<td>${row.cells[3].innerHTML}</td>
-<td>${row.cells[4].innerHTML}</td>
-<td>${row.cells[5].innerHTML}</td>
-<td>${row.cells[6].innerHTML}</td>
-
-<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
-<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
-<td>${row.cells[9].innerHTML}</td> <!-- Qty -->
-
-<td>${row.cells[10].innerHTML}</td> <!-- Warehouse -->
-<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
-
-<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
-<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
-
-<td>${row.cells[14].innerHTML}</td> <!-- Action -->
-<td>
-<select class="premium-select status-select">
-<option selected>In Transit</option>
-<option>QC Rejected</option>
-<option>Arrived</option>
-</select>
-</td> <!-- Status -->
-<td>${row.cells[16].innerHTML}</td> 
-
-
-<td>
-<button class="delete-btn" onclick="deleteRow(this)">
-<i class="fa-solid fa-trash"></i>
-</button>
-</td>
-`;
-
+const row=btn.closest('tr');
+const newRow=shipmentTable.insertRow(-1);
+newRow.innerHTML=`
+<td contenteditable="true">${row.cells[0].innerHTML}</td>
+<td contenteditable="true">${row.cells[1].innerHTML}</td>
+<td contenteditable="true">${row.cells[2].innerHTML}</td>
+<td contenteditable="true">${row.cells[3].innerHTML}</td>
+<td contenteditable="true">${row.cells[4].innerHTML}</td>
+<td contenteditable="true">${row.cells[5].innerHTML}</td>
+<td contenteditable="true">${row.cells[6].innerHTML}</td>
+<td contenteditable="true">${row.cells[7].innerHTML}</td>
+<td contenteditable="true">${row.cells[8].innerHTML}</td>
+<td contenteditable="true">${row.cells[9].innerHTML}</td>
+<td>${row.cells[10].innerHTML}</td>
+<td contenteditable="true">${row.cells[11].innerHTML}</td>
+<td>${row.cells[12].innerHTML}</td>
+<td>${row.cells[13].innerHTML}</td>
+<td contenteditable="true">${row.cells[14].innerHTML}</td>
+<td contenteditable="true">${row.cells[15].innerHTML}</td>
+<td>${row.cells[16].innerHTML}</td>
+<td><select class="premium-select status-select"><option selected>In Transit</option><option>QC Rejected</option><option>Arrived</option></select></td>
+<td contenteditable="true">${row.cells[18].innerHTML}</td>
+<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>`;
 setupRow(newRow);
-
-row.remove();
-
-refreshDashboard();
-saveAll();
-
+row.remove(); refreshDashboard(); saveAll();
 }
 
 function deleteRow(btn){
