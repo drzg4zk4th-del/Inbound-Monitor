@@ -974,13 +974,18 @@ console.error(error);
 
 }
 
-dispatchWeek.innerHTML = '';
+const dispatchWeek =
+document.getElementById('dispatchWeekInput');
+
+let options = '';
 
 for (let fy = 26; fy <= 30; fy++) {
   for (let week = 1; week <= 52; week++) {
-    dispatchWeek.innerHTML += `<option>W${String(week).padStart(2, '0')} FY${fy}</option>`;
+    options += `<option>W${String(week).padStart(2,'0')} FY${fy}</option>`;
   }
 }
+
+dispatchWeek.innerHTML = options;
 
 function getFinancialWeek(){
 
