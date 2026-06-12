@@ -820,6 +820,7 @@ style="max-width:280px;"
 </div>
 <br>
 <button class="add-btn" onclick="archiveWeeklyNotes()">Archive Week Notes</button>
+<button class="add-btn" onclick="exportCurrentWeekNotes()">Export Current Week Notes</button>
 </div>
 </div>
 
@@ -1711,13 +1712,13 @@ const pallets =
 incomingPallets + packsPallets;
 
 const qty =
-Number(row.cells[9].innerText || 0);
+Number(row.cells[11].innerText || 0);
 
 palletsTotal += pallets;
 qtyTotal += qty;
 
 const warehouse =
-row.cells[10]
+row.cells[12]
 .querySelector('select')
 .value;
 
@@ -1850,10 +1851,10 @@ let sumStyles=0,sumUnits=0,sumPallets=0,sumUrgent=0,sumMissing=0;
 
 rows.forEach(row=>{
  const eta=row.cells[5].innerText;
- const qty=Number(row.cells[9].innerText||0);
+ const qty=Number(row.cells[11].innerText||0);
  const pallets=(Number(row.cells[7].innerText||0)+Number(row.cells[8].innerText||0));
- const priority=row.cells[11].querySelector('select').value;
- const location=row.cells[12].innerText.trim();
+ const priority=row.cells[13].querySelector('select').value;
+ const location=row.cells[14].innerText.trim();
 
  if(location==='') sumMissing++;
  if(priority==='Urgent Despatch') sumUrgent++;
@@ -1936,7 +1937,7 @@ let unitsPastDue=0;
 const currentFYWeek=Math.floor(((new Date()-new Date((new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1),6,1))/(1000*60*60*24))/7)+1;
 
 qcRows.forEach(row=>{
- const qty=Number(row.cells[9]?.innerText||0);
+ const qty=Number(row.cells[11]?.innerText||0);
  qcUnits+=qty;
 
  const week=Number((row.cells[6]?.innerText||'').replace('Week ','').trim());
@@ -2381,6 +2382,16 @@ function archiveWeeklyNotes(){
 }
 
 
+
+
+function exportCurrentWeekNotes(){
+ let txt=`Sunday\n${sunNote.value}\n\nMonday\n${monNote.value}\n\nTuesday\n${tueNote.value}\n\nWednesday\n${wedNote.value}\n\nThursday\n${thuNote.value}\n\nFriday\n${friNote.value}\n\nSaturday\n${satNote.value}`;
+ const blob=new Blob([txt],{type:'text/plain'});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download='CurrentWeekNotes.txt';
+ a.click();
+}
 
 function exportNotesArchive(){
  const cards=document.querySelectorAll('#notesArchiveContainer .card');
