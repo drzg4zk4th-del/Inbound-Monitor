@@ -974,10 +974,18 @@ console.error(error);
 
 }
 
-for(let i=1;i<=52;i++){
-const option=document.createElement('option');
-option.textContent=`Week ${i}`;
-dispatchWeekInput.appendChild(option);
+dispatchWeek.innerHTML = '';
+
+for (let fy = 26; fy <= 30; fy++) {
+
+  for (let week = 1; week <= 52; week++) {
+
+    dispatchWeek.innerHTML += `
+      <option>W${String(week).padStart(2, '0')} FY${fy}</option>
+    `;
+
+  }
+
 }
 
 function getFinancialWeek(){
