@@ -541,6 +541,20 @@ FY Week
 <div class="big-number" id="urgentPallets">0</div>
 <div class="metric-sub">Urgent incoming pallets</div>
 </div>
+<div class="card">
+<div class="metric-icon purple"><i class="fa-solid fa-box-open"></i></div>
+<h3>Total Estimated Cartons</h3>
+<div class="big-number" id="totalCartons">0</div>
+<div class="metric-sub">All active shipments</div>
+</div>
+
+<div class="card">
+<div class="metric-icon blue"><i class="fa-solid fa-boxes-stacked"></i></div>
+<h3>Cartons Next 7 Days</h3>
+<div class="big-number" id="next7Cartons">0</div>
+<div class="metric-sub">Incoming cartons</div>
+</div>
+
 
 <div class="card">
 <div class="metric-icon orange"><i class="fa-solid fa-location-dot"></i></div>
@@ -1692,6 +1706,8 @@ Array.from(qcRejectedTable.rows).slice(1);
 
 let palletsTotal = 0;
 let qtyTotal = 0;
+let cartonsTotal = 0;
+let cartonsNext7 = 0;
 let urgentPalletsTotal = 0;
 let unallocatedCount = 0;
 
@@ -1711,14 +1727,15 @@ Number(row.cells[8].innerText || 0);
 const pallets =
 incomingPallets + packsPallets;
 
-const qty =
-Number(row.cells[11].innerText || 0);
+const qty = Number(row.cells[11].innerText || 0);
+const cartons = Number(row.cells[10].innerText || 0);
+cartonsTotal += cartons;
 
 palletsTotal += pallets;
 qtyTotal += qty;
 
 const warehouse =
-row.cells[12]
+row.cells[10]
 .querySelector('select')
 .value;
 
@@ -1755,6 +1772,7 @@ const diff =
 
 if(diff <= 7 && diff >= 0){
 urgentPalletsTotal += pallets;
+cartonsNext7 += cartons;
 }
 
 }
@@ -1778,6 +1796,9 @@ qtyTotal.toLocaleString();
 
 document.getElementById('urgentPallets').innerText =
 urgentPalletsTotal.toLocaleString();
+
+if(document.getElementById('totalCartons')) document.getElementById('totalCartons').innerText = cartonsTotal.toLocaleString();
+if(document.getElementById('next7Cartons')) document.getElementById('next7Cartons').innerText = cartonsNext7.toLocaleString();
 
 document.getElementById('unallocatedRows').innerText =
 unallocatedCount;
@@ -1851,10 +1872,10 @@ let sumStyles=0,sumUnits=0,sumPallets=0,sumUrgent=0,sumMissing=0;
 
 rows.forEach(row=>{
  const eta=row.cells[5].innerText;
- const qty=Number(row.cells[11].innerText||0);
+ const qty=Number(row.cells[9].innerText||0);
  const pallets=(Number(row.cells[7].innerText||0)+Number(row.cells[8].innerText||0));
- const priority=row.cells[13].querySelector('select').value;
- const location=row.cells[14].innerText.trim();
+ const priority=row.cells[11].querySelector('select').value;
+ const location=row.cells[12].innerText.trim();
 
  if(location==='') sumMissing++;
  if(priority==='Urgent Despatch') sumUrgent++;
@@ -1937,7 +1958,7 @@ let unitsPastDue=0;
 const currentFYWeek=Math.floor(((new Date()-new Date((new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1),6,1))/(1000*60*60*24))/7)+1;
 
 qcRows.forEach(row=>{
- const qty=Number(row.cells[11]?.innerText||0);
+ const qty=Number(row.cells[9]?.innerText||0);
  qcUnits+=qty;
 
  const week=Number((row.cells[6]?.innerText||'').replace('Week ','').trim());
