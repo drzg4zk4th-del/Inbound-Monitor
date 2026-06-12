@@ -90,18 +90,19 @@ function getWeekEndingDate(){
 
 function archiveWeeklyNotes(){
  const weekEnding=getWeekEndingDate();
-
- const notes=`Sunday: ${sunNote.value}<br>
- Monday: ${monNote.value}<br>
- Tuesday: ${tueNote.value}<br>
- Wednesday: ${wedNote.value}<br>
- Thursday: ${thuNote.value}<br>
- Friday: ${friNote.value}<br>
- Saturday: ${satNote.value}`;
-
- const row=notesArchiveTable.insertRow(-1);
- row.innerHTML=`<td>${weekEnding}</td><td>${notes}</td><td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>`;
-
+ const card=document.createElement('div');
+ card.className='card';
+ card.innerHTML=`
+ <h3>Week Ending ${weekEnding}</h3>
+ <p><b>Sunday</b><br>${sunNote.value}</p>
+ <p><b>Monday</b><br>${monNote.value}</p>
+ <p><b>Tuesday</b><br>${tueNote.value}</p>
+ <p><b>Wednesday</b><br>${wedNote.value}</p>
+ <p><b>Thursday</b><br>${thuNote.value}</p>
+ <p><b>Friday</b><br>${friNote.value}</p>
+ <p><b>Saturday</b><br>${satNote.value}</p>
+ <button class="delete-btn" onclick="this.parentElement.remove();saveAll()">Delete</button>`;
+ document.getElementById('notesArchiveContainer').appendChild(card);
  saveAll();
 }
 
@@ -1425,38 +1426,111 @@ saveAll();
 
 }
   
-
 function moveToArchive(row){
 
-const archiveRow = archiveTable.insertRow(-1);
+const archiveRow =
+archiveTable.insertRow(-1);
 
 archiveRow.innerHTML = `
-${Array.from({length:19},(_,i)=>`<td>${row.cells[${i}].innerHTML}</td>`).join('')}
-<td><button class="restore-btn" onclick="restoreRow(this)">Restore</button></td>
-<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>
+<td>${row.cells[0].innerHTML}</td>
+<td>${row.cells[1].innerHTML}</td>
+<td>${row.cells[2].innerHTML}</td>
+<td>${row.cells[3].innerHTML}</td>
+<td>${row.cells[4].innerHTML}</td>
+<td>${row.cells[5].innerHTML}</td>
+<td>${row.cells[6].innerHTML}</td>
+
+<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
+<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
+<td>${row.cells[9].innerHTML}</td> <!-- Qty -->
+
+<td>${row.cells[10].innerHTML}</td> <!-- Warehouse -->
+<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
+
+<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
+<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
+
+<td>${row.cells[14].innerHTML}</td> <!-- Action -->
+<td>
+<select class="premium-select status-select">
+<option selected>In Transit</option>
+<option>QC Rejected</option>
+<option>Arrived</option>
+</select>
+</td> <!-- Status -->
+<td contenteditable="true">${row.cells[16].innerHTML}</td> 
+
+<td>
+<button class="restore-btn" onclick="restoreRow(this)">
+Restore
+</button>
+</td>
+
+<td>
+<button class="delete-btn" onclick="deleteRow(this)">
+<i class="fa-solid fa-trash"></i>
+</button>
+</td>
 `;
 
 row.remove();
+
 refreshDashboard();
 saveAll();
-}
 
+}
 
 function restoreRow(btn){
 
 const row = btn.closest('tr');
-const newRow = shipmentTable.insertRow(-1);
 
-let cells='';
-for(let i=0;i<19;i++){ cells += `<td>${row.cells[i].innerHTML}</td>`; }
-cells += `<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>`;
+const newRow =
+shipmentTable.insertRow(-1);
 
-newRow.innerHTML=cells;
+newRow.innerHTML = `
+<td>${row.cells[0].innerHTML}</td>
+<td>${row.cells[1].innerHTML}</td>
+<td>${row.cells[2].innerHTML}</td>
+<td>${row.cells[3].innerHTML}</td>
+<td>${row.cells[4].innerHTML}</td>
+<td>${row.cells[5].innerHTML}</td>
+<td>${row.cells[6].innerHTML}</td>
+
+<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
+<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
+<td>${row.cells[9].innerHTML}</td> <!-- Qty -->
+
+<td>${row.cells[10].innerHTML}</td> <!-- Warehouse -->
+<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
+
+<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
+<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
+
+<td>${row.cells[14].innerHTML}</td> <!-- Action -->
+<td>
+<select class="premium-select status-select">
+<option selected>In Transit</option>
+<option>QC Rejected</option>
+<option>Arrived</option>
+</select>
+</td> <!-- Status -->
+<td>${row.cells[16].innerHTML}</td> 
+
+
+<td>
+<button class="delete-btn" onclick="deleteRow(this)">
+<i class="fa-solid fa-trash"></i>
+</button>
+</td>
+`;
+
 setupRow(newRow);
 
 row.remove();
+
 refreshDashboard();
 saveAll();
+
 }
 
 function deleteRow(btn){
