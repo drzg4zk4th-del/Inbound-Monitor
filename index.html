@@ -831,7 +831,7 @@ style="max-width:280px;"
 <div class="card"><h3>Incoming Pallets (7 Days)</h3><div class="big-number" id="sumPallets">0</div></div>
 <div class="card"><h3>Urgent Despatch</h3><div class="big-number" id="sumUrgent">0</div></div>
 <div class="card"><h3>Seven Hills Remaining</h3><div class="big-number" id="sumSevenRemain">0</div></div>
-<div class="card"><h3>Virtual Remaining</h3><div class="big-number" id="sumVirtualRemain">0</div></div>
+<div class="card"><h3>Virtual Remaining</h3><div class="big-number" id="sumVirtualRemain">0</div></div><div class="card"><h3>Main Warehouse Remaining</h3><div class="big-number" id="sumMainRemain">0</div></div>
 
 <div class="card"><h3>QC Status</h3><div class="big-number" id="sumQCHealth">🟢</div></div>
 <div class="card"><h3>Operations Risk</h3><div class="big-number" id="sumRisk">🟢 NORMAL</div></div>
@@ -1033,7 +1033,7 @@ row.innerHTML = `
 <td contenteditable="true">${data.loosePallets || 0}</td>
 <td contenteditable="true">${data.packPallets || 0}</td>
 <td contenteditable="true">${data.unitsPerCarton || 0}</td>
-<td>${data.cartons || Math.ceil((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1))}</td>
+<td contenteditable="true">${data.cartons || Math.ceil((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1))}</td>
 <td contenteditable="true">${data.qty || 0}</td>
 
 <td>
@@ -1668,6 +1668,7 @@ let unallocatedCount = 0;
 
 let virtualIncoming = 0;
 let sevenIncoming = 0;
+let mainIncoming = 0;
 
 const weeks = new Set();
 
@@ -1696,6 +1697,8 @@ row.cells[12]
 
 if(warehouse === 'Virtual Warehouse'){
 virtualIncoming += pallets;
+}else if(warehouse === 'Main Warehouse'){
+mainIncoming += pallets;
 }else{
 sevenIncoming += pallets;
 }
@@ -1776,14 +1779,21 @@ Number(document.getElementById('sevenHillsCapacity').value || 0);
 const virtualTotal =
 virtualTaken + virtualIncoming;
 
+const mainTaken=Number(document.getElementById('mainWarehouseTaken')?.value||0);
+const mainCapacity=Number(document.getElementById('mainWarehouseCapacity')?.value||1000);
+
 const sevenTotal =
 sevenTaken + sevenIncoming;
+const mainTotal=mainTaken+mainIncoming;
 
 document.getElementById('virtualUsage').innerText =
 `${virtualTotal} / ${virtualCapacity}`;
 
 document.getElementById('sevenHillsUsage').innerText =
 `${sevenTotal} / ${sevenCapacity}`;
+if(document.getElementById('mainWarehouseUsage')){
+document.getElementById('mainWarehouseUsage').innerText=`${mainTotal} / ${mainCapacity}`;
+}
 
 const virtualPercent =
 virtualCapacity > 0
@@ -1858,11 +1868,18 @@ sevenCapacity - sevenTotal;
 const virtualRemain =
 virtualCapacity - virtualTotal;
 
+const mainRemain =
+mainCapacity - mainTotal;
+
 document.getElementById('sumSevenRemain').innerText =
 sevenRemain.toLocaleString();
 
 document.getElementById('sumVirtualRemain').innerText =
 virtualRemain.toLocaleString();
+
+if(document.getElementById('sumMainRemain')){
+document.getElementById('sumMainRemain').innerText=mainRemain.toLocaleString();
+}
 const sevenRemainEl=document.getElementById('sumSevenRemain');
 const virtualRemainEl=document.getElementById('sumVirtualRemain');
 
