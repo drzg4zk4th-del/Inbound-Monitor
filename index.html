@@ -58,7 +58,7 @@ function getWeekEndingDate(){
  return saturday.toLocaleDateString();
 }
 
-function archiveWeeklyNotes(){
+function archiveWeeklyNotes_OLD_DISABLED(){
  const weekEnding=getWeekEndingDate();
 
  const notes=`Sunday: ${sunNote.value}<br>
@@ -770,6 +770,8 @@ style="max-width:280px;"
 <th>Dispatch Week</th>
 <th>Pallets</th>
 <th>Packs Pallets</th>
+<th>Units/Carton</th>
+<th>Cartons</th>
 <th>Qty</th>
 <th>Warehouse</th>
 <th>Priority</th>
@@ -822,7 +824,7 @@ style="max-width:280px;"
 </div>
 
 <div id="notesArchivePage" class="page">
-<h1 style="margin-bottom:20px;">Weekly Notes Archive</h1>
+<h1 style="margin-bottom:20px;">Weekly Notes Archive</h1><button class="add-btn" onclick="exportNotesArchive()">Export Weekly Notes</button>
 <div id="notesArchiveContainer"></div>
 </div>
 
@@ -844,6 +846,8 @@ style="max-width:280px;"
 <th onclick="sortTable(this)" style="cursor:pointer;">Dispatch Week ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Pallets ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Packs Pallets ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Units/Carton ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Cartons ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Warehouse ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Priority ↕</th>
@@ -997,6 +1001,8 @@ row.innerHTML = `
 
 <td contenteditable="true">${data.loosePallets || 0}</td>
 <td contenteditable="true">${data.packPallets || 0}</td>
+<td contenteditable="true">${data.unitsPerCarton || 0}</td>
+<td>${data.cartons || Math.ceil((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1))}</td>
 <td contenteditable="true">${data.qty || 0}</td>
 
 <td>
@@ -1164,6 +1170,8 @@ dispatchWeek: dispatchWeekInput.value,
 
 loosePallets: palletInput.value,
 packPallets: packsPalletInput.value,
+unitsPerCarton: unitsPerCartonInput.value,
+cartons: Math.ceil((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)),
 qty: qtyInput.value,
 
 warehouse: warehouseInput.value,
@@ -1306,14 +1314,15 @@ qcRow.innerHTML = `
 <td>${row.cells[7].innerHTML}</td>
 <td>${row.cells[8].innerHTML}</td>
 <td>${row.cells[9].innerHTML}</td>
-
 <td>${row.cells[10].innerHTML}</td>
 <td>${row.cells[11].innerHTML}</td>
 
 <td>${row.cells[12].innerHTML}</td>
 <td>${row.cells[13].innerHTML}</td>
-
 <td>${row.cells[14].innerHTML}</td>
+<td>${row.cells[15].innerHTML}</td>
+
+<td>${row.cells[16].innerHTML}</td>
 
 <td>QC Rejected</td>
 
@@ -1363,14 +1372,15 @@ archiveRow.innerHTML = `
 <td>${row.cells[7].innerHTML}</td>
 <td>${row.cells[8].innerHTML}</td>
 <td>${row.cells[9].innerHTML}</td>
-
 <td>${row.cells[10].innerHTML}</td>
 <td>${row.cells[11].innerHTML}</td>
 
 <td>${row.cells[12].innerHTML}</td>
 <td>${row.cells[13].innerHTML}</td>
-
 <td>${row.cells[14].innerHTML}</td>
+<td>${row.cells[15].innerHTML}</td>
+
+<td>${row.cells[16].innerHTML}</td>
 
 <td>Arrived</td>
 
@@ -1969,7 +1979,9 @@ eta: row.cells[5].innerText,
 dispatchWeek: row.cells[6].innerText,
 loosePallets: row.cells[7].innerText,
 packPallets: row.cells[8].innerText,
-qty: row.cells[9].innerText,
+unitsPerCarton: row.cells[9].innerText,
+cartons: row.cells[10].innerText,
+qty: row.cells[11].innerText,
 warehouse: row.cells[10].querySelector('select').value,
 priority: row.cells[11].querySelector('select').value,
 location: row.cells[12].innerText,
@@ -2368,6 +2380,18 @@ function archiveWeeklyNotes(){
  saveAll();
 }
 
+
+
+function exportNotesArchive(){
+ const cards=document.querySelectorAll('#notesArchiveContainer .card');
+ let txt='Weekly Notes Archive\n\n';
+ cards.forEach(c=> txt += c.innerText + '\n\n');
+ const blob=new Blob([txt],{type:'text/plain'});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download='WeeklyNotesArchive.txt';
+ a.click();
+}
 
 function exportTableCSV(tableId,fileName){
  const rows=document.querySelectorAll('#'+tableId+' tr');
