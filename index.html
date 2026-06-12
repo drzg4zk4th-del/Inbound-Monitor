@@ -1425,115 +1425,38 @@ saveAll();
 
 }
   
+
 function moveToArchive(row){
 
-const archiveRow =
-archiveTable.insertRow(-1);
+const archiveRow = archiveTable.insertRow(-1);
 
 archiveRow.innerHTML = `
-<td>${row.cells[0].innerHTML}</td>
-<td>${row.cells[1].innerHTML}</td>
-<td>${row.cells[2].innerHTML}</td>
-<td>${row.cells[3].innerHTML}</td>
-<td>${row.cells[4].innerHTML}</td>
-<td>${row.cells[5].innerHTML}</td>
-<td>${row.cells[6].innerHTML}</td>
-
-<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
-<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
-<td>${row.cells[9].innerHTML}</td> <!-- Units/Carton -->
-<td>${row.cells[10].innerHTML}</td> <!-- Cartons -->
-<td>${row.cells[11].innerHTML}</td> <!-- Qty -->
-
-<td>${row.cells[12].innerHTML}</td> <!-- Warehouse -->
-<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
-
-<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
-<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
-
-<td>${row.cells[14].innerHTML}</td> <!-- Action -->
-<td>
-<select class="premium-select status-select">
-<option selected>In Transit</option>
-<option>QC Rejected</option>
-<option>Arrived</option>
-</select>
-</td> <!-- Status -->
-<td contenteditable="true">${row.cells[16].innerHTML}</td> 
-
-<td>
-<button class="restore-btn" onclick="restoreRow(this)">
-Restore
-</button>
-</td>
-
-<td>
-<button class="delete-btn" onclick="deleteRow(this)">
-<i class="fa-solid fa-trash"></i>
-</button>
-</td>
+${Array.from({length:19},(_,i)=>`<td>${row.cells[${i}].innerHTML}</td>`).join('')}
+<td><button class="restore-btn" onclick="restoreRow(this)">Restore</button></td>
+<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>
 `;
 
 row.remove();
-
 refreshDashboard();
 saveAll();
-
 }
+
 
 function restoreRow(btn){
 
 const row = btn.closest('tr');
+const newRow = shipmentTable.insertRow(-1);
 
-const newRow =
-shipmentTable.insertRow(-1);
+let cells='';
+for(let i=0;i<19;i++){ cells += `<td>${row.cells[i].innerHTML}</td>`; }
+cells += `<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>`;
 
-newRow.innerHTML = `
-<td>${row.cells[0].innerHTML}</td>
-<td>${row.cells[1].innerHTML}</td>
-<td>${row.cells[2].innerHTML}</td>
-<td>${row.cells[3].innerHTML}</td>
-<td>${row.cells[4].innerHTML}</td>
-<td>${row.cells[5].innerHTML}</td>
-<td>${row.cells[6].innerHTML}</td>
-
-<td>${row.cells[7].innerHTML}</td> <!-- Loose Pallets -->
-<td>${row.cells[8].innerHTML}</td> <!-- Packs Pallets -->
-<td>${row.cells[9].innerHTML}</td> <!-- Units/Carton -->
-<td>${row.cells[10].innerHTML}</td> <!-- Cartons -->
-<td>${row.cells[11].innerHTML}</td> <!-- Qty -->
-
-<td>${row.cells[12].innerHTML}</td> <!-- Warehouse -->
-<td>${row.cells[11].innerHTML}</td> <!-- Priority -->
-
-<td>${row.cells[12].innerHTML}</td> <!-- Storage Location -->
-<td>${row.cells[13].innerHTML}</td> <!-- Current Location -->
-
-<td>${row.cells[14].innerHTML}</td> <!-- Action -->
-<td>
-<select class="premium-select status-select">
-<option selected>In Transit</option>
-<option>QC Rejected</option>
-<option>Arrived</option>
-</select>
-</td> <!-- Status -->
-<td>${row.cells[16].innerHTML}</td> 
-
-
-<td>
-<button class="delete-btn" onclick="deleteRow(this)">
-<i class="fa-solid fa-trash"></i>
-</button>
-</td>
-`;
-
+newRow.innerHTML=cells;
 setupRow(newRow);
 
 row.remove();
-
 refreshDashboard();
 saveAll();
-
 }
 
 function deleteRow(btn){
@@ -1879,7 +1802,7 @@ rows.forEach(row=>{
  const qty=Number(row.cells[11].innerText||0);
  const pallets=(Number(row.cells[7].innerText||0)+Number(row.cells[8].innerText||0));
  const priority=row.cells[13].querySelector('select').value;
- const location=row.cells[14].innerText.trim();
+ const location=row.cells[12].innerText.trim();
 
  if(location==='') sumMissing++;
  if(priority==='Urgent Despatch') sumUrgent++;
