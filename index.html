@@ -1712,7 +1712,34 @@ moveToArchive(row);
 
 }
 
+
+function rowToDataObject(row){
+return {
+shipment: row.cells[0].innerText,
+po: row.cells[1].innerText,
+sku: row.cells[2].innerText,
+style: row.cells[3].innerText,
+colour: row.cells[4].innerText,
+eta: row.cells[5].innerText,
+dispatchWeek: row.cells[6].querySelector('select') ? row.cells[6].querySelector('select').value : row.cells[6].innerText,
+loosePallets: row.cells[7].innerText,
+packPallets: row.cells[8].innerText,
+packsCartons: row.cells[9].innerText,
+unitsPerCarton: row.cells[10].innerText,
+cartons: row.cells[11].innerText,
+qty: row.cells[12].innerText,
+warehouse: row.cells[13].querySelector('select') ? row.cells[13].querySelector('select').value : row.cells[13].innerText,
+priority: row.cells[14].querySelector('select') ? row.cells[14].querySelector('select').value : row.cells[14].innerText,
+location: row.cells[15].innerText,
+currentLocation: row.cells[16].innerText,
+action: row.cells[17].querySelector('select') ? row.cells[17].querySelector('select').value : row.cells[17].innerText,
+status: 'In Transit',
+notes: row.cells[19] ? row.cells[19].innerText : ''
+};
+}
+
 function moveToQCRejected(row){
+if(!row || !row.parentNode) return;
 
 const qcRow =
 qcRejectedTable.insertRow(-1);
@@ -1758,7 +1785,7 @@ onclick="deleteRow(this)">
 </td>
 `;
 
-if(row && row.parentNode){ row.remove(); }
+row.remove();
 
 refreshDashboard();
 saveAll();
@@ -1792,10 +1819,12 @@ archiveRow.innerHTML = `
 <td>${row.cells[13].innerHTML}</td>
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
-<td>${row.cells[16].innerHTML}</td>
-<td>${row.cells[17].innerHTML}</td>
+
+<td>${row.cells[18].innerHTML}</td>
+
 <td>Arrived</td>
-<td>${row.cells[19].innerHTML}</td>
+
+<td>${row.cells[16].innerHTML}</td>
 
 <td>
 <button
@@ -2262,7 +2291,7 @@ const incomingStyles = new Set();
 
 rows.forEach(row=>{
  const eta=row.cells[5].innerText;
- const qty=Number(row.cells[12].innerText||0);
+ const qty=Number(row.cells[11].innerText||0);
  const pallets=(Number(row.cells[7].innerText||0)+Number(row.cells[8].innerText||0));
 const warehouse =
 row.cells[13].querySelector('select').value;
@@ -2367,7 +2396,7 @@ let unitsPastDue=0;
 const currentFYWeek=Math.floor(((new Date()-new Date((new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1),6,1))/(1000*60*60*24))/7)+1;
 
 qcRows.forEach(row=>{
- const qty=Number(row.cells[12]?.innerText||0);
+ const qty=Number(row.cells[11]?.innerText||0);
  qcUnits+=qty;
 
  const week=Number((row.cells[6]?.innerText||'').replace('Week ','').trim());
