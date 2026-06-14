@@ -1129,6 +1129,14 @@ html += `
 ${row.cells[12].querySelector('select').value}
 </p>
 
+<p><b>Storage Location:</b>
+${row.cells[14].querySelector('input')?.value || ''}
+</p>
+
+<p><b>Current Location:</b>
+${row.cells[15].querySelector('input')?.value || ''}
+</p>
+
 </div>
 
 `;
