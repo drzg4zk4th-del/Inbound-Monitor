@@ -2197,16 +2197,27 @@ sevenCapacity > 0
 ? Math.round((sevenTotal / sevenCapacity) * 100)
 : 0;
 
+const mainPercent =
+mainCapacity > 0
+? Math.round((mainTotal / mainCapacity) * 100)
+: 0;
+
 document.getElementById('virtualPercent').innerText =
 `${virtualPercent}%`;
 
 document.getElementById('sevenPercent').innerText =
 `${sevenPercent}%`;
 
+document.getElementById('mainWarehousePercent').innerText =
+`${mainPercent}%`;
+
 document.getElementById('virtualCard')
 .classList.remove('capacity-danger');
 
 document.getElementById('sevenHillsCard')
+.classList.remove('capacity-danger');
+
+document.getElementById('mainWarehouseCard')
 .classList.remove('capacity-danger');
 
 if(virtualTotal > virtualCapacity){
@@ -2219,6 +2230,13 @@ document.getElementById('virtualCard')
 if(sevenTotal > sevenCapacity){
 
 document.getElementById('sevenHillsCard')
+.classList.add('capacity-danger');
+
+}
+
+if(mainTotal >= mainCapacity){
+
+document.getElementById('mainWarehouseCard')
 .classList.add('capacity-danger');
 
 }
