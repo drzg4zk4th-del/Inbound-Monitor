@@ -439,7 +439,19 @@ white-space:normal;
 word-break:break-word;
 }
 
+#lookupResults .card{
+font-size:20px;
+}
 
+#lookupResults h2{
+font-size:28px;
+margin-bottom:10px;
+}
+
+#lookupResults p{
+font-size:20px;
+margin:6px 0;
+}
 
 </style>
 </head>
@@ -457,6 +469,11 @@ word-break:break-word;
 <button onclick="showPage('mainPage')">
 <i class="fa-solid fa-box"></i>
 Main Shipments
+</button>
+
+<button onclick="showPage('lookupPage')">
+<i class="fa-solid fa-magnifying-glass"></i>
+PO Lookup
 </button>
 
 <button onclick="showPage('archivePage')">
@@ -910,6 +927,25 @@ style="max-width:280px;"
 
 </div>
 
+<div id="lookupPage" class="page">
+
+<h1 style="margin-bottom:20px;">PO / SKU Lookup</h1>
+
+<div class="card">
+
+<input
+id="lookupInput"
+placeholder="Search PO, SKU or Style"
+style="width:100%;margin-bottom:20px;"
+oninput="runLookup()"
+>
+
+<div id="lookupResults"></div>
+
+</div>
+
+</div>
+
 </div>
 
 <script>
@@ -954,6 +990,128 @@ refreshDashboard();
 
 });
 
+function runLookup(){
+
+const search =
+document.getElementById('lookupInput')
+.value
+.toLowerCase()
+.trim();
+
+const results =
+document.getElementById('lookupResults');
+
+if(search === ''){
+results.innerHTML='';
+return;
+}
+
+const rows =
+Array.from(shipmentTable.rows).slice(1);
+
+let matches=[];
+
+rows.forEach(row=>{
+
+const po =
+row.cells[1].innerText.toLowerCase();
+
+const sku =
+row.cells[2].innerText.toLowerCase();
+
+const style =
+row.cells[3].innerText.toLowerCase();
+
+if(
+po.includes(search) ||
+sku.includes(search) ||
+style.includes(search)
+){
+matches.push(row);
+}
+
+});
+
+if(matches.length===0){
+results.innerHTML='<h2>No Results Found</h2>';
+return;
+}
+
+let totalUnits=0;
+let totalCartons=0;
+
+matches.forEach(row=>{
+
+totalUnits +=
+Number(row.cells[11].innerText || 0);
+
+totalCartons +=
+Number(row.cells[10].innerText || 0);
+
+});
+
+let html=`
+
+<div class="card" style="margin-bottom:20px;">
+
+<h2>${matches.length} Matching Lines</h2>
+
+<div class="big-number">
+${totalUnits.toLocaleString()}
+</div>
+
+<div class="metric-sub">
+Total Units
+</div>
+
+<br>
+
+<div class="big-number">
+${totalCartons.toLocaleString()}
+</div>
+
+<div class="metric-sub">
+Total Cartons
+</div>
+
+</div>
+
+`;
+
+matches.forEach(row=>{
+
+html += `
+
+<div class="card" style="margin-bottom:15px;">
+
+<h2>${row.cells[3].innerText}</h2>
+
+<p><b>PO:</b> ${row.cells[1].innerText}</p>
+
+<p><b>SKU:</b> ${row.cells[2].innerText}</p>
+
+<p><b>Colour:</b> ${row.cells[4].innerText}</p>
+
+<p><b>Qty:</b> ${row.cells[11].innerText}</p>
+
+<p><b>Cartons:</b> ${row.cells[10].innerText}</p>
+
+<p><b>ETA:</b> ${row.cells[5].innerText}</p>
+
+<p><b>Warehouse:</b>
+${row.cells[12].querySelector('select').value}
+</p>
+
+</div>
+
+`;
+
+});
+
+results.innerHTML=html;
+
+}
+ 
 async function login(){
 
 try{
