@@ -369,12 +369,12 @@ td[contenteditable="true"]:focus{
     opacity:0.7;
 }
 
-#shipmentTable td:nth-child(20),
-#shipmentTable th:nth-child(20),
-#archiveTable td:nth-child(20),
-#archiveTable th:nth-child(20),
-#qcRejectedTable td:nth-child(20),
-#qcRejectedTable th:nth-child(20){
+#shipmentTable td:nth-child(17),
+#shipmentTable th:nth-child(17),
+#archiveTable td:nth-child(17),
+#archiveTable th:nth-child(17),
+#qcRejectedTable td:nth-child(17),
+#qcRejectedTable th:nth-child(17){
     min-width:250px;
     max-width:600px;
     white-space:normal;
@@ -663,9 +663,8 @@ FY Week
 
 <input id="palletInput" type="number" placeholder="Loose Pallets">
 <input id="packsPalletInput" type="number" placeholder="Packs Pallets">
-<input id="packsCartonsInput" type="number" placeholder="Packs Cartons">
 <input id="unitsPerCartonInput" type="number" placeholder="Units Per Carton">
-<input id="qtyInput" type="number" placeholder="Loose Qty">
+<input id="qtyInput" type="number" placeholder="Quantity">
 
 <select id="warehouseInput">
 <option>Virtual Warehouse</option>
@@ -743,7 +742,7 @@ style="max-width:280px;"
 
 <div class="card" style="margin-bottom:20px;">
 <div class="metric-icon">📤</div>
-<h3>Projected PACKS Outbound Cartons By Dispatch Week</h3>
+<h3>Projected PACKS Outbound Pallets By Dispatch Week</h3>
 <div id="dispatchProjectionContainer"></div>
 </div>
 
@@ -761,8 +760,7 @@ style="max-width:280px;"
 <th onclick="sortTable(this)" style="cursor:pointer;">Dispatch Week ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Pallets ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Packs Pallets ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Packs Cartons ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Units/Carton ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Cartons ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Loose Qty ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Units/Carton ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Cartons ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Warehouse ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Priority ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Storage Location ↕</th>
@@ -803,10 +801,9 @@ style="max-width:280px;"
 <th>Dispatch Week</th>
 <th>Pallets</th>
 <th>Packs Pallets</th>
-<th>Packs Cartons</th>
 <th>Units/Carton</th>
 <th>Cartons</th>
-<th>Loose Qty</th>
+<th>Qty</th>
 <th>Warehouse</th>
 <th>Priority</th>
 <th>Storage Location</th>
@@ -881,10 +878,9 @@ style="max-width:280px;"
 <th onclick="sortTable(this)" style="cursor:pointer;">Dispatch Week ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Pallets ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Packs Pallets ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Packs Cartons ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Units/Carton ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Cartons ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Loose Qty ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Warehouse ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Priority ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Storage Location ↕</th>
@@ -1046,10 +1042,10 @@ let totalCartons=0;
 matches.forEach(row=>{
 
 totalUnits +=
-Number(row.cells[12].innerText || 0);
+Number(row.cells[11].innerText || 0);
 
 totalCartons +=
-Number(row.cells[11].innerText || 0);
+Number(row.cells[10].innerText || 0);
 
 });
 
@@ -1095,22 +1091,22 @@ html += `
 
 <p><b>Colour:</b> ${row.cells[4].innerText}</p>
 
-<p><b>Qty:</b> ${row.cells[12].innerText}</p>
+<p><b>Qty:</b> ${row.cells[11].innerText}</p>
 
-<p><b>Cartons:</b> ${row.cells[11].innerText}</p>
+<p><b>Cartons:</b> ${row.cells[10].innerText}</p>
 
 <p><b>ETA:</b> ${row.cells[5].innerText}</p>
 
 <p><b>Warehouse:</b>
-${row.cells[13].querySelector('select').value}
+${row.cells[12].querySelector('select').value}
 </p>
 
 <p><b>Storage Location:</b>
-${row.cells[15].textContent.trim()}
+${row.cells[14].textContent.trim()}
 </p>
 
 <p><b>Current Location:</b>
-${row.cells[16].textContent.trim()}
+${row.cells[15].textContent.trim()}
 </p>
 
 </div>
@@ -1310,7 +1306,6 @@ ${dispatchWeek.innerHTML.replace(
 </td>
 <td contenteditable="true">${data.loosePallets || 0}</td>
 <td contenteditable="true">${data.packPallets || 0}</td>
-<td contenteditable="true">${data.packsCartons || 0}</td>
 <td contenteditable="true">${data.unitsPerCarton || 0}</td>
 <td>${data.cartons || ((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1)).toFixed(1)}</td>
 <td contenteditable="true">${data.qty || 0}</td>
@@ -1469,9 +1464,8 @@ dispatchWeek: dispatchWeekInput.value,
 
 loosePallets: palletInput.value,
 packPallets: packsPalletInput.value,
-packsCartons: packsCartonsInput.value,
 unitsPerCarton: unitsPerCartonInput.value,
-cartons: (((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1))+Number(packsCartonsInput.value||0)).toFixed(1),
+cartons: ((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)).toFixed(1),
 qty: qtyInput.value,
 
 warehouse: warehouseInput.value,
@@ -1508,9 +1502,8 @@ eta: etaInput.value,
 dispatchWeek: dispatchWeekInput.value,
 loosePallets: palletInput.value,
 packPallets: packsPalletInput.value,
-packsCartons: packsCartonsInput.value,
 unitsPerCarton: unitsPerCartonInput.value,
-cartons: (((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1))+Number(packsCartonsInput.value||0)).toFixed(1),
+cartons: ((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)).toFixed(1),
 qty: qtyInput.value,
 
 warehouse: warehouseInput.value,
@@ -1632,7 +1625,7 @@ row.classList.remove(
 );
 
 const storageLocation =
-row.cells[15].innerText.trim();
+row.cells[14].innerText.trim();
 
 if(
 prioritySelect &&
@@ -1656,11 +1649,8 @@ row.querySelectorAll('td[contenteditable="true"]').forEach(cell=>{
 
 cell.addEventListener('input',()=>{
 
-const qty = Number(row.cells[12].innerText || 0);
-const packsCartons = Number(row.cells[9].innerText || 0);
-const unitsPerCarton = Number(row.cells[10].innerText || 1);
-
-row.cells[11].innerText = ((qty / Math.max(unitsPerCarton,1)) + packsCartons).toFixed(1);
+const qty = Number(row.cells[11].innerText || 0);
+const unitsPerCarton = Number(row.cells[9].innerText || 1);
 
 row.cells[10].innerText =
 (qty / Math.max(unitsPerCarton,1)).toFixed(1);
@@ -1702,8 +1692,10 @@ moveToQCRejected(row);
 
 }
 
-if(statusSelect.value === 'Arrived' && row.parentNode){
+if(statusSelect.value === 'Arrived'){
+
 moveToArchive(row);
+
 }
 
 });
@@ -1712,34 +1704,7 @@ moveToArchive(row);
 
 }
 
-
-function rowToDataObject(row){
-return {
-shipment: row.cells[0].innerText,
-po: row.cells[1].innerText,
-sku: row.cells[2].innerText,
-style: row.cells[3].innerText,
-colour: row.cells[4].innerText,
-eta: row.cells[5].innerText,
-dispatchWeek: row.cells[6].querySelector('select') ? row.cells[6].querySelector('select').value : row.cells[6].innerText,
-loosePallets: row.cells[7].innerText,
-packPallets: row.cells[8].innerText,
-packsCartons: row.cells[9].innerText,
-unitsPerCarton: row.cells[10].innerText,
-cartons: row.cells[11].innerText,
-qty: row.cells[12].innerText,
-warehouse: row.cells[13].querySelector('select') ? row.cells[13].querySelector('select').value : row.cells[13].innerText,
-priority: row.cells[14].querySelector('select') ? row.cells[14].querySelector('select').value : row.cells[14].innerText,
-location: row.cells[15].innerText,
-currentLocation: row.cells[16].innerText,
-action: row.cells[17].querySelector('select') ? row.cells[17].querySelector('select').value : row.cells[17].innerText,
-status: 'In Transit',
-notes: row.cells[19] ? row.cells[19].innerText : ''
-};
-}
-
 function moveToQCRejected(row){
-if(!row || !row.parentNode) return;
 
 const qcRow =
 qcRejectedTable.insertRow(-1);
@@ -1763,10 +1728,12 @@ qcRow.innerHTML = `
 <td>${row.cells[13].innerHTML}</td>
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
-<td>${row.cells[16].innerHTML}</td>
-<td>${row.cells[17].innerHTML}</td>
+
+<td>${row.cells[18].innerHTML}</td>
+
 <td>QC Rejected</td>
-<td contenteditable="true">${row.cells[19].innerHTML}</td>
+
+<td contenteditable="true">${row.cells[16].innerHTML}</td>
 
 <td>
 <button
@@ -1794,9 +1761,11 @@ saveAll();
 
 function moveQCRejectedToArchive(btn){
 
-const row = btn.closest('tr');
-
-const archiveRow = archiveTable.insertRow(-1);
+const row =
+btn.closest('tr');
+  
+const archiveRow =
+archiveTable.insertRow(-1);
 
 archiveRow.innerHTML = `
 <td>${row.cells[0].innerHTML}</td>
@@ -1806,26 +1775,46 @@ archiveRow.innerHTML = `
 <td>${row.cells[4].innerHTML}</td>
 <td>${row.cells[5].innerHTML}</td>
 <td>${row.cells[6].innerHTML}</td>
+
 <td>${row.cells[7].innerHTML}</td>
 <td>${row.cells[8].innerHTML}</td>
 <td>${row.cells[9].innerHTML}</td>
 <td>${row.cells[10].innerHTML}</td>
 <td>${row.cells[11].innerHTML}</td>
+
 <td>${row.cells[12].innerHTML}</td>
 <td>${row.cells[13].innerHTML}</td>
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
-<td>${row.cells[16].innerHTML}</td>
-<td>${row.cells[17].innerHTML}</td>
-<td>Arrived</td>
-<td>${row.cells[19].innerHTML}</td>
-<td><button class="restore-btn" onclick="restoreRow(this)">Restore</button></td>
-<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>
-`;
 
+<td>${row.cells[18].innerHTML}</td>
+
+<td>Arrived</td>
+
+<td>${row.cells[16].innerHTML}</td>
+
+<td>
+<button
+class="restore-btn"
+onclick="restoreRow(this)">
+Restore
+</button>
+</td>
+
+<td>
+<button
+class="delete-btn"
+onclick="deleteRow(this)">
+<i class="fa-solid fa-trash"></i>
+</button>
+</td>
+`;
+  
 row.remove();
+
 refreshDashboard();
 saveAll();
+
 }
   
 
@@ -1849,9 +1838,8 @@ archiveRow.innerHTML=`
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
 <td>${row.cells[16].innerHTML}</td>
-<td>${row.cells[17].innerHTML}</td>
 <td>Arrived</td>
-<td>${row.cells[19].innerHTML}</td>
+<td>${row.cells[18].innerHTML}</td>
 <td><button class="restore-btn" onclick="restoreRow(this)">Restore</button></td>
 <td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>`;
 row.remove(); refreshDashboard(); saveAll();
@@ -1859,34 +1847,31 @@ row.remove(); refreshDashboard(); saveAll();
 
 
 function restoreRow(btn){
-const row = btn.closest('tr');
-
-createRow({
-shipment: row.cells[0].innerText,
-po: row.cells[1].innerText,
-sku: row.cells[2].innerText,
-style: row.cells[3].innerText,
-colour: row.cells[4].innerText,
-eta: row.cells[5].innerText,
-dispatchWeek: row.cells[6].innerText,
-loosePallets: row.cells[7].innerText,
-packPallets: row.cells[8].innerText,
-packsCartons: row.cells[9].innerText,
-unitsPerCarton: row.cells[10].innerText,
-cartons: row.cells[11].innerText,
-qty: row.cells[12].innerText,
-warehouse: row.cells[13].innerText,
-priority: row.cells[14].innerText,
-location: row.cells[15].innerText,
-currentLocation: row.cells[16].innerText,
-action: row.cells[17].innerText,
-status: 'In Transit',
-notes: row.cells[19].innerText
-});
-
-row.remove();
-refreshDashboard();
-saveAll();
+const row=btn.closest('tr');
+const newRow=shipmentTable.insertRow(-1);
+newRow.innerHTML=`
+<td contenteditable="true">${row.cells[0].innerHTML}</td>
+<td contenteditable="true">${row.cells[1].innerHTML}</td>
+<td contenteditable="true">${row.cells[2].innerHTML}</td>
+<td contenteditable="true">${row.cells[3].innerHTML}</td>
+<td contenteditable="true">${row.cells[4].innerHTML}</td>
+<td contenteditable="true">${row.cells[5].innerHTML}</td>
+<td contenteditable="true">${row.cells[6].innerHTML}</td>
+<td contenteditable="true">${row.cells[7].innerHTML}</td>
+<td contenteditable="true">${row.cells[8].innerHTML}</td>
+<td contenteditable="true">${row.cells[9].innerHTML}</td>
+<td>${row.cells[10].innerHTML}</td>
+<td contenteditable="true">${row.cells[11].innerHTML}</td>
+<td>${row.cells[12].innerHTML}</td>
+<td>${row.cells[13].innerHTML}</td>
+<td contenteditable="true">${row.cells[14].innerHTML}</td>
+<td contenteditable="true">${row.cells[15].innerHTML}</td>
+<td>${row.cells[16].innerHTML}</td>
+<td><select class="premium-select status-select"><option selected>In Transit</option><option>QC Rejected</option><option>Arrived</option></select></td>
+<td contenteditable="true">${row.cells[18].innerHTML}</td>
+<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>`;
+setupRow(newRow);
+row.remove(); refreshDashboard(); saveAll();
 }
 
 function deleteRow(btn){
@@ -2085,15 +2070,15 @@ Number(row.cells[8].innerText || 0);
 const pallets =
 incomingPallets + packsPallets;
 
-const qty = Number(row.cells[12].innerText || 0);
-const cartons = Number(row.cells[11].innerText || 0);
+const qty = Number(row.cells[11].innerText || 0);
+const cartons = Number(row.cells[10].innerText || 0);
 cartonsTotal += cartons;
 
 palletsTotal += pallets;
 qtyTotal += qty;
 
 const warehouse =
-row.cells[13]
+row.cells[12]
 .querySelector('select')
 .value;
 
@@ -2106,7 +2091,7 @@ sevenIncoming += pallets;
 }
 
 const location =
-row.cells[15].innerText.trim();
+row.cells[14].innerText.trim();
 
 if(location === ''){
 unallocatedCount++;
@@ -2275,13 +2260,13 @@ rows.forEach(row=>{
  const qty=Number(row.cells[11].innerText||0);
  const pallets=(Number(row.cells[7].innerText||0)+Number(row.cells[8].innerText||0));
 const warehouse =
-row.cells[13].querySelector('select').value;
+row.cells[12].querySelector('select').value;
 
 const priority =
-row.cells[14].querySelector('select').value;
+row.cells[13].querySelector('select').value;
 
 const location =
-row.cells[15].innerText.trim();
+row.cells[14].innerText.trim();
 
  if(location==='') sumMissing++;
  if(priority==='Urgent Despatch') sumUrgent++;
@@ -2377,7 +2362,7 @@ let unitsPastDue=0;
 const currentFYWeek=Math.floor(((new Date()-new Date((new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1),6,1))/(1000*60*60*24))/7)+1;
 
 qcRows.forEach(row=>{
- const qty=Number(row.cells[12]?.innerText||0);
+ const qty=Number(row.cells[11]?.innerText||0);
  qcUnits+=qty;
 
  const week=Number((row.cells[6]?.innerText||'').replace('Week ','').trim());
@@ -2420,17 +2405,16 @@ eta: row.cells[5].innerText,
 dispatchWeek: row.cells[6].querySelector('select').value,
 loosePallets: row.cells[7].innerText,
 packPallets: row.cells[8].innerText,
-packsCartons: row.cells[9].innerText,
-unitsPerCarton: row.cells[10].innerText,
-cartons: row.cells[11].innerText,
-qty: row.cells[12].innerText,
-warehouse: row.cells[13].querySelector('select').value,
-priority: row.cells[14].querySelector('select').value,
-location: row.cells[15].innerText,
-currentLocation: row.cells[16].innerText,
-action: row.cells[17].querySelector('select').value,
-status: row.cells[18].querySelector('select').value,
-notes: row.cells[19].innerText
+unitsPerCarton: row.cells[9].innerText,
+cartons: row.cells[10].innerText,
+qty: row.cells[11].innerText,
+warehouse: row.cells[12].querySelector('select').value,
+priority: row.cells[13].querySelector('select').value,
+location: row.cells[14].innerText,
+currentLocation: row.cells[15].innerText,
+action: row.cells[16].querySelector('select').value,
+status: row.cells[17].querySelector('select').value,
+notes: row.cells[18].innerText
 });
 
 });
@@ -2697,7 +2681,7 @@ row.querySelector('.priority-select')
 : '';
 
 const currentLocation =
-row.cells[16].innerText.trim();
+row.cells[15].innerText.trim();
 
 let visible = true;
 
@@ -2757,7 +2741,7 @@ if(!projections[week]){
 projections[week] = 0;
 }
 
-projections[week] += Number(row.cells[9].innerText || 0);
+projections[week] += packsPallets;
 
 });
 
@@ -2765,7 +2749,7 @@ let html = `
 <table style="width:100%;min-width:100%;">
 <tr>
 <th>Dispatch Week</th>
-<th>Projected Outbound Cartons</th>
+<th>Projected Outbound Pallets</th>
 </tr>
 `;
 
@@ -2924,7 +2908,7 @@ function exportUnallocatedRows(){
    row.cells[14]?.querySelector('input');
 
    const location =
-   row.cells[15]?.innerText?.trim() || '';
+   row.cells[14]?.innerText?.trim() || '';
 
    if(location===''){
 
