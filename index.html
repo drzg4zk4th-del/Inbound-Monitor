@@ -1178,6 +1178,8 @@ const file = event.target.files[0];
 
 if(!file) return;
 
+alert("Reading text...");
+
 const result = await Tesseract.recognize(
    file,
    'eng'
@@ -1187,8 +1189,22 @@ const text = result.data.text;
 
 console.log(text);
 
-console.log(text);
-alert("OCR Complete - check console");
+const match = text.match(/\b\d{5}\b/);
+
+if(match){
+
+   document.getElementById('lookupInput').value =
+   match[0];
+
+   runLookup();
+
+   alert("Found PO: " + match[0]);
+
+}else{
+
+   alert("No 5 digit PO found.\n\nOCR Read:\n" + text);
+
+}
 
 }
  
