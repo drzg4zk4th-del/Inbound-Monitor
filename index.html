@@ -1978,14 +1978,25 @@ document.getElementById('sevenHillsCard')
 
 
 const today=new Date();
-let sumStyles=0,sumUnits=0,sumPallets=0,sumUrgent=0,sumMissing=0;
+let sumUnits=0,
+    sumPallets=0,
+    sumUrgent=0,
+    sumMissing=0;
+
+const incomingStyles = new Set();
 
 rows.forEach(row=>{
  const eta=row.cells[5].innerText;
  const qty=Number(row.cells[11].innerText||0);
  const pallets=(Number(row.cells[7].innerText||0)+Number(row.cells[8].innerText||0));
- const priority=row.cells[13].querySelector('select').value;
- const location=row.cells[12].innerText.trim();
+const warehouse =
+row.cells[12].querySelector('select').value;
+
+const priority =
+row.cells[13].querySelector('select').value;
+
+const location =
+row.cells[14].innerText.trim();
 
  if(location==='') sumMissing++;
  if(priority==='Urgent Despatch') sumUrgent++;
@@ -1993,16 +2004,24 @@ rows.forEach(row=>{
  if(eta){
    const d=new Date(eta);
    const diff=(d-today)/(1000*60*60*24);
-   if(diff>=0 && diff<=7){
-      sumStyles++;
-      sumUnits+=qty;
-      sumPallets+=pallets;
-   }
+if(
+   diff >= 0 &&
+   diff <= 7 &&
+   warehouse === 'Virtual Warehouse'
+){
+
+   incomingStyles.add(
+      row.cells[2].innerText.trim()
+   );
+
+   sumUnits += qty;
+   sumPallets += pallets;
+}
  }
 });
 
 if(document.getElementById('sumStyles')){
- document.getElementById('sumStyles').innerText=sumStyles;
+ document.getElementById('sumStyles').innerText = incomingStyles.size;
  document.getElementById('sumUnits').innerText=sumUnits.toLocaleString();
  document.getElementById('sumPallets').innerText=sumPallets.toLocaleString();
  document.getElementById('sumUrgent').innerText=sumUrgent;
