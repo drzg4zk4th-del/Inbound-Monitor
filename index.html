@@ -709,6 +709,10 @@ Add Shipment
 </button>
 <button class="add-btn" onclick="exportTableCSV('shipmentTable','ActiveShipments.csv')">Export Active Shipments</button>
 
+<button onclick="exportUnallocatedRows()">
+Export Unallocated Rows
+</button>
+
 <input type="file" id="importFile" accept=".xlsx,.xls,.csv">
 
 <button class="add-btn" onclick="importSpreadsheet()">
@@ -2862,6 +2866,69 @@ function exportTableCSV(tableId,fileName){
  a.href=URL.createObjectURL(blob);
  a.download=fileName;
  a.click();
+}
+
+function exportUnallocatedRows(){
+
+ const csv = [];
+
+ csv.push([
+   "PO",
+   "Style",
+   "Colour",
+   "Qty",
+   "Cartons",
+   "Warehouse",
+   "Storage Location"
+ ].join(','));
+
+ const rows =
+ document.querySelectorAll('#shipmentTable tr');
+
+ rows.forEach((row,index)=>{
+
+   if(index===0) return;
+
+   const locationInput =
+   row.cells[14]?.querySelector('input');
+
+   const location =
+   locationInput?.value?.trim() || '';
+
+   if(location===''){
+
+      const warehouse =
+      row.cells[12]?.querySelector('select')?.value || '';
+
+      csv.push([
+         '"' + row.cells[1]?.innerText + '"',
+         '"' + row.cells[3]?.innerText + '"',
+         '"' + row.cells[4]?.innerText + '"',
+         '"' + row.cells[11]?.innerText + '"',
+         '"' + row.cells[10]?.innerText + '"',
+         '"' + warehouse + '"',
+         '""'
+      ].join(','));
+
+   }
+
+ });
+
+ const blob =
+ new Blob([csv.join('\n')],
+ {type:'text/csv'});
+
+ const a =
+ document.createElement('a');
+
+ a.href =
+ URL.createObjectURL(blob);
+
+ a.download =
+ 'Unallocated-Rows.csv';
+
+ a.click();
+
 }
 
 </script>
