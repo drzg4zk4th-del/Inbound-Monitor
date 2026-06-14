@@ -369,12 +369,12 @@ td[contenteditable="true"]:focus{
     opacity:0.7;
 }
 
-#shipmentTable td:nth-child(17),
-#shipmentTable th:nth-child(17),
-#archiveTable td:nth-child(17),
-#archiveTable th:nth-child(17),
-#qcRejectedTable td:nth-child(17),
-#qcRejectedTable th:nth-child(17){
+#shipmentTable td:nth-child(20),
+#shipmentTable th:nth-child(20),
+#archiveTable td:nth-child(20),
+#archiveTable th:nth-child(20),
+#qcRejectedTable td:nth-child(20),
+#qcRejectedTable th:nth-child(20){
     min-width:250px;
     max-width:600px;
     white-space:normal;
@@ -663,8 +663,9 @@ FY Week
 
 <input id="palletInput" type="number" placeholder="Loose Pallets">
 <input id="packsPalletInput" type="number" placeholder="Packs Pallets">
+<input id="packsCartonsInput" type="number" placeholder="Packs Cartons">
 <input id="unitsPerCartonInput" type="number" placeholder="Units Per Carton">
-<input id="qtyInput" type="number" placeholder="Quantity">
+<input id="qtyInput" type="number" placeholder="Loose Qty">
 
 <select id="warehouseInput">
 <option>Virtual Warehouse</option>
@@ -742,7 +743,7 @@ style="max-width:280px;"
 
 <div class="card" style="margin-bottom:20px;">
 <div class="metric-icon">📤</div>
-<h3>Projected PACKS Outbound Pallets By Dispatch Week</h3>
+<h3>Projected PACKS Outbound Cartons By Dispatch Week</h3>
 <div id="dispatchProjectionContainer"></div>
 </div>
 
@@ -760,7 +761,8 @@ style="max-width:280px;"
 <th onclick="sortTable(this)" style="cursor:pointer;">Dispatch Week ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Pallets ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Packs Pallets ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Units/Carton ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Cartons ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Packs Cartons ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Units/Carton ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Cartons ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Loose Qty ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Warehouse ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Priority ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Storage Location ↕</th>
@@ -801,9 +803,10 @@ style="max-width:280px;"
 <th>Dispatch Week</th>
 <th>Pallets</th>
 <th>Packs Pallets</th>
+<th>Packs Cartons</th>
 <th>Units/Carton</th>
 <th>Cartons</th>
-<th>Qty</th>
+<th>Loose Qty</th>
 <th>Warehouse</th>
 <th>Priority</th>
 <th>Storage Location</th>
@@ -878,9 +881,10 @@ style="max-width:280px;"
 <th onclick="sortTable(this)" style="cursor:pointer;">Dispatch Week ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Pallets ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Packs Pallets ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Packs Cartons ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Units/Carton ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Cartons ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Loose Qty ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Warehouse ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Priority ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Storage Location ↕</th>
@@ -1306,6 +1310,7 @@ ${dispatchWeek.innerHTML.replace(
 </td>
 <td contenteditable="true">${data.loosePallets || 0}</td>
 <td contenteditable="true">${data.packPallets || 0}</td>
+<td contenteditable="true">${data.packsCartons || 0}</td>
 <td contenteditable="true">${data.unitsPerCarton || 0}</td>
 <td>${data.cartons || ((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1)).toFixed(1)}</td>
 <td contenteditable="true">${data.qty || 0}</td>
@@ -2749,7 +2754,7 @@ let html = `
 <table style="width:100%;min-width:100%;">
 <tr>
 <th>Dispatch Week</th>
-<th>Projected Outbound Pallets</th>
+<th>Projected Outbound Cartons</th>
 </tr>
 `;
 
