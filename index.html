@@ -7,6 +7,8 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+ 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
 let weeklyNotesArchive=[];
 
@@ -714,6 +716,13 @@ Add Shipment
 </button>
 <button class="add-btn" onclick="exportTableCSV('shipmentTable','ActiveShipments.csv')">Export Active Shipments</button>
 
+<input type="file" id="importFile" accept=".xlsx,.xls,.csv">
+
+<button class="add-btn" onclick="importSpreadsheet()">
+<i class="fa-solid fa-file-import"></i>
+Import Spreadsheet
+</button>
+
 <button class="add-btn" onclick="addSimilar()">
 <i class="fa-solid fa-copy"></i>
 Add Similar
@@ -1262,6 +1271,8 @@ saveAll();
 
 }
 
+
+
 function recalculateExcess(row){
 
 const incoming =
@@ -1275,6 +1286,69 @@ Math.max(incoming - packs,0);
 
 }
 
+async function importSpreadsheet(){
+
+const file =
+document.getElementById('importFile').files[0];
+
+if(!file){
+alert('Select a file first');
+return;
+}
+
+const data = await file.arrayBuffer();
+
+const workbook =
+XLSX.read(data);
+
+const sheet =
+workbook.Sheets[
+workbook.SheetNames[0]
+];
+
+const rows =
+XLSX.utils.sheet_to_json(sheet);
+
+rows.forEach(item=>{
+
+createRow({
+
+shipment: item["ORDER"] || "",
+po: item["PURCHASE ORDER #"] || "",
+sku: item["STYLE CODE"] || "",
+style: item["STYLE NAME"] || "",
+colour: item["COLOUR CODE"] || "",
+
+qty: item["QTY"] || 0,
+
+dispatchWeek: "Week Not Assigned",
+
+loosePallets: 0,
+packPallets: 0,
+unitsPerCarton: 0,
+cartons: 0,
+
+warehouse: "Virtual Warehouse",
+priority: "Normal",
+
+location: "",
+currentLocation: "",
+
+action: "No Action Required",
+status: "In Transit",
+
+notes: ""
+
+});
+
+});
+
+refreshDashboard();
+saveAll();
+
+alert(rows.length + " rows imported");
+
+}
 
 function setupRow(row){
 
