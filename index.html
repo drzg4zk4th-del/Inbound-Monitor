@@ -1758,7 +1758,7 @@ onclick="deleteRow(this)">
 </td>
 `;
 
-row.remove();
+if(row && row.parentNode){ row.remove(); }
 
 refreshDashboard();
 saveAll();
@@ -1792,12 +1792,10 @@ archiveRow.innerHTML = `
 <td>${row.cells[13].innerHTML}</td>
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
-
-<td>${row.cells[18].innerHTML}</td>
-
-<td>Arrived</td>
-
 <td>${row.cells[16].innerHTML}</td>
+<td>${row.cells[17].innerHTML}</td>
+<td>Arrived</td>
+<td>${row.cells[19].innerHTML}</td>
 
 <td>
 <button
@@ -2264,7 +2262,7 @@ const incomingStyles = new Set();
 
 rows.forEach(row=>{
  const eta=row.cells[5].innerText;
- const qty=Number(row.cells[11].innerText||0);
+ const qty=Number(row.cells[12].innerText||0);
  const pallets=(Number(row.cells[7].innerText||0)+Number(row.cells[8].innerText||0));
 const warehouse =
 row.cells[13].querySelector('select').value;
@@ -2369,7 +2367,7 @@ let unitsPastDue=0;
 const currentFYWeek=Math.floor(((new Date()-new Date((new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1),6,1))/(1000*60*60*24))/7)+1;
 
 qcRows.forEach(row=>{
- const qty=Number(row.cells[11]?.innerText||0);
+ const qty=Number(row.cells[12]?.innerText||0);
  qcUnits+=qty;
 
  const week=Number((row.cells[6]?.innerText||'').replace('Week ','').trim());
