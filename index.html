@@ -12,76 +12,9 @@
 <!--<script src="https://unpkg.com/@zxing/library@latest"></script>-->
 <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
  
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 
-let weeklyNotesArchive=[];
-
-function getWeekEndingDate(){
- const d=new Date();
- const day=d.getDay();
- const saturday=new Date(d);
- saturday.setDate(d.getDate()+(6-day));
- return saturday.toLocaleDateString();
-}
-
-
-function archiveWeeklyNotes(){
-
- const weekEnding=getWeekEndingDate();
-
- const card=document.createElement('div');
- card.className='card';
- card.style.marginBottom='20px';
-
- card.innerHTML=`
- <h3>Week Ending ${weekEnding}</h3>
- <p><b>Sunday</b><br>${sunNote.value}</p>
- <p><b>Monday</b><br>${monNote.value}</p>
- <p><b>Tuesday</b><br>${tueNote.value}</p>
- <p><b>Wednesday</b><br>${wedNote.value}</p>
- <p><b>Thursday</b><br>${thuNote.value}</p>
- <p><b>Friday</b><br>${friNote.value}</p>
- <p><b>Saturday</b><br>${satNote.value}</p>
- <button class="delete-btn" onclick="this.parentElement.remove();saveAll()">Delete</button>
- `;
-
- document.getElementById('notesArchiveContainer').appendChild(card);
-
- saveAll();
-}
-
-
-</script>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js">
-let weeklyNotesArchive=[];
-
-function getWeekEndingDate(){
- const d=new Date();
- const day=d.getDay();
- const saturday=new Date(d);
- saturday.setDate(d.getDate()+(6-day));
- return saturday.toLocaleDateString();
-}
-
-function archiveWeeklyNotes_OLD_DISABLED(){
- const weekEnding=getWeekEndingDate();
-
- const notes=`Sunday: ${sunNote.value}<br>
- Monday: ${monNote.value}<br>
- Tuesday: ${tueNote.value}<br>
- Wednesday: ${wedNote.value}<br>
- Thursday: ${thuNote.value}<br>
- Friday: ${friNote.value}<br>
- Saturday: ${satNote.value}`;
-
- const row=notesArchiveTable.insertRow(-1);
- row.innerHTML=`<td>${weekEnding}</td><td>${notes}</td><td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>`;
-
- saveAll();
-}
-
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js">
 let weeklyNotesArchive=[];
@@ -1047,10 +980,7 @@ document.getElementById('signOutBtn').style.display='none';
 
 }
 
-});
-
 await loadAll();
-
 refreshDashboard();
 
 });
