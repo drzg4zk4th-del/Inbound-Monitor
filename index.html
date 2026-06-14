@@ -1106,11 +1106,11 @@ ${row.cells[12].querySelector('select').value}
 </p>
 
 <p><b>Storage Location:</b>
-${row.cells[14].textContent.trim()}
+${row.cells[15].textContent.trim()}
 </p>
 
 <p><b>Current Location:</b>
-${row.cells[15].textContent.trim()}
+${row.cells[16].textContent.trim()}
 </p>
 
 </div>
@@ -1630,7 +1630,7 @@ row.classList.remove(
 );
 
 const storageLocation =
-row.cells[14].innerText.trim();
+row.cells[15].innerText.trim();
 
 if(
 prioritySelect &&
@@ -2415,8 +2415,8 @@ cartons: row.cells[10].innerText,
 qty: row.cells[11].innerText,
 warehouse: row.cells[12].querySelector('select').value,
 priority: row.cells[13].querySelector('select').value,
-location: row.cells[14].innerText,
-currentLocation: row.cells[15].innerText,
+location: row.cells[15].innerText,
+currentLocation: row.cells[16].innerText,
 action: row.cells[16].querySelector('select').value,
 status: row.cells[17].querySelector('select').value,
 notes: row.cells[18].innerText
@@ -2686,7 +2686,7 @@ row.querySelector('.priority-select')
 : '';
 
 const currentLocation =
-row.cells[15].innerText.trim();
+row.cells[16].innerText.trim();
 
 let visible = true;
 
@@ -2913,7 +2913,7 @@ function exportUnallocatedRows(){
    row.cells[14]?.querySelector('input');
 
    const location =
-   row.cells[14]?.innerText?.trim() || '';
+   row.cells[15]?.innerText?.trim() || '';
 
    if(location===''){
 
