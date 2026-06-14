@@ -1301,7 +1301,7 @@ row.innerHTML = `
 <td contenteditable="true">${data.loosePallets || 0}</td>
 <td contenteditable="true">${data.packPallets || 0}</td>
 <td contenteditable="true">${data.unitsPerCarton || 0}</td>
-<td>${data.cartons || Math.ceil((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1))}</td>
+<td>${data.cartons || ((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1)).toFixed(1)}</td>
 <td contenteditable="true">${data.qty || 0}</td>
 
 <td>
@@ -1459,7 +1459,7 @@ dispatchWeek: dispatchWeekInput.value,
 loosePallets: palletInput.value,
 packPallets: packsPalletInput.value,
 unitsPerCarton: unitsPerCartonInput.value,
-cartons: Math.ceil((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)),
+cartons: ((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)).toFixed(1),
 qty: qtyInput.value,
 
 warehouse: warehouseInput.value,
@@ -1498,7 +1498,7 @@ dispatchWeek: dispatchWeekInput.value,
 loosePallets: palletInput.value,
 packPallets: packsPalletInput.value,
 unitsPerCarton: unitsPerCartonInput.value,
-cartons: Math.ceil((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)),
+cartons: ((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)).toFixed(1),
 qty: qtyInput.value,
 
 warehouse: warehouseInput.value,
