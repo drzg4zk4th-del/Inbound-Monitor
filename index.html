@@ -2434,8 +2434,18 @@ mainCapacity: mainWarehouseCapacity.value
 
 }
 
+let dataLoaded = false;
+ 
 async function loadAll(){
 
+if(dataLoaded) return;
+
+dataLoaded = true;
+
+shipmentTable.innerHTML = shipmentTable.rows[0].outerHTML;
+archiveTable.innerHTML = archiveTable.rows[0].outerHTML;
+qcRejectedTable.innerHTML = qcRejectedTable.rows[0].outerHTML;
+ 
 const snapshot =
 await db.collection('planner').doc('main').get();
 
@@ -2466,8 +2476,6 @@ if(data.active){
 data.active.forEach(item=>{
 
 const row = createRow(item);
-
-shipmentTable.appendChild(row);
 
 row.querySelectorAll('td').forEach((cell,index)=>{
 
