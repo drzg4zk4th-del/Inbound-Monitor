@@ -56,20 +56,14 @@ box-sizing:border-box;
 }
 
 body{
-font-family:Arial,sans-serif;
-background:#020817;
-color:white;
+font-family:'Inter',Arial,sans-serif;
+background:#f7f3ee;
+color:#1a1a1a;
 overflow:hidden;
 }
 
 body::before{
-content:'';
-position:fixed;
-inset:0;
-background:
-radial-gradient(circle at top left,#1d4ed833,transparent 30%),
-radial-gradient(circle at bottom right,#06b6d422,transparent 30%);
-pointer-events:none;
+display:none;
 }
 
 .sidebar{
@@ -78,8 +72,8 @@ left:0;
 top:0;
 width:220px;
 height:100vh;
-background:#081120;
-border-right:1px solid #1e293b;
+background:#171717;
+border-right:1px solid #d8d0c7;
 padding:20px;
 z-index:1000;
 transition:left 0.3s ease;
@@ -179,10 +173,10 @@ display:block;
 }
 
 .header h1{
-font-size:42px;
-font-weight:800;
-width:100%;
-text-align:center;
+font-size:56px;
+font-weight:700;
+color:#111111;
+letter-spacing:-2px;
 }
 
 #financialWeekBox{
@@ -201,13 +195,13 @@ margin-bottom:22px;
 }
 
 .card{
-background:linear-gradient(145deg,#0f172a,#071226);
-border:1px solid #1e293b;
-border-radius:22px;
-padding:22px;
-position:relative;
-overflow:hidden;
-box-shadow:0 0 20px rgba(0,0,0,0.35);
+background:#ffffff;
+border:1px solid #e7dfd6;
+border-radius:24px;
+box-shadow:
+0 2px 8px rgba(0,0,0,0.04),
+0 8px 24px rgba(0,0,0,0.06);
+color:#1a1a1a;
 }
 
 .shipment-master-card{
@@ -219,12 +213,12 @@ font-size:26px;
 margin-bottom:16px;
 }
 
-.green{color:#4ade80;}
-.blue{color:#38bdf8;}
-.purple{color:#c084fc;}
-.yellow{color:#facc15;}
-.orange{color:#fb923c;}
-.red{color:#f87171;}
+.green  {color:#c7b299;}
+.blue   {color:#b89d7f;}
+.purple {color:#bfa68a;}
+.yellow {color:#d4b483;}
+.orange {color:#c78d5f;}
+.red    {color:#d27d6d;}
 .virtual-pink{
 color:#e8c3ae;
 }
@@ -235,9 +229,10 @@ margin-bottom:10px;
 }
 
 .big-number{
-font-size:42px;
-font-weight:800;
-margin-bottom:6px;
+font-size:48px;
+font-weight:700;
+color:#111111;
+letter-spacing:-1px;
 }
 
 .metric-sub{
@@ -246,8 +241,8 @@ color:#94a3b8;
 }
 
 .capacity-danger{
-border:2px solid #ef4444 !important;
-background:#3b0a0a !important;
+background:#fff4f2 !important;
+border:2px solid #d27d6d !important;
 }
 
 .capacity-inputs{
@@ -263,13 +258,12 @@ font-weight:800;
 margin-top:10px;
 }
 
-input,select,textarea,button{
-padding:12px;
-border-radius:12px;
-border:1px solid #334155;
-background:#0f172a;
-color:white;
-font-size:14px;
+input,
+select,
+textarea{
+background:#faf8f5;
+color:#1a1a1a;
+border:1px solid #ded6cd;
 }
 
 .form-grid{
@@ -280,10 +274,13 @@ margin-bottom:20px;
 }
 
 .add-btn{
-background:#2563eb;
-cursor:pointer;
-font-weight:bold;
-margin-bottom:20px;
+background:#171717;
+color:white;
+border:none;
+}
+
+.add-btn:hover{
+background:#2c2c2c;
 }
 
 .table-wrap{
