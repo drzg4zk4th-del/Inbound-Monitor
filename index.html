@@ -1296,8 +1296,14 @@ row.innerHTML = `
 <td contenteditable="true">${data.style || ''}</td>
 <td contenteditable="true">${data.colour || ''}</td>
 <td contenteditable="true">${data.eta || ''}</td>
-<td contenteditable="true">${data.dispatchWeek || ''}</td>
-
+<td>
+<select class="premium-select dispatch-week-select">
+${dispatchWeek.innerHTML.replace(
+  `>${data.dispatchWeek}<`,
+  ` selected>${data.dispatchWeek}<`
+)}
+</select>
+</td>
 <td contenteditable="true">${data.loosePallets || 0}</td>
 <td contenteditable="true">${data.packPallets || 0}</td>
 <td contenteditable="true">${data.unitsPerCarton || 0}</td>
@@ -1494,7 +1500,6 @@ style: styleInput.value,
 colour: colourInput.value,
 eta: etaInput.value,
 dispatchWeek: dispatchWeekInput.value,
-
 loosePallets: palletInput.value,
 packPallets: packsPalletInput.value,
 unitsPerCarton: unitsPerCartonInput.value,
@@ -2093,7 +2098,7 @@ unallocatedCount++;
 }
 
 const week =
-row.cells[6].innerText;
+row.cells[6].querySelector('select')?.value || '';
 
 if(week !== ''){
 weeks.add(week);
@@ -2397,7 +2402,7 @@ sku: row.cells[2].innerText,
 style: row.cells[3].innerText,
 colour: row.cells[4].innerText,
 eta: row.cells[5].innerText,
-dispatchWeek: row.cells[6].innerText,
+dispatchWeek: row.cells[6].querySelector('select').value,
 loosePallets: row.cells[7].innerText,
 packPallets: row.cells[8].innerText,
 unitsPerCarton: row.cells[9].innerText,
@@ -2719,7 +2724,7 @@ const projections = {};
 rows.forEach(row=>{
 
 const week =
-row.cells[6].innerText.trim();
+row.cells[6].querySelector('select')?.value || '';
 
 const incomingPallets =
 Number(row.cells[7].innerText || 0);
