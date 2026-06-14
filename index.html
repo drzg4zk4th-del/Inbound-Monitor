@@ -12,7 +12,9 @@
 <!--<script src="https://unpkg.com/@zxing/library@latest"></script>-->
 <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
  
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+ 
 let weeklyNotesArchive=[];
 
 function getWeekEndingDate(){
@@ -1051,8 +1053,6 @@ document.getElementById('signOutBtn').style.display='none';
 await loadAll();
 
 refreshDashboard();
-
-});
 
 function runLookup(){
 
