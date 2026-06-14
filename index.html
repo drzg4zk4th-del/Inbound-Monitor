@@ -2845,7 +2845,17 @@ function exportTableCSV(tableId,fileName){
  let csv=[];
  rows.forEach(r=>{
    const cols=r.querySelectorAll('th,td');
-   csv.push(Array.from(cols).map(c=>'"'+(c.innerText||'').replace(/"/g,'""')+'"').join(','));
+   csv.push(Array.from(cols).map(c=>{
+
+   const select = c.querySelector('select');
+   if(select) return '"' + select.value.replace(/"/g,'""') + '"';
+
+   const input = c.querySelector('input');
+   if(input) return '"' + input.value.replace(/"/g,'""') + '"';
+
+   return '"' + (c.innerText||'').replace(/"/g,'""') + '"';
+
+}).join(','));
  });
  const blob=new Blob([csv.join('\n')],{type:'text/csv'});
  const a=document.createElement('a');
