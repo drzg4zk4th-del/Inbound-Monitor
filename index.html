@@ -2225,14 +2225,14 @@ document.getElementById('sevenHillsCard')
 document.getElementById('mainWarehouseCard')
 .classList.remove('capacity-danger');
 
-if(virtualTotal > virtualCapacity){
+if(virtualTotal >= virtualCapacity){
 
 document.getElementById('virtualCard')
 .classList.add('capacity-danger');
 
 }
 
-if(sevenTotal > sevenCapacity){
+if(sevenTotal >= sevenCapacity){
 
 document.getElementById('sevenHillsCard')
 .classList.add('capacity-danger');
