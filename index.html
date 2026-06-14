@@ -1629,7 +1629,7 @@ row.classList.remove(
 );
 
 const currentLocation =
-row.cells[15].innerText.trim();
+row.cells[14].innerText.trim();
 
 if(
 prioritySelect &&
@@ -1639,7 +1639,7 @@ prioritySelect.value === 'Urgent Despatch'
 row.classList.add('urgent-row');
 
 }
-else if(currentLocation === ''){
+else if(storageLocation === ''){
 
 row.classList.add('warning-row');
 
