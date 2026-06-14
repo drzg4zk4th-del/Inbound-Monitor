@@ -2879,7 +2879,8 @@ function exportUnallocatedRows(){
    "Qty",
    "Cartons",
    "Warehouse",
-   "Storage Location"
+   "Storage Location",
+   "Current Location"
  ].join(','));
 
  const rows =
@@ -2900,6 +2901,9 @@ function exportUnallocatedRows(){
       const warehouse =
       row.cells[12]?.querySelector('select')?.value || '';
 
+      const currentLocation =
+      row.cells[15]?.innerText?.trim() || '';
+
       csv.push([
          '"' + row.cells[1]?.innerText + '"',
          '"' + row.cells[3]?.innerText + '"',
@@ -2907,7 +2911,8 @@ function exportUnallocatedRows(){
          '"' + row.cells[11]?.innerText + '"',
          '"' + row.cells[10]?.innerText + '"',
          '"' + warehouse + '"',
-         '""'
+         '"' + location + '"',
+         '"' + currentLocation + '"'
       ].join(','));
 
    }
