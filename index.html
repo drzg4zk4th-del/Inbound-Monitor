@@ -1311,6 +1311,15 @@ XLSX.utils.sheet_to_json(sheet);
 
 rows.forEach(item=>{
 
+let warehouse = "Main Warehouse";
+
+if(item["CUSTOMER"] === "RET"){
+   warehouse = "Virtual Warehouse";
+}
+else if(item["CUSTOMER"] === "MKPR"){
+   warehouse = "PR Warehouse";
+}
+ 
 createRow({
 
 shipment: item["ORDER"] || "",
@@ -1328,7 +1337,7 @@ packPallets: 0,
 unitsPerCarton: 0,
 cartons: 0,
 
-warehouse: "Virtual Warehouse",
+warehouse: warehouse,
 priority: "Normal",
 
 location: "",
