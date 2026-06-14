@@ -2335,11 +2335,23 @@ asc:asc
 
 rows.sort((a,b)=>{
 
-let aVal =
-a.cells[index].innerText.trim();
+let aVal;
+let bVal;
 
-let bVal =
-b.cells[index].innerText.trim();
+const aSelect = a.cells[index].querySelector('select');
+const bSelect = b.cells[index].querySelector('select');
+
+if(aSelect){
+    aVal = aSelect.value;
+} else {
+    aVal = a.cells[index].innerText.trim();
+}
+
+if(bSelect){
+    bVal = bSelect.value;
+} else {
+    bVal = b.cells[index].innerText.trim();
+}
 
 const aNum = parseFloat(aVal);
 const bNum = parseFloat(bVal);
