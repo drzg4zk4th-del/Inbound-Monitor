@@ -709,7 +709,7 @@ Add Shipment
 </button>
 <button class="add-btn" onclick="exportTableCSV('shipmentTable','ActiveShipments.csv')">Export Active Shipments</button>
 
-<button onclick="exportUnallocatedRows()">
+<button class="add-btn" onclick="exportUnallocatedRows()">
 Export Unallocated Rows
 </button>
 
@@ -2893,7 +2893,7 @@ function exportUnallocatedRows(){
    row.cells[14]?.querySelector('input');
 
    const location =
-   locationInput?.value?.trim() || '';
+   row.cells[14]?.innerText?.trim() || '';
 
    if(location===''){
 
