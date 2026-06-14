@@ -714,6 +714,10 @@ Add Shipment
 </button>
 <button class="add-btn" onclick="exportTableCSV('shipmentTable','ActiveShipments.csv')">Export Active Shipments</button>
 
+<button class="add-btn" onclick="addSimilar()">
+<i class="fa-solid fa-copy"></i>
+Add Similar
+</button>
 
 <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
 
@@ -977,7 +981,7 @@ console.error(error);
 const dispatchWeek =
 document.getElementById('dispatchWeekInput');
 
-let options = '';
+let options = '<option selected>Week Not Assigned</option>';
 
 for (let fy = 26; fy <= 30; fy++) {
   for (let week = 1; week <= 52; week++) {
@@ -1222,7 +1226,41 @@ saveAll();
 
 }
 
+function addSimilar(){
 
+const row = createRow({
+
+shipment: shipmentInput.value,
+po: poInput.value,
+sku: skuInput.value,
+style: styleInput.value,
+colour: colourInput.value,
+eta: etaInput.value,
+dispatchWeek: dispatchWeekInput.value,
+
+loosePallets: palletInput.value,
+packPallets: packsPalletInput.value,
+unitsPerCarton: unitsPerCartonInput.value,
+cartons: Math.ceil((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)),
+qty: qtyInput.value,
+
+warehouse: warehouseInput.value,
+priority: priorityInput.value,
+
+location: locationInput.value,
+currentLocation: currentLocationInput.value,
+
+action: actionInput.value,
+status: 'In Transit',
+
+notes: notesInput.value
+
+});
+
+refreshDashboard();
+saveAll();
+
+}
 
 function recalculateExcess(row){
 
