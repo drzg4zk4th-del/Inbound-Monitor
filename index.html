@@ -1182,14 +1182,17 @@ alert("Reading text...");
 
 const result = await Tesseract.recognize(
    file,
-   'eng'
+   'eng',
+   {
+      tessedit_char_whitelist:'0123456789'
+   }
 );
 
 const text = result.data.text;
 
 console.log(text);
 
-const match = text.match(/\b\d{5}\b/);
+const match = text.match(/\d+/);
 
 if(match){
 
