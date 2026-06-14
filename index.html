@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script src="https://unpkg.com/@zxing/library@latest"></script>
  
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
 let weeklyNotesArchive=[];
@@ -940,6 +942,15 @@ style="width:100%;margin-bottom:20px;"
 oninput="runLookup()"
 >
 
+<button class="add-btn" onclick="startScanner()">
+📷 Scan PO
+</button>
+
+<video
+id="scanner"
+style="width:100%;display:none;border-radius:12px;"
+></video>
+
 <div id="lookupResults"></div>
 
 </div>
@@ -1109,6 +1120,41 @@ ${row.cells[12].querySelector('select').value}
 });
 
 results.innerHTML=html;
+
+}
+
+async function startScanner(){
+
+const video =
+document.getElementById('scanner');
+
+video.style.display='block';
+
+const codeReader =
+new ZXing.BrowserBarcodeReader();
+
+try{
+
+const result =
+await codeReader.decodeOnceFromVideoDevice(
+undefined,
+'scanner'
+);
+
+document.getElementById('lookupInput').value =
+result.text;
+
+runLookup();
+
+video.style.display='none';
+
+}catch(err){
+
+console.error(err);
+
+alert('No barcode detected');
+
+}
 
 }
  
