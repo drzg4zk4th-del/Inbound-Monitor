@@ -1095,14 +1095,14 @@ html += `
 
 <p><b>Colour:</b> ${row.cells[4].innerText}</p>
 
-<p><b>Qty:</b> ${row.cells[11].innerText}</p>
+<p><b>Qty:</b> ${row.cells[12].innerText}</p>
 
-<p><b>Cartons:</b> ${row.cells[10].innerText}</p>
+<p><b>Cartons:</b> ${row.cells[11].innerText}</p>
 
 <p><b>ETA:</b> ${row.cells[5].innerText}</p>
 
 <p><b>Warehouse:</b>
-${row.cells[12].querySelector('select').value}
+${row.cells[13].querySelector('select').value}
 </p>
 
 <p><b>Storage Location:</b>
@@ -1661,7 +1661,6 @@ const packsCartons = Number(row.cells[9].innerText || 0);
 const unitsPerCarton = Number(row.cells[10].innerText || 1);
 
 row.cells[11].innerText = ((qty / Math.max(unitsPerCarton,1)) + packsCartons).toFixed(1);
-return;
 
 row.cells[10].innerText =
 (qty / Math.max(unitsPerCarton,1)).toFixed(1);
@@ -1737,12 +1736,10 @@ qcRow.innerHTML = `
 <td>${row.cells[13].innerHTML}</td>
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
-
-<td>${row.cells[18].innerHTML}</td>
-
+<td>${row.cells[16].innerHTML}</td>
+<td>${row.cells[17].innerHTML}</td>
 <td>QC Rejected</td>
-
-<td contenteditable="true">${row.cells[16].innerHTML}</td>
+<td contenteditable="true">${row.cells[19].innerHTML}</td>
 
 <td>
 <button
@@ -1847,8 +1844,9 @@ archiveRow.innerHTML=`
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
 <td>${row.cells[16].innerHTML}</td>
+<td>${row.cells[17].innerHTML}</td>
 <td>Arrived</td>
-<td>${row.cells[18].innerHTML}</td>
+<td>${row.cells[19].innerHTML}</td>
 <td><button class="restore-btn" onclick="restoreRow(this)">Restore</button></td>
 <td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>`;
 row.remove(); refreshDashboard(); saveAll();
@@ -2422,9 +2420,9 @@ warehouse: row.cells[13].querySelector('select').value,
 priority: row.cells[14].querySelector('select').value,
 location: row.cells[15].innerText,
 currentLocation: row.cells[16].innerText,
-action: row.cells[16].querySelector('select').value,
-status: row.cells[17].querySelector('select').value,
-notes: row.cells[18].innerText
+action: row.cells[17].querySelector('select').value,
+status: row.cells[18].querySelector('select').value,
+notes: row.cells[19].innerText
 });
 
 });
