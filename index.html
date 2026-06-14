@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
+<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
  
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
 let weeklyNotesArchive=[];
@@ -951,6 +952,19 @@ id="scanner"
 style="width:100%;display:none;border-radius:12px;"
 ></video>
 
+<button class="add-btn" onclick="document.getElementById('ocrInput').click()">
+📷 Scan Text
+</button>
+
+<input
+type="file"
+id="ocrInput"
+accept="image/*"
+capture="environment"
+style="display:none"
+onchange="scanText(event)"
+>
+
 <div id="lookupResults"></div>
 
 </div>
@@ -1155,6 +1169,25 @@ console.error(err);
 alert('No barcode detected');
 
 }
+
+}
+
+async function scanText(event){
+
+const file = event.target.files[0];
+
+if(!file) return;
+
+const result = await Tesseract.recognize(
+   file,
+   'eng'
+);
+
+const text = result.data.text;
+
+console.log(text);
+
+alert(text);
 
 }
  
