@@ -1648,7 +1648,7 @@ const qty = Number(row.cells[11].innerText || 0);
 const unitsPerCarton = Number(row.cells[9].innerText || 1);
 
 row.cells[10].innerText =
-Math.ceil(qty / Math.max(unitsPerCarton,1));
+(qty / Math.max(unitsPerCarton,1)).toFixed(1);
 
 applyRowColours();
 
