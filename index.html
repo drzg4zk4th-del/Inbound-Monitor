@@ -1872,8 +1872,18 @@ cartonsNext7 += cartons;
 
 });
 
+const uniquePOs = new Set();
+
+rows.forEach(row=>{
+   const po = row.cells[1].innerText.trim();
+
+   if(po !== ''){
+      uniquePOs.add(po);
+   }
+});
+
 document.getElementById('totalPOs').innerText =
-rows.length;
+uniquePOs.size;
 
 document.getElementById('qcRejectedCount').innerText =
 qcRows.length;
