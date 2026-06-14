@@ -2271,18 +2271,16 @@ row.cells[14].innerText.trim();
  if(eta){
    const d=new Date(eta);
    const diff=(d-today)/(1000*60*60*24);
-if(
-   diff >= 0 &&
-   diff <= 7 &&
-   warehouse === 'Virtual Warehouse'
-){
-
-   incomingStyles.add(
-      row.cells[2].innerText.trim()
-   );
+if(diff >= 0 && diff <= 7){
 
    sumUnits += qty;
    sumPallets += pallets;
+
+   if(warehouse === 'Virtual Warehouse'){
+      incomingStyles.add(
+         row.cells[2].innerText.trim()
+      );
+   }
 }
  }
 });
