@@ -456,6 +456,35 @@ font-size:20px;
 margin:6px 0;
 }
 
+#signInBtn,
+#signOutBtn{
+    position:fixed;
+    top:20px;
+    right:20px;
+
+    z-index:2000;
+
+    padding:12px 20px;
+
+    border:none;
+    border-radius:12px;
+
+    background:#2563eb;
+    color:white;
+
+    font-weight:bold;
+    cursor:pointer;
+}
+
+#signOutBtn{
+    display:none;
+}
+
+#signInBtn:hover,
+#signOutBtn:hover{
+    background:#1d4ed8;
+}
+
 </style>
 </head>
 
@@ -502,11 +531,11 @@ Next 7 Days
 
 <div class="header">
 
-<button type="button" onclick="login(); return false;">
+<button id="signInBtn" onclick="signIn()">
 Sign In
 </button>
 
-<button type="button" onclick="logout(); return false;">
+<button id="signOutBtn" onclick="signOut()">
 Sign Out
 </button>
 
@@ -1003,13 +1032,21 @@ console.log("Logged in:", user.email);
 
 document.body.classList.remove("viewer-mode");
 
+document.getElementById('signInBtn').style.display='none';
+document.getElementById('signOutBtn').style.display='block';
+
 }else{
 
 console.log("Viewing as guest");
 
 document.body.classList.add("viewer-mode");
 
+document.getElementById('signInBtn').style.display='block';
+document.getElementById('signOutBtn').style.display='none';
+
 }
+
+});
 
 await loadAll();
 
@@ -1233,6 +1270,10 @@ console.error(error);
 
 alert("Login failed");
 
+document.getElementById('signInBtn').style.display='none';
+
+document.getElementById('signOutBtn').style.display='block';
+
 }
 
 }
@@ -1252,6 +1293,10 @@ location.reload();
 console.error(error);
 
 });
+
+document.getElementById('signOutBtn').style.display='none';
+
+document.getElementById('signInBtn').style.display='block';
 
 }
 
