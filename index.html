@@ -1044,7 +1044,7 @@ row.innerHTML = `
 <td contenteditable="true">${data.loosePallets || 0}</td>
 <td contenteditable="true">${data.packPallets || 0}</td>
 <td contenteditable="true">${data.unitsPerCarton || 0}</td>
-<td contenteditable="true">${data.cartons || Math.ceil((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1))}</td>
+<td>${data.cartons || Math.ceil((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1))}</td>
 <td contenteditable="true">${data.qty || 0}</td>
 
 <td>
@@ -1324,6 +1324,8 @@ applyRowColours();
 refreshDashboard();
 
 saveAll();
+
+});
 
 });
 
