@@ -1703,8 +1703,10 @@ moveToArchive(row);
 }
 
 }
+ 
+ function moveToQCRejected(row){
 
-function moveToQCRejected(row){
+  if(!row || !row.parentNode) return;
 
 const qcRow =
 qcRejectedTable.insertRow(-1);
@@ -1729,11 +1731,9 @@ qcRow.innerHTML = `
 <td>${row.cells[14].innerHTML}</td>
 <td>${row.cells[15].innerHTML}</td>
 
-<td>${row.cells[18].innerHTML}</td>
-
+<td>${row.cells[16].innerHTML}</td>
 <td>QC Rejected</td>
-
-<td contenteditable="true">${row.cells[16].innerHTML}</td>
+<td contenteditable="true">${row.cells[18].innerHTML}</td>
 
 <td>
 <button
@@ -2515,10 +2515,6 @@ index !== 16
 ){
 cell.setAttribute('contenteditable','true');
 }
-
-});
-
-setupRow(row);
 
 });
 
