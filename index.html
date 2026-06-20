@@ -420,9 +420,37 @@ td[contenteditable="true"]:focus{
 }
 
 </style>
+
+<style>
+#retailPage .form-grid{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(180px,1fr)) !important;
+  gap:12px !important;
+  margin-bottom:15px !important;
+}
+#retailPage .add-btn{
+  width:auto !important;
+  height:auto !important;
+  display:inline-block !important;
+  padding:12px 24px !important;
+  margin-bottom:15px !important;
+}
+</style>
+
 </head>
 
 <body>
+
+<!--
+WOC 2.0 CLEANUP BUILD
+Purpose:
+- Inbound retained
+- Retail retained
+- Firebase retained
+- Archive retained
+- Testing candidate build
+-->
+
 
 <div class="sidebar hidden">
 
@@ -435,6 +463,15 @@ td[contenteditable="true"]:focus{
 <button onclick="showPage('mainPage')">
 <i class="fa-solid fa-box"></i>
 Main Shipments
+</button>
+
+<button onclick="showPage('retailPage')">
+<i class="fa-solid fa-truck"></i>
+Retail Despatch
+</button>
+
+<button onclick="showPage('retailArchivePage')">
+Retail Archive
 </button>
 
 <button onclick="showPage('lookupPage')">
@@ -458,6 +495,7 @@ Next 7 Days
 </button>
 
 <button onclick="showPage('notesArchivePage')"><i class="fa-solid fa-note-sticky"></i>Weekly Notes Archive</button>
+<button onclick="showPage('exceptionsPage')">Exceptions</button>
 
 </div>
 
@@ -665,6 +703,7 @@ FY Week
 <input id="packsPalletInput" type="number" placeholder="Packs Pallets">
 <input id="unitsPerCartonInput" type="number" placeholder="Units Per Carton">
 <input id="qtyInput" type="number" placeholder="Quantity">
+<input id="totalPacksInput" type="number" placeholder="Total Packs">
 
 <select id="warehouseInput">
 <option>Virtual Warehouse</option>
@@ -760,7 +799,8 @@ style="max-width:280px;"
 <th onclick="sortTable(this)" style="cursor:pointer;">Dispatch Week ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Pallets ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Packs Pallets ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Units/Carton ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Cartons ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Loose Units/Carton ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Loose Cartons ↕</th><th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Total Packs ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Warehouse ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Priority ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Storage Location ↕</th>
@@ -804,6 +844,7 @@ style="max-width:280px;"
 <th>Units/Carton</th>
 <th>Cartons</th>
 <th>Qty</th>
+<th>Total Packs</th>
 <th>Warehouse</th>
 <th>Priority</th>
 <th>Storage Location</th>
@@ -836,6 +877,15 @@ style="max-width:280px;"
 
 <div class="card"><h3>QC Status</h3><div class="big-number" id="sumQCHealth">🟢</div></div>
 <div class="card"><h3>Operations Risk</h3><div class="big-number" id="sumRisk">🟢 NORMAL</div></div>
+</div>
+
+
+<div class="dashboard-grid" style="margin-top:20px;">
+<div class="card"><h3>Oldest Pickrun</h3><div class="big-number" id="retailOldestPickrun">0</div></div>
+<div class="card"><h3>Yesterday Despatched</h3><div class="big-number" id="retailYesterday">0</div></div>
+<div class="card"><h3>Last 7 Days</h3><div class="big-number" id="retailLast7Days">0</div></div>
+<div class="card"><h3>Monthly Despatch</h3><div class="big-number" id="retailMonthly">0</div></div>
+<div class="card"><h3>FY Total</h3><div class="big-number" id="retailFYTotal">0</div></div>
 </div>
 
 <div class="card" style="margin-top:20px;">
@@ -878,9 +928,10 @@ style="max-width:280px;"
 <th onclick="sortTable(this)" style="cursor:pointer;">Dispatch Week ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Pallets ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Packs Pallets ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Units/Carton ↕</th>
-<th onclick="sortTable(this)" style="cursor:pointer;">Cartons ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Loose Units/Carton ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Loose Cartons ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Qty ↕</th>
+<th onclick="sortTable(this)" style="cursor:pointer;">Total Packs ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Warehouse ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Priority ↕</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Storage Location ↕</th>
@@ -895,6 +946,101 @@ style="max-width:280px;"
 
 </div>
 
+</div>
+
+
+<div id="retailPage" class="page">
+<h1 style="margin-bottom:20px;">Retail Despatch Dashboard</h1>
+
+<div class="dashboard-grid" id="retailFullMetrics">
+<div class="card"><h3>Total Units To Be Despatched</h3><div class="big-number" id="retailMetricTotalUnits">0</div></div>
+<div class="card"><h3>Total Pickruns</h3><div class="big-number" id="retailMetricPickruns">0</div></div>
+<div class="card"><h3>Oldest Pickrun</h3><div class="big-number" id="retailMetricOldest">0 days</div></div>
+<div class="card">
+<h3>Discrepancies</h3>
+<div class="big-number" id="retailMetricAvgDiscrepancies">0 Avg</div>
+<div class="metric-sub" id="retailMetricDiscrepancyRate">0%</div>
+</div>
+<div class="card"><h3>Yesterday Despatched</h3><div class="big-number" id="retailMetricYesterday">0</div></div>
+<div class="card"><h3>Last 7 Days Despatched</h3><div class="big-number" id="retailMetricLast7">0</div></div>
+<div class="card"><h3>Monthly Despatch</h3><div class="big-number" id="retailMetricMonth">0</div></div>
+<div class="card"><h3>Current Financial Year Total</h3><div class="big-number" id="retailMetricFY">0</div></div>
+</div>
+
+
+<div><div class="form-grid">
+<input id="retailPickrunNumber" placeholder="Pickrun Number">
+<input id="retailDescription" placeholder="Description">
+<input id="retailQty" type="number" placeholder="Qty">
+<select id="retailUrgency">
+<option>Low</option>
+<option>Medium</option>
+<option>High</option>
+</select>
+</div>
+
+<button class="add-btn" onclick="addRetailPickrunBeta4()">Add Pickrun</button>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Pickrun Number</th>
+<th>Description</th>
+<th>Qty</th>
+<th>Urgency</th>
+<th>Order Type</th>
+<th>Date Created</th>
+<th>Printed</th>
+<th>Completed</th>
+<th>Discrepancies Left Qty</th>
+<th>Date Completed</th>
+<th>Delete</th>
+</tr>
+</thead>
+<tbody id="retailPickrunsBody"></tbody>
+</table></div></div>
+
+
+</div>
+
+<div id="retailArchivePage" class="page">
+<h1 style="margin-bottom:20px;">Retail Archive</h1>
+
+<div class="dashboard-grid">
+<div class="card"><h3>Archived Pickruns</h3><div class="big-number" id="retailArchiveCount">0</div></div>
+<div class="card"><h3>Archived Units</h3><div class="big-number" id="retailArchiveUnits">0</div></div>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Pickrun Number</th>
+<th>Description</th>
+<th>Qty</th>
+<th>Urgency</th>
+<th>Order Type</th>
+<th>Date Created</th>
+<th>Printed</th>
+<th>Completed</th>
+<th>Discrepancies Left Qty</th>
+<th>Date Completed</th>
+<th>Delete</th>
+</tr>
+</thead>
+<tbody id="retailArchivePageBody"></tbody>
+</table>
+</div>
+</div>
+
+
+<div id="exceptionsPage" class="page">
+<h1 style="margin-bottom:20px;">Exception Dashboard</h1>
+<div id="exceptionList" class="card">
+<h3>Operational Exceptions</h3>
+<p>Missing Locations, Dispatch Weeks, Cartons and QC issues will appear here.</p>
+</div>
 </div>
 
 <div id="lookupPage" class="page">
@@ -966,7 +1112,7 @@ auth.onAuthStateChanged(async user => {
 
 if(user){
 
-console.log("Logged in:", user.email);
+
 
 document.body.classList.remove("viewer-mode");
 
@@ -975,7 +1121,7 @@ document.getElementById('signOutBtn').style.display='block';
 
 }else{
 
-console.log("Viewing as guest");
+
 
 document.body.classList.add("viewer-mode");
 
@@ -986,6 +1132,9 @@ document.getElementById('signOutBtn').style.display='none';
 
 await loadAll();
 refreshDashboard();
+loadRetailUnified();
+refreshRetailMetricsHotfix();
+retailMetricsFinalHotfix();
 
 });
 
@@ -1098,7 +1247,7 @@ html += `
 <p><b>ETA:</b> ${row.cells[5].innerText}</p>
 
 <p><b>Warehouse:</b>
-${row.cells[12].querySelector('select').value}
+${row.cells[14].querySelector('select').value}
 </p>
 
 <p><b>Storage Location:</b>
@@ -1172,7 +1321,7 @@ const result = await Tesseract.recognize(
 
 const text = result.data.text;
 
-console.log(text);
+
 
 const match = text.match(/\d+/);
 
@@ -1218,7 +1367,7 @@ function logout(){
 firebase.auth().signOut()
 .then(()=>{
 
-console.log("Logged out");
+
 
 location.reload();
 
@@ -1309,6 +1458,7 @@ ${dispatchWeek.innerHTML.replace(
 <td contenteditable="true">${data.unitsPerCarton || 0}</td>
 <td>${data.cartons || ((Number(data.qty||0))/Math.max(Number(data.unitsPerCarton||1),1)).toFixed(1)}</td>
 <td contenteditable="true">${data.qty || 0}</td>
+<td contenteditable="true">${data.totalPacks || 0}</td>
 
 <td>
 <select class="premium-select">
@@ -1467,6 +1617,7 @@ packPallets: packsPalletInput.value,
 unitsPerCarton: unitsPerCartonInput.value,
 cartons: ((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)).toFixed(1),
 qty: qtyInput.value,
+totalPacks: totalPacksInput.value,
 
 warehouse: warehouseInput.value,
 priority: priorityInput.value,
@@ -1505,6 +1656,7 @@ packPallets: packsPalletInput.value,
 unitsPerCarton: unitsPerCartonInput.value,
 cartons: ((Number(qtyInput.value||0))/Math.max(Number(unitsPerCartonInput.value||1),1)).toFixed(1),
 qty: qtyInput.value,
+totalPacks: totalPacksInput.value,
 
 warehouse: warehouseInput.value,
 priority: priorityInput.value,
@@ -1625,7 +1777,7 @@ row.classList.remove(
 );
 
 const storageLocation =
-row.cells[14].innerText.trim();
+row.cells[16].innerText.trim();
 
 if(
 prioritySelect &&
@@ -2091,7 +2243,7 @@ sevenIncoming += pallets;
 }
 
 const location =
-row.cells[14].innerText.trim();
+row.cells[16].innerText.trim();
 
 if(location === ''){
 unallocatedCount++;
@@ -2260,13 +2412,13 @@ rows.forEach(row=>{
  const qty=Number(row.cells[11].innerText||0);
  const pallets=(Number(row.cells[7].innerText||0)+Number(row.cells[8].innerText||0));
 const warehouse =
-row.cells[12].querySelector('select').value;
+row.cells[14].querySelector('select').value;
 
 const priority =
-row.cells[13].querySelector('select').value;
+row.cells[14].querySelector('select').value;
 
 const location =
-row.cells[14].innerText.trim();
+row.cells[16].innerText.trim();
 
  if(location==='') sumMissing++;
  if(priority==='Urgent Despatch') sumUrgent++;
@@ -2408,13 +2560,13 @@ packPallets: row.cells[8].innerText,
 unitsPerCarton: row.cells[9].innerText,
 cartons: row.cells[10].innerText,
 qty: row.cells[11].innerText,
-warehouse: row.cells[12].querySelector('select').value,
-priority: row.cells[13].querySelector('select').value,
-location: row.cells[14].innerText,
-currentLocation: row.cells[15].innerText,
-action: row.cells[16].querySelector('select').value,
-status: row.cells[17].querySelector('select').value,
-notes: row.cells[18].innerText
+warehouse: row.cells[14].querySelector('select').value,
+priority: row.cells[14].querySelector('select').value,
+location: row.cells[16].innerText,
+currentLocation: row.cells[16].innerText,
+action: row.cells[18].querySelector('select').value,
+status: row.cells[18].querySelector('select').value,
+notes: row.cells[19].innerText
 });
 
 });
@@ -2679,7 +2831,7 @@ row.querySelector('.priority-select')
 : '';
 
 const currentLocation =
-row.cells[15].innerText.trim();
+row.cells[16].innerText.trim();
 
 let visible = true;
 
@@ -2816,7 +2968,7 @@ function getWeekEndingDate(){
  return saturday.toLocaleDateString();
 }
 
-function archiveWeeklyNotes(){
+function archiveWeeklyNotesLegacy(){
  const weekEnding=getWeekEndingDate();
 
  const notes=`Sunday: ${sunNote.value}<br>
@@ -2948,6 +3100,296 @@ function exportUnallocatedRows(){
 
 }
 
+</script>
+
+
+<script>
+async function addRetailPickrunBeta4(){
+ if(!window.db) return alert('Firebase not loaded');
+ const pickrunNumber=document.getElementById('retailPickrunNumber').value;
+ const description=document.getElementById('retailDescription').value;
+ const qty=Number(document.getElementById('retailQty').value||0);
+ const urgency=document.getElementById('retailUrgency').value;
+
+ await db.collection('dispatch_pickruns').add({
+   pickrunNumber,description,qty,urgency,
+   orderType:'Retail',
+   discrepancies:0,
+   printed:false,
+   completed:false,
+   archived:false,
+   dateCreated:new Date().toISOString()
+ });
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+
+function refreshRetailMetricsHotfix(){
+ if(typeof db==='undefined') return;
+
+ db.collection('dispatch_pickruns').onSnapshot(snapshot=>{
+   let totalUnits=0;
+   let totalPickruns=0;
+   let discrepancies=0;
+   let openDiscrepancies=0;
+
+   snapshot.forEach(doc=>{
+      const d=doc.data() || {};
+
+      const qty = Number(d.qty || d.units || 0);
+      const disc = Number(d.discrepancies || d.discrepancyQty || 0);
+
+      totalUnits += qty;
+      totalPickruns++;
+      discrepancies += disc;
+
+      if(!d.archived && !d.completed){
+         openDiscrepancies += disc;
+      }
+   });
+
+   const update=(ids,val)=>{
+      ids.forEach(id=>{
+         const el=document.getElementById(id);
+         if(el) el.innerText=val;
+      });
+   };
+
+   update(['retailMetricTotalUnits'], totalUnits.toLocaleString());
+   update(['retailMetricPickruns'], totalPickruns.toLocaleString());
+
+   const discrepancyRate =
+      totalUnits > 0 ? ((discrepancies / totalUnits) * 100).toFixed(2) : '0.00';
+
+   const avgDiscrepancies =
+      totalPickruns > 0 ? (discrepancies / totalPickruns).toFixed(1) : '0.0';
+
+   update(['retailMetricAvgDiscrepancies'], avgDiscrepancies + ' Avg');
+   update(['retailMetricDiscrepancyRate'], discrepancyRate + '%');
+ });
+}
+</script>
+
+
+<script>
+function retailDelete(id){
+ if(!confirm('Delete pickrun?')) return;
+ db.collection('dispatch_pickruns').doc(id).delete();
+}
+
+function retailUpdate(id,field,value){
+ db.collection('dispatch_pickruns').doc(id).update({[field]:value});
+}
+
+function retailPrinted(id,val){
+ db.collection('dispatch_pickruns').doc(id).update({printed:val});
+}
+
+function retailCompleted(id,val){
+ db.collection('dispatch_pickruns').doc(id).update({
+   completed:val,
+   archived:val,
+   dateCompleted: val ? new Date().toISOString() : null
+ });
+}
+
+function loadRetailUnified(){
+ if(typeof db==='undefined') return;
+
+ db.collection('dispatch_pickruns').onSnapshot(snapshot=>{
+
+   const body=document.getElementById('retailPickrunsBody');
+   const archiveBody=document.getElementById('retailArchivePageBody');
+
+   if(body) body.innerHTML='';
+   if(archiveBody) archiveBody.innerHTML='';
+
+   snapshot.forEach(doc=>{
+      const d=doc.data()||{};
+      const row=`
+      <tr>
+      <td contenteditable="true" onblur="retailUpdate('${doc.id}','pickrunNumber',this.innerText)">${d.pickrunNumber||''}</td>
+      <td contenteditable="true" onblur="retailUpdate('${doc.id}','description',this.innerText)">${d.description||''}</td>
+      <td contenteditable="true" onblur="retailUpdate('${doc.id}','qty',this.innerText)">${d.qty||0}</td>
+      <td contenteditable="true" onblur="retailUpdate('${doc.id}','urgency',this.innerText)">${d.urgency||''}</td>
+      <td contenteditable="true" onblur="retailUpdate('${doc.id}','orderType',this.innerText)">${d.orderType||''}</td>
+      <td>${d.dateCreated?new Date(d.dateCreated).toLocaleString():''}</td>
+      <td><input type="checkbox" ${d.printed?'checked':''} onchange="retailPrinted('${doc.id}',this.checked)"></td>
+      <td><input type="checkbox" ${d.completed?'checked':''} onchange="retailCompleted('${doc.id}',this.checked)"></td>
+      <td contenteditable="true" onblur="retailUpdate('${doc.id}','discrepancies',this.innerText)">${d.discrepancies||0}</td>
+      <td>${d.dateCompleted?new Date(d.dateCompleted).toLocaleString():''}</td>
+      <td><button class="delete-btn" onclick="retailDelete('${doc.id}')">Delete</button></td>
+      </tr>`;
+
+      const isArchived =
+      d.archived === true ||
+      d.completed === true ||
+      !!d.dateCompleted;
+
+      if(isArchived){
+        if(archiveBody) archiveBody.innerHTML += row;
+      }else{
+        if(body) body.innerHTML += row;
+      }
+   });
+ });
+}
+</script>
+
+
+<script>
+function retailMetricsFinalHotfix(){
+ if(typeof db==='undefined') return;
+
+ db.collection('dispatch_pickruns').onSnapshot(snapshot=>{
+
+   let oldest=0,yesterday=0,last7=0,month=0,fy=0;
+   const now=new Date();
+   const currentMonth=now.getMonth();
+   const currentYear=now.getFullYear();
+   const fyStart=(currentMonth>=6)?new Date(currentYear,6,1):new Date(currentYear-1,6,1);
+
+   snapshot.forEach(doc=>{
+      const d=doc.data()||{};
+
+      if(!d.archived && d.dateCreated){
+        const age=Math.floor((now - new Date(d.dateCreated))/86400000);
+        if(age>oldest) oldest=age;
+      }
+
+      const completedDate = d.dateCompleted ? new Date(d.dateCompleted) : null;
+
+      if(completedDate){
+        const diff=Math.floor((now-completedDate)/86400000);
+        const qty=Number(d.qty||0);
+
+        if(diff===1) yesterday += qty;
+        if(diff<=7) last7 += qty;
+
+        if(completedDate.getMonth()===currentMonth &&
+           completedDate.getFullYear()===currentYear){
+           month += qty;
+        }
+
+        if(completedDate >= fyStart){
+           fy += qty;
+        }
+      }
+   });
+
+   const set=(id,val)=>{
+      const el=document.getElementById(id);
+      if(el) el.innerText=val;
+   };
+
+   set('retailMetricOldest', oldest + ' days');
+   set('retailOldestPickrun', oldest + ' days');
+
+   set('retailMetricYesterday', yesterday.toLocaleString());
+   set('retailYesterday', yesterday.toLocaleString());
+
+   set('retailMetricLast7', last7.toLocaleString());
+   set('retailLast7Days', last7.toLocaleString());
+
+   set('retailMetricMonth', month.toLocaleString());
+   set('retailMonthly', month.toLocaleString());
+
+   set('retailMetricFY', fy.toLocaleString());
+   set('retailFYTotal', fy.toLocaleString());
+ });
+}
+
+</script>
+
+
+<script>
+window.addEventListener('load',function(){
+   setTimeout(function(){
+      if(typeof loadRetailUnified==='function'){
+         loadRetailUnified();
+      }
+      if(typeof retailMetricsFinalHotfix==='function'){
+         retailMetricsFinalHotfix();
+      }
+   },500);
+});
+</script>
+
+
+<script>
+function rebuildRetailArchive(){
+ if(typeof db==='undefined') return;
+
+ db.collection('dispatch_pickruns').onSnapshot(snapshot=>{
+   const body=document.getElementById('retailArchivePageBody');
+   if(!body) return;
+
+   body.innerHTML='';
+
+   let count=0, units=0;
+
+   snapshot.forEach(doc=>{
+      const d=doc.data()||{};
+
+      const archived =
+        d.archived===true ||
+        d.completed===true ||
+        !!d.dateCompleted;
+
+      if(!archived) return;
+
+      count++;
+      units += Number(d.qty||0);
+
+      body.innerHTML += `
+      <tr>
+      <td>${d.pickrunNumber||''}</td>
+      <td>${d.description||''}</td>
+      <td>${d.qty||0}</td>
+      <td>${d.urgency||''}</td>
+      <td>${d.orderType||''}</td>
+      <td>${d.dateCreated||''}</td>
+      <td>${d.printed?'✓':''}</td>
+      <td>${d.completed?'✓':''}</td>
+      <td>${d.discrepancies||0}</td>
+      <td>${d.dateCompleted||''}</td>
+      <td><button onclick="retailDelete('${doc.id}')">Delete</button></td>
+      </tr>`;
+   });
+
+   const c=document.getElementById('retailArchiveCount');
+   const u=document.getElementById('retailArchiveUnits');
+   if(c) c.innerText=count;
+   if(u) u.innerText=units.toLocaleString();
+ });
+}
+window.addEventListener('load',()=>setTimeout(rebuildRetailArchive,1500));
 </script>
 
 </body>
