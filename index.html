@@ -2560,6 +2560,7 @@ packPallets: row.cells[8].innerText,
 unitsPerCarton: row.cells[9].innerText,
 cartons: row.cells[10].innerText,
 qty: row.cells[11].innerText,
+totalPacks: row.cells[12].innerText,
 warehouse: row.cells[13].querySelector('select').value,
 priority: row.cells[14].querySelector('select').value,
 location: row.cells[15].innerText,
@@ -3058,12 +3059,12 @@ function exportUnallocatedRows(){
    row.cells[14]?.querySelector('input');
 
    const location =
-   row.cells[14]?.innerText?.trim() || '';
+   row.cells[15]?.innerText?.trim() || '';
 
    if(location===''){
 
       const warehouse =
-      row.cells[12]?.querySelector('select')?.value || '';
+      row.cells[13]?.querySelector('select')?.value || '';
 
       const currentLocation =
       row.cells[15]?.innerText?.trim() || '';
