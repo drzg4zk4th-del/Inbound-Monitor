@@ -1858,54 +1858,21 @@ moveToArchive(row);
  
  function moveToQCRejected(row){
 
-  if(!row || !row.parentNode) return;
+if(!row || !row.parentNode) return;
 
-const qcRow =
-qcRejectedTable.insertRow(-1);
+const qcRow = qcRejectedTable.insertRow(-1);
 
-qcRow.innerHTML = `
-<td>${row.cells[0].innerHTML}</td>
-<td>${row.cells[1].innerHTML}</td>
-<td>${row.cells[2].innerHTML}</td>
-<td>${row.cells[3].innerHTML}</td>
-<td>${row.cells[4].innerHTML}</td>
-<td>${row.cells[5].innerHTML}</td>
-<td>${row.cells[6].innerHTML}</td>
+for(let i=0;i<=19;i++){
+ const c=qcRow.insertCell(-1);
+ c.innerHTML=row.cells[i].innerHTML;
+}
 
-<td>${row.cells[7].innerHTML}</td>
-<td>${row.cells[8].innerHTML}</td>
-<td>${row.cells[9].innerHTML}</td>
-<td>${row.cells[10].innerHTML}</td>
-<td>${row.cells[11].innerHTML}</td>
+qcRow.cells[18].innerHTML='QC Rejected';
 
-<td>${row.cells[12].innerHTML}</td>
-<td>${row.cells[13].innerHTML}</td>
-<td>${row.cells[14].innerHTML}</td>
-<td>${row.cells[15].innerHTML}</td>
-
-<td>${row.cells[16].innerHTML}</td>
-<td>QC Rejected</td>
-<td contenteditable="true">${row.cells[18].innerHTML}</td>
-
-<td>
-<button
-class="restore-btn"
-onclick="moveQCRejectedToArchive(this)">
-Arrived
-</button>
-</td>
-
-<td>
-<button
-class="delete-btn"
-onclick="deleteRow(this)">
-<i class="fa-solid fa-trash"></i>
-</button>
-</td>
-`;
+qcRow.insertCell(-1).innerHTML='<button class="restore-btn" onclick="moveQCRejectedToArchive(this)">Arrived</button>';
+qcRow.insertCell(-1).innerHTML='<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
 
 row.remove();
-
 refreshDashboard();
 saveAll();
 
@@ -1972,28 +1939,17 @@ saveAll();
 
 function moveToArchive(row){
 const archiveRow=archiveTable.insertRow(-1);
-archiveRow.innerHTML=`
-<td>${row.cells[0].innerHTML}</td>
-<td>${row.cells[1].innerHTML}</td>
-<td>${row.cells[2].innerHTML}</td>
-<td>${row.cells[3].innerHTML}</td>
-<td>${row.cells[4].innerHTML}</td>
-<td>${row.cells[5].innerHTML}</td>
-<td>${row.cells[6].innerHTML}</td>
-<td>${row.cells[7].innerHTML}</td>
-<td>${row.cells[8].innerHTML}</td>
-<td>${row.cells[9].innerHTML}</td>
-<td>${row.cells[10].innerHTML}</td>
-<td>${row.cells[11].innerHTML}</td>
-<td>${row.cells[12].innerHTML}</td>
-<td>${row.cells[13].innerHTML}</td>
-<td>${row.cells[14].innerHTML}</td>
-<td>${row.cells[15].innerHTML}</td>
-<td>${row.cells[16].innerHTML}</td>
-<td>Arrived</td>
-<td>${row.cells[18].innerHTML}</td>
-<td><button class="restore-btn" onclick="restoreRow(this)">Restore</button></td>
-<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>`;
+
+for(let i=0;i<=19;i++){
+ const c=archiveRow.insertCell(-1);
+ c.innerHTML=row.cells[i].innerHTML;
+}
+
+archiveRow.cells[18].innerHTML='Arrived';
+
+archiveRow.insertCell(-1).innerHTML='<button class="restore-btn" onclick="restoreRow(this)">Restore</button>';
+archiveRow.insertCell(-1).innerHTML='<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
+
 row.remove(); refreshDashboard(); saveAll();
 }
 
@@ -3166,8 +3122,10 @@ function refreshRetailMetricsHotfix(){
       const qty = Number(d.qty || d.units || 0);
       const disc = Number(d.discrepancies || d.discrepancyQty || d['Discrepancies Left Qty'] || 0);
 
-      totalUnits += qty;
-      totalPickruns++;
+      if(!d.archived && !d.completed){
+         totalUnits += qty;
+         totalPickruns++;
+      }
       discrepancies += disc;
 
       if(!d.archived && !d.completed){
