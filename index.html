@@ -18,6 +18,29 @@ function repairArchiveRowAlignment(){
 }
 window.addEventListener('load',()=>setTimeout(repairArchiveRowAlignment,1000));
 
+
+function rebuildArchiveRowSafe(sourceRow,targetTable,statusText){
+    const newRow = targetTable.insertRow(-1);
+
+    const maxCells = Math.min(20, sourceRow.cells.length);
+    for(let i=0;i<maxCells;i++){
+        const cell = newRow.insertCell(-1);
+        cell.innerHTML = sourceRow.cells[i].innerHTML;
+    }
+
+    if(newRow.cells[18]){
+        newRow.cells[18].innerHTML = statusText;
+    }
+
+    newRow.insertCell(-1).innerHTML =
+      '<button class="restore-btn" onclick="restoreRow(this)">Restore</button>';
+
+    newRow.insertCell(-1).innerHTML =
+      '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
+
+    return newRow;
+}
+
 </script>
 
 <!--<script src="https://unpkg.com/@zxing/library@latest"></script>-->
