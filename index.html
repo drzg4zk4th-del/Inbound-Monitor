@@ -1314,7 +1314,7 @@ ${row.cells[13].querySelector('select').value}
 </p>
 
 <p><b>Storage Location:</b>
-${row.cells[15].textContent.trim()}
+${row.cells[16].textContent.trim()}
 </p>
 
 <p><b>Current Location:</b>
@@ -1988,26 +1988,30 @@ function restoreRow(btn){
 
     const row = btn.closest('tr');
 
-    const restoredRow = shipmentTable.insertRow(-1);
+    const data = {
+      shipment: row.cells[0]?.innerText || '',
+      po: row.cells[1]?.innerText || '',
+      sku: row.cells[2]?.innerText || '',
+      style: row.cells[3]?.innerText || '',
+      colour: row.cells[4]?.innerText || '',
+      eta: row.cells[5]?.innerText || '',
+      dispatchWeek: row.cells[6]?.innerText || 'Week Not Assigned',
+      loosePallets: row.cells[7]?.innerText || 0,
+      packPallets: row.cells[8]?.innerText || 0,
+      unitsPerCarton: row.cells[9]?.innerText || 0,
+      cartons: row.cells[10]?.innerText || 0,
+      qty: row.cells[11]?.innerText || 0,
+      totalPacks: row.cells[12]?.innerText || 0,
+      warehouse: row.cells[13]?.innerText || 'Virtual Warehouse',
+      priority: row.cells[14]?.innerText || 'Normal',
+      location: row.cells[15]?.innerText || '',
+      currentLocation: row.cells[16]?.innerText || '',
+      action: row.cells[17]?.innerText || 'No Action Required',
+      status: 'In Transit',
+      notes: row.cells[19]?.innerText || ''
+    };
 
-    for(let i=0;i<=19;i++){
-        const cell = restoredRow.insertCell(-1);
-        cell.innerHTML = row.cells[i].innerHTML;
-    }
-
-    const statusCell = restoredRow.cells[18];
-
-    statusCell.innerHTML = `
-    <select class="premium-select status-select">
-        <option selected>In Transit</option>
-        <option>QC Rejected</option>
-        <option>Arrived</option>
-    </select>`;
-
-    restoredRow.insertCell(-1).innerHTML =
-        '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
-
-    setupRow(restoredRow);
+    createRow(data);
 
     row.remove();
 
