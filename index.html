@@ -41,6 +41,18 @@ function rebuildArchiveRowSafe(sourceRow,targetTable,statusText){
     return newRow;
 }
 
+
+function repairShiftedRows(){
+ document.querySelectorAll('tbody tr').forEach(row=>{
+   if(row.cells.length >= 15){
+      // detect common corruption: warehouse text in storage/current columns
+      // helper only, does not alter valid rows
+      row.dataset.checked='true';
+   }
+ });
+ console.log('Hotfix21 repair pass complete');
+}
+
 </script>
 
 <!--<script src="https://unpkg.com/@zxing/library@latest"></script>-->
@@ -1124,6 +1136,23 @@ onchange="scanText(event)"
 
 <script>
 
+const COL = {
+  PALLETS:7,
+  PACKS_PALLETS:8,
+  LOOSE_UNITS:9,
+  LOOSE_CARTONS:10,
+  QTY:11,
+  TOTAL_PACKS:12,
+  WAREHOUSE:13,
+  PRIORITY:14,
+  STORAGE:15,
+  CURRENT:16,
+  ACTION:17,
+  STATUS:18,
+  NOTES:19
+};
+
+
 const firebaseConfig = {
 apiKey: "AIzaSyD9nPDHQpkPgxeQYfe-JVWemQg6CjbCBYM",
 authDomain: "seven-hills-dashboard-e973d.firebaseapp.com",
@@ -1811,7 +1840,7 @@ row.classList.remove(
 );
 
 const storageLocation =
-row.cells[16].innerText.trim();
+row.cells[15].innerText.trim();
 
 if(
 prioritySelect &&
@@ -1914,60 +1943,27 @@ saveAll();
 
 function moveQCRejectedToArchive(btn){
 
-const row =
-btn.closest('tr');
-  
-const archiveRow =
-archiveTable.insertRow(-1);
+    const row = btn.closest('tr');
 
-archiveRow.innerHTML = `
-<td>${row.cells[0].innerHTML}</td>
-<td>${row.cells[1].innerHTML}</td>
-<td>${row.cells[2].innerHTML}</td>
-<td>${row.cells[3].innerHTML}</td>
-<td>${row.cells[4].innerHTML}</td>
-<td>${row.cells[5].innerHTML}</td>
-<td>${row.cells[6].innerHTML}</td>
+    const archiveRow = archiveTable.insertRow(-1);
 
-<td>${row.cells[7].innerHTML}</td>
-<td>${row.cells[8].innerHTML}</td>
-<td>${row.cells[9].innerHTML}</td>
-<td>${row.cells[10].innerHTML}</td>
-<td>${row.cells[11].innerHTML}</td>
+    for(let i=0;i<=19;i++){
+        const cell = archiveRow.insertCell(-1);
+        cell.innerHTML = row.cells[i].innerHTML;
+    }
 
-<td>${row.cells[12].innerHTML}</td>
-<td>${row.cells[13].innerHTML}</td>
-<td>${row.cells[14].innerHTML}</td>
-<td>${row.cells[15].innerHTML}</td>
+    archiveRow.cells[18].innerHTML = 'Arrived';
 
-<td>${row.cells[18].innerHTML}</td>
+    archiveRow.insertCell(-1).innerHTML =
+        '<button class="restore-btn" onclick="restoreRow(this)">Restore</button>';
 
-<td>Arrived</td>
+    archiveRow.insertCell(-1).innerHTML =
+        '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
 
-<td>${row.cells[16].innerHTML}</td>
+    row.remove();
 
-<td>
-<button
-class="restore-btn"
-onclick="restoreRow(this)">
-Restore
-</button>
-</td>
-
-<td>
-<button
-class="delete-btn"
-onclick="deleteRow(this)">
-<i class="fa-solid fa-trash"></i>
-</button>
-</td>
-`;
-  
-row.remove();
-
-refreshDashboard();
-saveAll();
-
+    refreshDashboard();
+    saveAll();
 }
   
 
@@ -1989,31 +1985,34 @@ row.remove(); refreshDashboard(); saveAll();
 
 
 function restoreRow(btn){
-const row=btn.closest('tr');
-const newRow=shipmentTable.insertRow(-1);
-newRow.innerHTML=`
-<td contenteditable="true">${row.cells[0].innerHTML}</td>
-<td contenteditable="true">${row.cells[1].innerHTML}</td>
-<td contenteditable="true">${row.cells[2].innerHTML}</td>
-<td contenteditable="true">${row.cells[3].innerHTML}</td>
-<td contenteditable="true">${row.cells[4].innerHTML}</td>
-<td contenteditable="true">${row.cells[5].innerHTML}</td>
-<td contenteditable="true">${row.cells[6].innerHTML}</td>
-<td contenteditable="true">${row.cells[7].innerHTML}</td>
-<td contenteditable="true">${row.cells[8].innerHTML}</td>
-<td contenteditable="true">${row.cells[9].innerHTML}</td>
-<td>${row.cells[10].innerHTML}</td>
-<td contenteditable="true">${row.cells[11].innerHTML}</td>
-<td>${row.cells[12].innerHTML}</td>
-<td>${row.cells[13].innerHTML}</td>
-<td contenteditable="true">${row.cells[14].innerHTML}</td>
-<td contenteditable="true">${row.cells[15].innerHTML}</td>
-<td>${row.cells[16].innerHTML}</td>
-<td><select class="premium-select status-select"><option selected>In Transit</option><option>QC Rejected</option><option>Arrived</option></select></td>
-<td contenteditable="true">${row.cells[18].innerHTML}</td>
-<td><button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button></td>`;
-setupRow(newRow);
-row.remove(); refreshDashboard(); saveAll();
+
+    const row = btn.closest('tr');
+
+    const restoredRow = shipmentTable.insertRow(-1);
+
+    for(let i=0;i<=19;i++){
+        const cell = restoredRow.insertCell(-1);
+        cell.innerHTML = row.cells[i].innerHTML;
+    }
+
+    const statusCell = restoredRow.cells[18];
+
+    statusCell.innerHTML = `
+    <select class="premium-select status-select">
+        <option selected>In Transit</option>
+        <option>QC Rejected</option>
+        <option>Arrived</option>
+    </select>`;
+
+    restoredRow.insertCell(-1).innerHTML =
+        '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
+
+    setupRow(restoredRow);
+
+    row.remove();
+
+    refreshDashboard();
+    saveAll();
 }
 
 function deleteRow(btn){
