@@ -1511,6 +1511,8 @@ page.classList.remove('active');
 
 document.getElementById(pageId).classList.add('active');
 
+localStorage.setItem('activePage', pageId);
+
 }
 
 function createRow(data){
@@ -3495,6 +3497,56 @@ function rebuildRetailArchive(){
  });
 }
 window.addEventListener('load',()=>setTimeout(rebuildRetailArchive,1500));
+
+window.addEventListener('load', () => {
+
+const savedPage =
+localStorage.getItem('activePage');
+
+if(savedPage &&
+document.getElementById(savedPage)){
+   showPage(savedPage);
+}
+
+});
+</script>
+
+<script>
+
+window.addEventListener('load',()=>{
+
+document.querySelectorAll('.table-wrap').forEach(wrapper=>{
+
+let isDown=false;
+let startX;
+let scrollLeft;
+
+wrapper.addEventListener('mousedown',e=>{
+    isDown=true;
+    startX=e.pageX-wrapper.offsetLeft;
+    scrollLeft=wrapper.scrollLeft;
+});
+
+wrapper.addEventListener('mouseleave',()=>isDown=false);
+wrapper.addEventListener('mouseup',()=>isDown=false);
+
+wrapper.addEventListener('mousemove',e=>{
+
+    if(!isDown) return;
+
+    e.preventDefault();
+
+    const x=e.pageX-wrapper.offsetLeft;
+    const walk=(x-startX)*2;
+
+    wrapper.scrollLeft=scrollLeft-walk;
+
+});
+
+});
+
+});
+
 </script>
 
 </body>
