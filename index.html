@@ -3421,10 +3421,18 @@ function loadRetailUnified(){
   
   snapshot.forEach(doc=>{
       const d=doc.data()||{};
-      plannerData.push({
-  ...d,
-  plannerDay:d.plannerDay || 'Unassigned'
-});
+    if(
+   !d.archived &&
+   !d.completed &&
+   !d.dateCompleted
+){
+
+   plannerData.push({
+      ...d,
+      plannerDay:d.plannerDay || ''
+   });
+
+}
       
       const row=`
       <tr>
