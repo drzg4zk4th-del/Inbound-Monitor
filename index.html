@@ -1027,6 +1027,10 @@ style="max-width:280px;"
 
 <div class="dashboard-grid" id="retailFullMetrics">
 <div class="card"><h3>Total Units To Be Despatched</h3><div class="big-number" id="retailMetricTotalUnits">0</div></div>
+<div class="card">
+<h3>Total Stores To Service</h3>
+<div class="big-number" id="retailMetricStores">0</div>
+</div>
 <div class="card"><h3>Total Pickruns</h3><div class="big-number" id="retailMetricPickruns">0</div></div>
 <div class="card"><h3>Oldest Pickrun</h3><div class="big-number" id="retailMetricOldest">0 days</div></div>
 <div class="card">
@@ -1045,6 +1049,7 @@ style="max-width:280px;"
 <input id="retailPickrunNumber" placeholder="Pickrun Number">
 <input id="retailDescription" placeholder="Description">
 <input id="retailQty" type="number" placeholder="Qty">
+<input id="retailStores" type="number" placeholder="Total Stores">
 <select id="retailUrgency">
 <option>Low</option>
 <option>Medium</option>
@@ -1061,6 +1066,7 @@ style="max-width:280px;"
 <th>Pickrun Number</th>
 <th>Description</th>
 <th>Qty</th>
+<th>Total Stores</th>
 <th>Urgency</th>
 <th>Order Type</th>
 <th>Date Created</th>
@@ -1092,6 +1098,7 @@ style="max-width:280px;"
 <th>Pickrun Number</th>
 <th>Description</th>
 <th>Qty</th>
+<th>Total Stores</th>
 <th>Urgency</th>
 <th>Order Type</th>
 <th>Date Created</th>
@@ -3241,17 +3248,22 @@ async function addRetailPickrunBeta4(){
  const pickrunNumber=document.getElementById('retailPickrunNumber').value;
  const description=document.getElementById('retailDescription').value;
  const qty=Number(document.getElementById('retailQty').value||0);
+ const stores=Number(document.getElementById('retailStores').value||0);
  const urgency=document.getElementById('retailUrgency').value;
 
- await db.collection('dispatch_pickruns').add({
-   pickrunNumber,description,qty,urgency,
+await db.collection('dispatch_pickruns').add({
+   pickrunNumber,
+   description,
+   qty,
+   stores,
+   urgency,
    orderType:'Retail',
    discrepancies:0,
    printed:false,
    completed:false,
    archived:false,
    dateCreated:new Date().toISOString()
- });
+});
 }
 </script>
 
@@ -3290,6 +3302,7 @@ function refreshRetailMetricsHotfix(){
    let totalPickruns=0;
    let discrepancies=0;
    let openDiscrepancies=0;
+  let totalStores=0;
 
   snapshot.forEach(doc=>{
    const d=doc.data() || {};
@@ -3297,10 +3310,11 @@ function refreshRetailMetricsHotfix(){
    const qty = Number(d.qty || d.units || 0);
    const disc = Number(d.discrepancies || d.discrepancyQty || d['Discrepancies Left Qty'] || 0);
 
-   if(!d.archived && !d.completed){
-      totalUnits += qty;
-      totalPickruns++;
-   }
+if(!d.archived && !d.completed){
+   totalUnits += qty;
+   totalPickruns++;
+   totalStores += Number(d.stores || 0);
+}
 
    // Only count completed / archived pickruns
    if(d.archived || d.completed){
@@ -3323,6 +3337,7 @@ function refreshRetailMetricsHotfix(){
    update(['retailMetricPickruns'], totalPickruns.toLocaleString());
    update(['mainRetailUnits'], totalUnits.toLocaleString());
 update(['mainRetailPickruns'], totalPickruns.toLocaleString());
+  update(['retailMetricStores'], totalStores.toLocaleString());
 
   const archivedPickruns =
    snapshot.docs.filter(doc=>{
@@ -3387,6 +3402,10 @@ function loadRetailUnified(){
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','pickrunNumber',this.innerText)">${d.pickrunNumber||''}</td>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','description',this.innerText)">${d.description||''}</td>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','qty',this.innerText)">${d.qty||0}</td>
+      <td contenteditable="true"
+onblur="retailUpdate('${doc.id}','stores',this.innerText)">
+${d.stores||0}
+</td>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','urgency',this.innerText)">${d.urgency||''}</td>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','orderType',this.innerText)">${d.orderType||''}</td>
       <td>${d.dateCreated?new Date(d.dateCreated).toLocaleString():''}</td>
@@ -3523,6 +3542,7 @@ function rebuildRetailArchive(){
       <td>${d.pickrunNumber||''}</td>
       <td>${d.description||''}</td>
       <td>${d.qty||0}</td>
+      <td>${d.stores||0}</td>
       <td>${d.urgency||''}</td>
       <td>${d.orderType||''}</td>
       <td>${d.dateCreated||''}</td>
