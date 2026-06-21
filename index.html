@@ -1042,6 +1042,10 @@ style="max-width:280px;"
 <div class="card"><h3>Last 7 Days Despatched</h3><div class="big-number" id="retailMetricLast7">0</div></div>
 <div class="card"><h3>Monthly Despatch</h3><div class="big-number" id="retailMetricMonth">0</div></div>
 <div class="card"><h3>Current Financial Year Total</h3><div class="big-number" id="retailMetricFY">0</div></div>
+<div class="card">
+<h3>📅 Weekly Pick Plan</h3>
+<div id="weeklyPlannerMetric" style="font-size:14px;line-height:1.8;"></div>
+</div>
 </div>
 
 
@@ -1088,8 +1092,14 @@ style="max-width:280px;"
 </tr>
 </thead>
 <tbody id="retailPickrunsBody"></tbody>
-</table></div></div>
+</table></div>
 
+<div class="card" style="margin-top:20px;">
+<h2>Retail Planning Board</h2>
+<div id="plannerBoards"></div>
+</div>
+
+</div>
 
 </div>
 
@@ -3269,6 +3279,7 @@ await db.collection('dispatch_pickruns').add({
    stores,
    urgency,
    orderType,
+   plannerDay:'Unassigned',
    discrepancies:0,
    printed:false,
    completed:false,
@@ -3622,6 +3633,63 @@ wrapper.addEventListener('mousemove',e=>{
 
 });
 
+</script>
+
+
+<script>
+function assignPlannerDay(id){
+const day=prompt('Assign Pickrun\n\nUnassigned\nSunday\nMonday\nTuesday\nWednesday\nThursday\nFriday\nSaturday');
+if(!day) return;
+db.collection('dispatch_pickruns').doc(id).update({plannerDay:day});
+}
+
+function renderPlannerBoard(docs){
+const days=['Unassigned','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+let html='';
+const planner={Sunday:{u:0,s:0},Monday:{u:0,s:0},Tuesday:{u:0,s:0},Wednesday:{u:0,s:0},Thursday:{u:0,s:0},Friday:{u:0,s:0},Saturday:{u:0,s:0}};
+
+days.forEach(day=>{
+let units=0;
+let count=0;
+let rows='';
+
+docs.forEach(d=>{
+if((d.plannerDay||'Unassigned')!==day) return;
+
+units+=Number(d.qty||0);
+count++;
+
+if(planner[day]){
+planner[day].u+=Number(d.qty||0);
+planner[day].s+=Number(d.stores||0);
+}
+
+rows+=`<tr><td>${d.pickrunNumber||''}</td><td>${d.description||''}</td><td>${d.qty||0}</td></tr>`;
+});
+
+html+=`<div class="card" style="margin-bottom:15px;">
+<h3>${day} (${count} Pickruns)</h3>
+<div class="metric-sub">${units.toLocaleString()} Units</div>
+<table style="width:100%;min-width:100%;">
+<tr><th>Pickrun</th><th>Description</th><th>Units</th></tr>
+${rows}
+</table>
+</div>`;
+});
+
+const board=document.getElementById('plannerBoards');
+if(board) board.innerHTML=html;
+
+const metric=document.getElementById('weeklyPlannerMetric');
+if(metric){
+metric.innerHTML=Object.keys(planner).map(day=>{
+const u=planner[day].u;
+const s=planner[day].s;
+const avg=s?Math.round(u/s):0;
+return `${day.substring(0,3).toUpperCase()} ${u.toLocaleString()} / ${avg} (${s})`;
+}).join('<br>');
+}
+}
 </script>
 
 </body>
