@@ -3694,7 +3694,7 @@ function assignPlannerDay(id,day){
 }
 
 function renderPlannerBoard(docs){
-const days=['Unassigned','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 let html='';
 const planner={Sunday:{u:0,s:0},Monday:{u:0,s:0},Tuesday:{u:0,s:0},Wednesday:{u:0,s:0},Thursday:{u:0,s:0},Friday:{u:0,s:0},Saturday:{u:0,s:0}};
 
@@ -3704,7 +3704,8 @@ let count=0;
 let rows='';
 
 docs.forEach(d=>{
-if((d.plannerDay||'Unassigned')!==day) return;
+if(!d.plannerDay) return;
+if(d.plannerDay!==day) return;
 
 units+=Number(d.qty||0);
 count++;
