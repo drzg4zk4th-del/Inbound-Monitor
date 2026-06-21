@@ -570,6 +570,33 @@ FY Week
 <div class="dashboard-grid">
 
 <div class="card">
+<div class="metric-icon blue">
+<i class="fa-solid fa-truck"></i>
+</div>
+<h3>Retail Units To Be Despatched</h3>
+<div class="big-number" id="mainRetailUnits">0</div>
+<div class="metric-sub">Active pickruns</div>
+</div>
+
+<div class="card">
+<div class="metric-icon purple">
+<i class="fa-solid fa-list-check"></i>
+</div>
+<h3>Retail Pickruns</h3>
+<div class="big-number" id="mainRetailPickruns">0</div>
+<div class="metric-sub">Active pickruns</div>
+</div>
+
+<div class="card">
+<div class="metric-icon orange">
+<i class="fa-solid fa-clock"></i>
+</div>
+<h3>Oldest Pickrun</h3>
+<div class="big-number" id="mainRetailOldest">0 days</div>
+<div class="metric-sub">Age of oldest active pickrun</div>
+</div>
+
+<div class="card">
 <div class="metric-icon green"><i class="fa-solid fa-clipboard"></i></div>
 <h3>Total Purchase Orders</h3>
 <div class="big-number" id="totalPOs">0</div>
@@ -3294,6 +3321,8 @@ function refreshRetailMetricsHotfix(){
 
    update(['retailMetricTotalUnits'], totalUnits.toLocaleString());
    update(['retailMetricPickruns'], totalPickruns.toLocaleString());
+   update(['mainRetailUnits'], totalUnits.toLocaleString());
+update(['mainRetailPickruns'], totalPickruns.toLocaleString());
 
   const archivedPickruns =
    snapshot.docs.filter(doc=>{
@@ -3431,6 +3460,7 @@ function retailMetricsFinalHotfix(){
 
    set('retailMetricOldest', oldest + ' days');
    set('retailOldestPickrun', oldest + ' days');
+   set('mainRetailOldest', oldest + ' days');
 
    set('retailMetricYesterday', yesterday.toLocaleString());
    set('retailYesterday', yesterday.toLocaleString());
