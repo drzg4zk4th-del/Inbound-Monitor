@@ -3246,7 +3246,6 @@ function exportUnallocatedRows(){
 
 <script>
 async function addRetailPickrunBeta4(){
- if(!window.db) return alert('Firebase not loaded');
  const pickrunNumber=document.getElementById('retailPickrunNumber').value;
  const description=document.getElementById('retailDescription').value;
  const qty=Number(document.getElementById('retailQty').value||0);
