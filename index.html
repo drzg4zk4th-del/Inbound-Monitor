@@ -2271,111 +2271,6 @@ cartonsNext7 += cartons;
 
 updateExceptions();
 
-function updateExceptions(){
-
-    const container =
-    document.getElementById('exceptionContent');
-
-    if(!container) return;
-
-    let html = '';
-
-    const rows =
-    Array.from(shipmentTable.rows).slice(1);
-
-    rows.forEach(row=>{
-
-
-        const po =
-        row.cells[1].innerText.trim();
-
-        const style =
-        row.cells[3].innerText.trim();
-
-        const warehouse =
-        row.cells[13].querySelector('select')?.value || '';
-
-        const location =
-        row.cells[15].innerText.trim();
-
-        if(location === ''){
-
-            html += `
-<div style="
-padding:10px;
-margin-bottom:8px;
-border-left:4px solid #ef4444;
-background:#1e293b;
-">
-
-🔴 Missing Storage Location<br>
-
-<b>PO:</b> ${po}<br>
-<b>Style:</b> ${style}<br>
-<b>Warehouse:</b> ${warehouse}<br><br>
-
-<input
-id="loc-${po}"
-placeholder="Enter Location"
-style="margin-right:8px;"
->
-
-<button
-onclick="
-updateLocationFromException(
-'${po}',
-document.getElementById('loc-${po}').value
-)
-"
->
-Update
-</button>
-
-</div>
-`;
-        }
-
-    });
-
-    if(html === ''){
-        html = `
-        <div style="color:#22c55e;">
-        ✅ No location exceptions found
-        </div>
-        `;
-    }
-
-    container.innerHTML = html;
-}
-
-function updateLocationFromException(po, location){
-
-    alert("Button clicked");
-
-    const rows =
-    Array.from(shipmentTable.rows).slice(1);
-
-    alert("Rows found: " + rows.length);
-
-    rows.forEach(row=>{
-
-        if(row.cells[1].innerText.trim() === po){
-
-            alert("Found PO: " + po);
-
-            row.cells[15].innerText = location;
-
-            alert("Location set to: " + row.cells[15].innerText);
-
-        }
-
-    });
-
-    saveAll();
-    refreshDashboard();
-
-}
-
 const uniquePOs = new Set();
 
 rows.forEach(row=>{
@@ -2635,6 +2530,86 @@ if(document.getElementById('qcStyles')){
 
 refreshShipmentOverview();
 
+}
+
+function updateExceptions(){
+
+    const container =
+    document.getElementById('exceptionContent');
+
+    if(!container) return;
+
+    let html = '';
+
+    const rows =
+    Array.from(shipmentTable.rows).slice(1);
+
+    rows.forEach(row=>{
+
+        const po =
+        row.cells[1].innerText.trim();
+
+        const style =
+        row.cells[3].innerText.trim();
+
+        const warehouse =
+        row.cells[13].querySelector('select')?.value || '';
+
+        const location =
+        row.cells[15].innerText.trim();
+
+        if(location === ''){
+
+            html += `
+<div style="
+padding:10px;
+margin-bottom:8px;
+border-left:4px solid #ef4444;
+background:#1e293b;
+">
+🔴 Missing Storage Location<br>
+<b>PO:</b> ${po}<br>
+<b>Style:</b> ${style}<br>
+<b>Warehouse:</b> ${warehouse}<br><br>
+
+<input
+id="loc-${po}"
+placeholder="Enter Location"
+style="margin-right:8px;"
+>
+
+<button onclick="updateLocationFromException('${po}',document.getElementById('loc-${po}').value)">
+Update
+</button>
+
+</div>
+`;
+        }
+
+    });
+
+    container.innerHTML =
+        html ||
+        '<div style="color:#22c55e;">✅ No location exceptions found</div>';
+}
+
+function updateLocationFromException(po, location){
+
+    const rows =
+    Array.from(shipmentTable.rows).slice(1);
+
+    rows.forEach(row=>{
+
+        if(row.cells[1].innerText.trim() === po){
+
+            row.cells[15].innerText = location;
+
+        }
+
+    });
+
+    saveAll();
+    refreshDashboard();
 }
 
 async function saveAll(){
