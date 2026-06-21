@@ -2350,36 +2350,29 @@ Update
 
 function updateLocationFromException(po, location){
 
-    if(!location) return;
+    alert("Button clicked");
 
     const rows =
     Array.from(shipmentTable.rows).slice(1);
 
-    let updated = false;
+    alert("Rows found: " + rows.length);
 
     rows.forEach(row=>{
 
-        if(
-            row.cells[1].innerText.trim() === po &&
-            row.cells[15].innerText.trim() === ''
-        ){
+        if(row.cells[1].innerText.trim() === po){
 
-            row.cells[15].textContent = location;
+            alert("Found PO: " + po);
 
-            updated = true;
+            row.cells[15].innerText = location;
+
+            alert("Location set to: " + row.cells[15].innerText);
+
         }
 
     });
 
-    if(updated){
-
-        saveAll();
-
-        setTimeout(() => {
-            refreshDashboard();
-        }, 100);
-
-    }
+    saveAll();
+    refreshDashboard();
 
 }
 
