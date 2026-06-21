@@ -2355,18 +2355,31 @@ function updateLocationFromException(po, location){
     const rows =
     Array.from(shipmentTable.rows).slice(1);
 
+    let updated = false;
+
     rows.forEach(row=>{
 
-        if(row.cells[1].innerText.trim() === po){
+        if(
+            row.cells[1].innerText.trim() === po &&
+            row.cells[15].innerText.trim() === ''
+        ){
 
-            row.cells[15].innerText = location;
+            row.cells[15].textContent = location;
 
+            updated = true;
         }
 
     });
 
-    refreshDashboard();
-    saveAll();
+    if(updated){
+
+        saveAll();
+
+        setTimeout(() => {
+            refreshDashboard();
+        }, 100);
+
+    }
 
 }
 
