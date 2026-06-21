@@ -3417,8 +3417,15 @@ function loadRetailUnified(){
    if(body) body.innerHTML='';
    if(archiveBody) archiveBody.innerHTML='';
 
-   snapshot.forEach(doc=>{
+   const plannerData=[];
+  
+  snapshot.forEach(doc=>{
       const d=doc.data()||{};
+      plannerData.push({
+  ...d,
+  plannerDay:d.plannerDay || 'Unassigned'
+});
+      
       const row=`
       <tr>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','pickrunNumber',this.innerText)">${d.pickrunNumber||''}</td>
@@ -3438,11 +3445,20 @@ onblur="retailUpdate('${doc.id}','description',this.innerText)">
 ${d.description||''}
 </span>
 
-<button
-class="planner-btn"
-onclick="assignPlannerDay('${doc.id}')">
-📅 ${d.plannerDay || 'Unassigned'}
-</button>
+<select
+onchange="assignPlannerDay('${doc.id}',this.value)"
+style="font-size:12px;padding:4px;">
+
+<option ${d.plannerDay==='Unassigned'?'selected':''}>Unassigned</option>
+<option ${d.plannerDay==='Sunday'?'selected':''}>Sunday</option>
+<option ${d.plannerDay==='Monday'?'selected':''}>Monday</option>
+<option ${d.plannerDay==='Tuesday'?'selected':''}>Tuesday</option>
+<option ${d.plannerDay==='Wednesday'?'selected':''}>Wednesday</option>
+<option ${d.plannerDay==='Thursday'?'selected':''}>Thursday</option>
+<option ${d.plannerDay==='Friday'?'selected':''}>Friday</option>
+<option ${d.plannerDay==='Saturday'?'selected':''}>Saturday</option>
+
+</select>
 
 </div>
 
@@ -3474,6 +3490,9 @@ ${d.stores||0}
         if(body) body.innerHTML += row;
       }
    });
+
+renderPlannerBoard(plannerData);
+  
  });
 }
 </script>
@@ -3662,10 +3681,16 @@ wrapper.addEventListener('mousemove',e=>{
 
 
 <script>
-function assignPlannerDay(id){
-const day=prompt('Assign Pickrun\n\nUnassigned\nSunday\nMonday\nTuesday\nWednesday\nThursday\nFriday\nSaturday');
-if(!day) return;
-db.collection('dispatch_pickruns').doc(id).update({plannerDay:day});
+function assignPlannerDay(id,day){
+
+ if(!day) return;
+
+ db.collection('dispatch_pickruns')
+ .doc(id)
+ .update({
+   plannerDay:day
+ });
+
 }
 
 function renderPlannerBoard(docs){
