@@ -1082,11 +1082,27 @@ style="max-width:280px;"
 
 
 <div id="exceptionsPage" class="page">
+
 <h1 style="margin-bottom:20px;">Exception Dashboard</h1>
+
+<div class="dashboard-grid">
+
+<div class="card">
+<div class="metric-icon orange">
+<i class="fa-solid fa-location-dot"></i>
+</div>
+<h3>Storage Locations Required</h3>
+<div class="big-number" id="missingLocationCount">0</div>
+<div class="metric-sub">Rows requiring allocation</div>
+</div>
+
+</div>
+
 <div id="exceptionList" class="card">
 <h3>Operational Exceptions</h3>
 <div id="exceptionContent"></div>
 </div>
+
 </div>
 
 <div id="lookupPage" class="page">
@@ -2540,6 +2556,7 @@ function updateExceptions(){
     if(!container) return;
 
     let html = '';
+    let missingCount = 0;
 
     const rows =
     Array.from(shipmentTable.rows).slice(1);
@@ -2560,6 +2577,7 @@ function updateExceptions(){
 
         if(location === ''){
 
+            missingCount++;
             html += `
 <div style="
 padding:10px;
@@ -2588,6 +2606,9 @@ Update
 
     });
 
+    document.getElementById('missingLocationCount').innerText =
+missingCount;
+    
     container.innerHTML =
         html ||
         '<div style="color:#22c55e;">✅ No location exceptions found</div>';
