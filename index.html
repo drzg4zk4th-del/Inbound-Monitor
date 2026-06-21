@@ -2267,9 +2267,9 @@ cartonsNext7 += cartons;
 
 }
 
-updateExceptions();
-
 });
+
+updateExceptions();
 
 function updateExceptions(){
 
@@ -2284,6 +2284,7 @@ function updateExceptions(){
     Array.from(shipmentTable.rows).slice(1);
 
     rows.forEach(row=>{
+
 
         const po =
         row.cells[1].innerText.trim();
@@ -2345,6 +2346,28 @@ Update
     }
 
     container.innerHTML = html;
+}
+
+function updateLocationFromException(po, location){
+
+    if(!location) return;
+
+    const rows =
+    Array.from(shipmentTable.rows).slice(1);
+
+    rows.forEach(row=>{
+
+        if(row.cells[1].innerText.trim() === po){
+
+            row.cells[15].innerText = location;
+
+        }
+
+    });
+
+    refreshDashboard();
+    saveAll();
+
 }
 
 const uniquePOs = new Set();
