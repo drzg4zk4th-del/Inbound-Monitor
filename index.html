@@ -2882,10 +2882,14 @@ incomingPallets + packsPallets;
 if(week === '') return;
 
 if(!projections[week]){
-projections[week] = 0;
+    projections[week] = {
+        pallets: 0,
+        packs: 0
+    };
 }
 
-projections[week] += packsPallets;
+projections[week].pallets += packsPallets;
+projections[week].packs += Number(row.cells[12].innerText || 0);
 
 });
 
@@ -2894,6 +2898,7 @@ let html = `
 <tr>
 <th>Dispatch Week</th>
 <th>Projected Outbound Pallets</th>
+<th> Total Packs</th>
 </tr>
 `;
 
@@ -2914,7 +2919,8 @@ return aNum - bNum;
 html += `
 <tr>
 <td>${week}</td>
-<td>${projections[week]}</td>
+<td>${projections[week].pallets}</td>
+<td>${projections[week].packs.toLocaleString()}</td>
 </tr>
 `;
 
