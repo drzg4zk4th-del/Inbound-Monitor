@@ -3422,7 +3422,32 @@ function loadRetailUnified(){
       const row=`
       <tr>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','pickrunNumber',this.innerText)">${d.pickrunNumber||''}</td>
-      <td contenteditable="true" onblur="retailUpdate('${doc.id}','description',this.innerText)">${d.description||''}</td>
+
+      <td>
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:8px;
+">
+
+<span
+contenteditable="true"
+onblur="retailUpdate('${doc.id}','description',this.innerText)">
+${d.description||''}
+</span>
+
+<button
+class="planner-btn"
+onclick="assignPlannerDay('${doc.id}')">
+📅 ${d.plannerDay || 'Unassigned'}
+</button>
+
+</div>
+
+</td>
+      
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','qty',this.innerText)">${d.qty||0}</td>
       <td contenteditable="true"
 onblur="retailUpdate('${doc.id}','stores',this.innerText)">
