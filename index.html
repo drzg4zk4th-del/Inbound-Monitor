@@ -3264,22 +3264,26 @@ function refreshRetailMetricsHotfix(){
    let discrepancies=0;
    let openDiscrepancies=0;
 
-   snapshot.forEach(doc=>{
-      const d=doc.data() || {};
+  snapshot.forEach(doc=>{
+   const d=doc.data() || {};
 
-      const qty = Number(d.qty || d.units || 0);
-      const disc = Number(d.discrepancies || d.discrepancyQty || d['Discrepancies Left Qty'] || 0);
+   const qty = Number(d.qty || d.units || 0);
+   const disc = Number(d.discrepancies || d.discrepancyQty || d['Discrepancies Left Qty'] || 0);
 
-      if(!d.archived && !d.completed){
-         totalUnits += qty;
-         totalPickruns++;
-      }
+   if(!d.archived && !d.completed){
+      totalUnits += qty;
+      totalPickruns++;
+   }
+
+   // Only count completed / archived pickruns
+   if(d.archived || d.completed){
       discrepancies += disc;
+   }
 
-      if(!d.archived && !d.completed){
-         openDiscrepancies += disc;
-      }
-   });
+   if(!d.archived && !d.completed){
+      openDiscrepancies += disc;
+   }
+});
 
    const update=(ids,val)=>{
       ids.forEach(id=>{
@@ -3291,11 +3295,21 @@ function refreshRetailMetricsHotfix(){
    update(['retailMetricTotalUnits'], totalUnits.toLocaleString());
    update(['retailMetricPickruns'], totalPickruns.toLocaleString());
 
-   const discrepancyRate =
-      totalUnits > 0 ? ((discrepancies / totalUnits) * 100).toFixed(2) : '0.00';
+  const archivedPickruns =
+   snapshot.docs.filter(doc=>{
+      const d=doc.data()||{};
+      return d.archived || d.completed;
+   }).length;
 
-   const avgDiscrepancies =
-      totalPickruns > 0 ? (discrepancies / totalPickruns).toFixed(1) : '0.0';
+const discrepancyRate =
+   archivedPickruns > 0
+   ? ((discrepancies / archivedPickruns) * 100).toFixed(2)
+   : '0.00';
+
+const avgDiscrepancies =
+   archivedPickruns > 0
+   ? (discrepancies / archivedPickruns).toFixed(1)
+   : '0.0';
 
    update(['retailMetricAvgDiscrepancies'], avgDiscrepancies + ' Avg');
    update(['retailMetricDiscrepancyRate'], discrepancyRate + '%');
