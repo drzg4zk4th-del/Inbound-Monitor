@@ -2044,7 +2044,9 @@ qcRow.cells[18].innerHTML='QC Rejected';
 qcRow.insertCell(-1).innerHTML='<button class="restore-btn" onclick="moveQCRejectedToArchive(this)">Arrived</button>';
 qcRow.insertCell(-1).innerHTML='<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
 
-row.remove();
+setupRow(qcRow);
+  
+ row.remove();
 refreshDashboard();
 saveAll();
 
