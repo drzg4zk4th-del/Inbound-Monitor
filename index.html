@@ -3537,7 +3537,10 @@ ${d.stores||0}
 type="datetime-local"
 value="${
 d.dateCompleted
-? new Date(d.dateCompleted).toISOString().slice(0,16)
+? new Date(d.dateCompleted)
+    .toLocaleString('sv-SE',{timeZone:'Australia/Sydney'})
+    .replace(' ','T')
+    .slice(0,16)
 : ''
 }"
 onchange="
