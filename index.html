@@ -2730,7 +2730,9 @@ function updateLocationFromException(po, location){
 
 async function saveAll(){
 
-const active = [];
+console.log('SAVE RUNNING');
+
+ const active = [];
 const archive = [];
 const qcRejected = [];
 const weeklyArchive=[];
@@ -2870,15 +2872,28 @@ if(data.qcRejected){
 
 data.qcRejected.forEach(item=>{
 
-const temp =
-document.createElement('tbody');
+const temp=document.createElement('tbody');
+temp.innerHTML=item;
 
-temp.innerHTML = item;
-
-const row =
-temp.querySelector('tr');
+const row=temp.querySelector('tr');
 
 qcRejectedTable.appendChild(row);
+
+row.querySelectorAll('td').forEach((cell,index)=>{
+
+if(
+index !== 9 &&
+index !== 10 &&
+index !== 13 &&
+index !== 14 &&
+index !== 16 &&
+index !== 20 &&
+index !== 21
+){
+cell.setAttribute('contenteditable','true');
+}
+
+});
 
 setupRow(row);
 
