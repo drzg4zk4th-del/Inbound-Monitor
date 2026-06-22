@@ -2775,11 +2775,23 @@ Array.from(qcRejectedTable.rows)
 .slice(1)
 .forEach(row=>{
 
-console.log('QC SAVE', row.cells[19]?.innerText);
+  row.querySelectorAll('input').forEach(input=>{
+    input.setAttribute('value', input.value);
+  });
 
-qcRejected.push(
-`<tr>${row.innerHTML}</tr>`
-);
+  row.querySelectorAll('select').forEach(select=>{
+    Array.from(select.options).forEach(opt=>{
+      if(opt.selected){
+        opt.setAttribute('selected','selected');
+      }else{
+        opt.removeAttribute('selected');
+      }
+    });
+  });
+
+  qcRejected.push(
+    `<tr>${row.innerHTML}</tr>`
+  );
 
 });
 
