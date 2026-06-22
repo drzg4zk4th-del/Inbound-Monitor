@@ -2775,6 +2775,8 @@ Array.from(qcRejectedTable.rows)
 .slice(1)
 .forEach(row=>{
 
+console.log('QC SAVE', row.cells[19]?.innerText);
+
 qcRejected.push(
 `<tr>${row.innerHTML}</tr>`
 );
