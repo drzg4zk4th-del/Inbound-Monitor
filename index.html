@@ -3443,6 +3443,18 @@ function retailCompleted(id,val){
  });
 }
 
+function retailUndoComplete(id){
+
+ db.collection('dispatch_pickruns')
+ .doc(id)
+ .update({
+   completed:false,
+   archived:false,
+   dateCompleted:null
+ });
+
+}
+
 function loadRetailUnified(){
  if(typeof db==='undefined') return;
 
@@ -3520,7 +3532,23 @@ ${d.stores||0}
       <td><input type="checkbox" ${d.printed?'checked':''} onchange="retailPrinted('${doc.id}',this.checked)"></td>
       <td><input type="checkbox" ${d.completed?'checked':''} onchange="retailCompleted('${doc.id}',this.checked)"></td>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','discrepancies',this.innerText)">${d.discrepancies||0}</td>
-      <td>${d.dateCompleted?new Date(d.dateCompleted).toLocaleString():''}</td>
+      <td>
+<input
+type="datetime-local"
+value="${
+d.dateCompleted
+? new Date(d.dateCompleted).toISOString().slice(0,16)
+: ''
+}"
+onchange="
+retailUpdate(
+'${doc.id}',
+'dateCompleted',
+new Date(this.value).toISOString()
+)
+"
+>
+</td>
       <td><button class="delete-btn" onclick="retailDelete('${doc.id}')">Delete</button></td>
       </tr>`;
 
@@ -3660,9 +3688,32 @@ function rebuildRetailArchive(){
       <td>${d.printed?'✓':''}</td>
       <td>${d.completed?'✓':''}</td>
       <td>${d.discrepancies||0}</td>
-      <td>${d.dateCompleted||''}</td>
-      <td><button onclick="retailDelete('${doc.id}')">Delete</button></td>
-      </tr>`;
+      <td>
+<input
+type="datetime-local"
+value="${
+d.dateCompleted
+? new Date(d.dateCompleted).toISOString().slice(0,16)
+: ''
+}"
+onchange="
+retailUpdate(
+'${doc.id}',
+'dateCompleted',
+new Date(this.value).toISOString()
+)
+"
+>
+</td>
+<td>
+<button class="restore-btn" onclick="retailUndoComplete('${doc.id}')">
+Undo Complete
+</button>
+
+<button class="delete-btn" onclick="retailDelete('${doc.id}')">
+Delete
+</button>
+</td>      </tr>`;
    });
 
    const c=document.getElementById('retailArchiveCount');
