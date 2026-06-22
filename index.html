@@ -963,14 +963,51 @@ style="max-width:280px;"
 
 <div class="card" style="margin-top:20px;">
 <h2>Sunday → Saturday Planning Notes</h2>
-<div style="display:flex;flex-direction:column;gap:16px;">
-<div><b>Sunday</b><textarea id="sunNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Monday</b><textarea id="monNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Tuesday</b><textarea id="tueNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Wednesday</b><textarea id="wedNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Thursday</b><textarea id="thuNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Friday</b><textarea id="friNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
-<div><b>Saturday</b><textarea id="satNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea></div>
+
+<div style="display:flex;flex-direction:column;gap:20px;">
+
+<div>
+<b>Sunday</b>
+<div id="sunRetailPlan"></div>
+<textarea id="sunNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea>
+</div>
+
+<div>
+<b>Monday</b>
+<div id="monRetailPlan"></div>
+<textarea id="monNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea>
+</div>
+
+<div>
+<b>Tuesday</b>
+<div id="tueRetailPlan"></div>
+<textarea id="tueNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea>
+</div>
+
+<div>
+<b>Wednesday</b>
+<div id="wedRetailPlan"></div>
+<textarea id="wedNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea>
+</div>
+
+<div>
+<b>Thursday</b>
+<div id="thuRetailPlan"></div>
+<textarea id="thuNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea>
+</div>
+
+<div>
+<b>Friday</b>
+<div id="friRetailPlan"></div>
+<textarea id="friNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea>
+</div>
+
+<div>
+<b>Saturday</b>
+<div id="satRetailPlan"></div>
+<textarea id="satNote" oninput="saveAll()" style="width:100%;min-height:140px;"></textarea>
+</div>
+
 </div>
 <br>
 <button class="add-btn" onclick="archiveWeeklyNotes()">Archive Week Notes</button>
@@ -3738,6 +3775,64 @@ ${rows}
 
 const board=document.getElementById('plannerBoards');
 if(board) board.innerHTML=html;
+
+const plannerMap={
+ Sunday:'sunRetailPlan',
+ Monday:'monRetailPlan',
+ Tuesday:'tueRetailPlan',
+ Wednesday:'wedRetailPlan',
+ Thursday:'thuRetailPlan',
+ Friday:'friRetailPlan',
+ Saturday:'satRetailPlan'
+};
+
+days.forEach(day=>{
+
+let units=0;
+let count=0;
+let rows='';
+
+docs.forEach(d=>{
+
+ if(!d.plannerDay) return;
+ if(d.plannerDay!==day) return;
+
+ units+=Number(d.qty||0);
+ count++;
+
+ rows+=`<tr>
+ <td>${d.pickrunNumber||''}</td>
+ <td>${d.description||''}</td>
+ <td>${d.qty||0}</td>
+ </tr>`;
+
+});
+
+const target=document.getElementById(plannerMap[day]);
+
+if(target){
+
+target.innerHTML=`
+<div class="card" style="margin:8px 0;">
+<h3>${day} (${count} Pickruns)</h3>
+<div class="metric-sub">${units.toLocaleString()} Units</div>
+
+<table style="width:100%;min-width:100%;">
+<tr>
+<th>Pickrun</th>
+<th>Description</th>
+<th>Units</th>
+</tr>
+
+${rows}
+
+</table>
+</div>
+`;
+
+}
+
+});
 
 const metric=document.getElementById('weeklyPlannerMetric');
 if(metric){
