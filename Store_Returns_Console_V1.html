@@ -51,6 +51,7 @@ async function saveReturnsConsole(){
    transitData,
    lastUpdated:new Date().toISOString()
  });
+ console.log('Firebase save successful');
 }
 
 async function loadReturnsConsole(){
@@ -66,7 +67,8 @@ async function loadReturnsConsole(){
  transitData.length);
 }
 
-window.addEventListener('load',()=>{
+window.addEventListener('load',async()=>{
+ try{await loadReturnsConsole();}catch(e){console.error(e);}
  refreshData();
 });
 </script>
@@ -205,6 +207,7 @@ let importedCount=0;
 
  alert(importedCount+' rows imported');
 
+ await saveReturnsConsole();
  refreshData();
  alert('Imported '+rows.length+' rows');
 }
@@ -253,6 +256,7 @@ let importedCount=0;
 
  alert(importedCount+' rows imported');
 
+ await saveReturnsConsole();
  refreshData();
 }
 
@@ -326,10 +330,11 @@ function refreshData(){
  }
 }
 
-function clearConsole(){
+async function clearConsole(){
  if(!confirm('Clear all data?')) return;
  returnsData=[];
  transitData=[];
+ await saveReturnsConsole();
  refreshData();
 }
 
