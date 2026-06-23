@@ -101,23 +101,35 @@ async function importReturns(){
  const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
  rows.forEach(r=>{
+
+  // Only import Virtual Warehouse stock
+  if(
+    String(r['To Store'] || '')
+      .trim()
+      .toUpperCase() !== 'VIRTUAL WAREHOUSE'
+  ){
+    return;
+  }
+
   returnsData.push({
-   store:r['From Store']||'',
-   category:r['CATEGORY']||'',
-   style:(r['STYLE']||'').toString().trim(),
-   colour:(r['COLOUR']||'').toString().trim(),
-   qty:Number(r['QTY']||0),
-   s4:Number(r['4']||0),
-   s5:Number(r['5']||0),
-   s6:Number(r['6']||0),
-   s7:Number(r['7']||0),
-   s8:Number(r['8']||0),
-   s9:Number(r['9']||0),
-   s10:Number(r['10']||0),
-   s11:Number(r['11']||0),
-   os:Number(r['OS']||0)
+    store:r['From Store']||'',
+    category:r['CATEGORY']||'',
+    style:(r['STYLE']||'').toString().trim(),
+    colour:(r['COLOUR']||'').toString().trim(),
+    qty:Number(r['QTY']||0),
+
+    s4:Number(r['4']||0),
+    s5:Number(r['5']||0),
+    s6:Number(r['6']||0),
+    s7:Number(r['7']||0),
+    s8:Number(r['8']||0),
+    s9:Number(r['9']||0),
+    s10:Number(r['10']||0),
+    s11:Number(r['11']||0),
+    os:Number(r['OS']||0)
   });
- });
+
+});
 
  saveData();
  refreshData();
