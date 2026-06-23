@@ -66,8 +66,8 @@ async function loadReturnsConsole(){
  transitData.length);
 }
 
-window.addEventListener('load',async()=>{
- await loadReturnsConsole();
+window.addEventListener('load',()=>{
+ refreshData();
 });
 </script>
 </head>
@@ -152,7 +152,7 @@ window.addEventListener('load',async()=>{
 
 <div class="section">
 <h3>Raw Imported Data</h3>
-<button onclick="clearConsole()">Clear Console</button>
+<button onclick="clearConsole()">Clear Console</button> <button onclick="archiveCampaign()">📦 Archive Campaign</button>
 <table id="rawTable"><thead><tr>
 <th>Store</th><th>Category</th><th>Style</th><th>Colour</th><th>Qty</th>
 </tr></thead><tbody></tbody></table>
@@ -203,7 +203,6 @@ let importedCount=0;
   });
  });
 
- await saveReturnsConsole();
  alert(importedCount+' rows imported');
 
  refreshData();
@@ -252,7 +251,6 @@ let importedCount=0;
   });
  });
 
- await saveReturnsConsole();
  alert(importedCount+' rows imported');
 
  refreshData();
@@ -328,11 +326,10 @@ function refreshData(){
  }
 }
 
-async function clearConsole(){
+function clearConsole(){
  if(!confirm('Clear all data?')) return;
  returnsData=[];
  transitData=[];
- await saveReturnsConsole();
  refreshData();
 }
 
@@ -341,6 +338,56 @@ loadReturnsConsole=async function(){
  await originalLoad();
  refreshData();
 }
+
+async function archiveCampaign(){
+
+ const campaignName = prompt('Campaign Name','March MD 2026');
+ if(!campaignName) return;
+
+ let totalUnits=0;
+ const styles=new Set();
+ const stores=new Set();
+ const colours=new Set();
+ const categories=new Set();
+
+ const styleSummary={};
+ let largestStyle='';
+ let largestStyleUnits=0;
+
+ returnsData.forEach(r=>{
+   totalUnits+=r.qty;
+   styles.add(r.style);
+   stores.add(r.store);
+   colours.add(r.colour);
+   categories.add(r.category);
+
+   styleSummary[r.style]=(styleSummary[r.style]||0)+r.qty;
+ });
+
+ Object.entries(styleSummary).forEach(([style,units])=>{
+   if(units>largestStyleUnits){
+      largestStyle=style;
+      largestStyleUnits=units;
+   }
+ });
+
+ await db.collection('storeReturnsArchive')
+   .doc(campaignName.replaceAll(' ','_'))
+   .set({
+      campaignName,
+      archivedDate:new Date().toISOString(),
+      totalUnits,
+      uniqueStyles:styles.size,
+      uniqueStores:stores.size,
+      uniqueColours:colours.size,
+      uniqueCategories:categories.size,
+      largestStyle,
+      largestStyleUnits
+   });
+
+ alert('Campaign archived successfully');
+}
+
 </script>
 </body>
 </html>
