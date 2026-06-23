@@ -3,31 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Store Returns Console V1</title>
+<title>Store Returns Console V2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-body{font-family:Arial,sans-serif;background:#020817;color:white;padding:20px}
-h1{margin-top:0}
-.dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-bottom:20px}
-.card{background:#0f172a;border:1px solid #1e293b;border-radius:18px;padding:20px}
-.big-number{font-size:36px;font-weight:bold}
-button,input{padding:12px;border-radius:10px;margin:5px}
-button{background:#2563eb;color:white;border:none;cursor:pointer}
-.table-wrap{overflow:auto;border:1px solid #1e293b}
+body{font-family:Arial,sans-serif;background:#0b1220;color:#fff;padding:20px}
+h1,h2{margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-bottom:20px}
+.card{background:#1f2937;padding:18px;border-radius:12px}
+.big{font-size:34px;font-weight:bold}
+button{padding:10px 14px;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;margin:4px}
+input{margin:4px}
+.table-wrap{overflow:auto;border:1px solid #374151;margin-bottom:20px}
 table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:left}
-th{background:#111827}
+th,td{border:1px solid #374151;padding:8px}
+th{background:#111827;position:sticky;top:0}
 </style>
 </head>
 <body>
 
-<h1>📦 Store Returns Console V1</h1>
+<h1>📦 Store Returns Console V2</h1>
 
-<div class="dashboard-grid">
-<div class="card"><h3>Returned Units</h3><div id="returnedUnits" class="big-number">0</div></div>
-<div class="card"><h3>Unique Styles</h3><div id="uniqueStyles" class="big-number">0</div></div>
-<div class="card"><h3>Participating Stores</h3><div id="storeCount" class="big-number">0</div></div>
-<div class="card"><h3>Transit Units</h3><div id="transitUnits" class="big-number">0</div></div>
+<div class="grid">
+<div class="card"><div>Returned Units</div><div class="big" id="returnedUnits">0</div></div>
+<div class="card"><div>Unique Styles</div><div class="big" id="uniqueStyles">0</div></div>
+<div class="card"><div>Stores</div><div class="big" id="storeCount">0</div></div>
+<div class="card"><div>Transit Units</div><div class="big" id="transitUnits">0</div></div>
+<div class="card"><div>Unique Colours</div><div class="big" id="colourCount">0</div></div>
+<div class="card"><div>Categories</div><div class="big" id="categoryCount">0</div></div>
 </div>
 
 <input type="file" id="returnsFile">
@@ -41,115 +43,179 @@ th{background:#111827}
 <h2>Top Returned Styles</h2>
 <div class="table-wrap">
 <table id="styleTable">
+<thead><tr><th>Style</th><th>Units</th><th>Stores</th><th>Transit</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+
+<h2>Store Analysis</h2>
+<div class="table-wrap">
+<table id="storeTable">
+<thead><tr><th>Store</th><th>Units</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+
+<h2>Colour Analysis</h2>
+<div class="table-wrap">
+<table id="colourTable">
+<thead><tr><th>Colour</th><th>Units</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+
+<h2>Size Analysis</h2>
+<div class="table-wrap">
+<table id="sizeTable">
+<thead><tr><th>Size</th><th>Units</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+
+<h2>Raw Imported Data</h2>
+<div class="table-wrap">
+<table id="rawTable">
 <thead>
-<tr><th>Style</th><th>Returned Units</th><th>Stores</th><th>Transit Units</th></tr>
+<tr>
+<th>Store</th><th>Category</th><th>Style</th><th>Colour</th><th>Qty</th>
+<th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>OS</th>
+</tr>
 </thead>
 <tbody></tbody>
 </table>
 </div>
 
 <script>
-let returnsData=[];
-let transitData=[];
+let returnsData=JSON.parse(localStorage.getItem('returnsData')||'[]');
+let transitData=JSON.parse(localStorage.getItem('transitData')||'[]');
+
+function saveData(){
+ localStorage.setItem('returnsData',JSON.stringify(returnsData));
+ localStorage.setItem('transitData',JSON.stringify(transitData));
+}
 
 async function importReturns(){
  const file=document.getElementById('returnsFile').files[0];
- if(!file) return alert('Select file');
+ if(!file)return alert('Select file');
  const wb=XLSX.read(await file.arrayBuffer());
  const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
  rows.forEach(r=>{
-   returnsData.push({
-      store:r['From Store']||'',
-      category:r['Category']||'',
-      style:String(r['Style']||'').trim(),
-      colour:String(r['Colour']||'').trim(),
-      qty:Number(r['Qty']||0),
-      s4:Number(r['4']||0),
-      s5:Number(r['5']||0),
-      s6:Number(r['6']||0),
-      s7:Number(r['7']||0),
-      s8:Number(r['8']||0),
-      s9:Number(r['9']||0),
-      s10:Number(r['10']||0),
-      s11:Number(r['11']||0),
-      os:Number(r['OS']||0)
-   });
+  returnsData.push({
+   store:r['From Store']||'',
+   category:r['CATEGORY']||'',
+   style:(r['STYLE']||'').toString().trim(),
+   colour:(r['COLOUR']||'').toString().trim(),
+   qty:Number(r['QTY']||0),
+   s4:Number(r['4']||0),
+   s5:Number(r['5']||0),
+   s6:Number(r['6']||0),
+   s7:Number(r['7']||0),
+   s8:Number(r['8']||0),
+   s9:Number(r['9']||0),
+   s10:Number(r['10']||0),
+   s11:Number(r['11']||0),
+   os:Number(r['OS']||0)
+  });
  });
 
+ saveData();
  refreshData();
+ alert(rows.length+' rows imported');
 }
 
 async function importTransit(){
  const file=document.getElementById('transitFile').files[0];
- if(!file) return alert('Select file');
+ if(!file)return alert('Select file');
  const wb=XLSX.read(await file.arrayBuffer());
  const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
  rows.forEach(r=>{
-   transitData.push({
-      style:String(r['Style']||'').trim(),
-      qty:Number(r['Qty']||0)
-   });
+  const vals=Object.values(r);
+  transitData.push({
+   style:(vals[0]||'').toString().trim(),
+   qty:Number(vals[1]||0)
+  });
  });
 
+ saveData();
  refreshData();
 }
 
 function refreshData(){
  let units=0;
- let stores=new Set();
- let styles=new Set();
- let summary={};
+ const styles=new Set(),stores=new Set(),colours=new Set(),cats=new Set();
+ let styleSummary={},storeSummary={},colourSummary={};
+ let sizeTotals={'4':0,'5':0,'6':0,'7':0,'8':0,'9':0,'10':0,'11':0,'OS':0};
 
  returnsData.forEach(r=>{
-   units+=r.qty;
-   stores.add(r.store);
-   styles.add(r.style);
+  units+=r.qty;
+  styles.add(r.style);
+  stores.add(r.store);
+  colours.add(r.colour);
+  cats.add(r.category);
 
-   if(!summary[r.style]){
-      summary[r.style]={units:0,stores:new Set(),transit:0};
-   }
+  styleSummary[r.style]??={units:0,stores:new Set(),transit:0};
+  styleSummary[r.style].units+=r.qty;
+  styleSummary[r.style].stores.add(r.store);
 
-   summary[r.style].units+=r.qty;
-   summary[r.style].stores.add(r.store);
+  storeSummary[r.store]=(storeSummary[r.store]||0)+r.qty;
+  colourSummary[r.colour]=(colourSummary[r.colour]||0)+r.qty;
+
+  sizeTotals['4']+=r.s4; sizeTotals['5']+=r.s5; sizeTotals['6']+=r.s6;
+  sizeTotals['7']+=r.s7; sizeTotals['8']+=r.s8; sizeTotals['9']+=r.s9;
+  sizeTotals['10']+=r.s10; sizeTotals['11']+=r.s11; sizeTotals['OS']+=r.os;
  });
 
  transitData.forEach(t=>{
-   if(!summary[t.style]){
-      summary[t.style]={units:0,stores:new Set(),transit:0};
-   }
-   summary[t.style].transit+=t.qty;
+  styleSummary[t.style]??={units:0,stores:new Set(),transit:0};
+  styleSummary[t.style].transit+=t.qty;
  });
 
  document.getElementById('returnedUnits').innerText=units.toLocaleString();
  document.getElementById('uniqueStyles').innerText=styles.size;
  document.getElementById('storeCount').innerText=stores.size;
  document.getElementById('transitUnits').innerText=transitData.reduce((a,b)=>a+b.qty,0).toLocaleString();
+ document.getElementById('colourCount').innerText=colours.size;
+ document.getElementById('categoryCount').innerText=cats.size;
 
- const body=document.querySelector('#styleTable tbody');
- body.innerHTML='';
+ let body=document.querySelector('#styleTable tbody'); body.innerHTML='';
+ Object.entries(styleSummary).sort((a,b)=>b[1].units-a[1].units).forEach(([s,d])=>{
+  body.innerHTML+=`<tr><td>${s}</td><td>${d.units.toLocaleString()}</td><td>${d.stores.size}</td><td>${d.transit.toLocaleString()}</td></tr>`;
+ });
 
- Object.entries(summary)
- .sort((a,b)=>b[1].units-a[1].units)
- .forEach(([style,data])=>{
-   body.innerHTML+=`
-   <tr>
-   <td>${style}</td>
-   <td>${data.units.toLocaleString()}</td>
-   <td>${data.stores.size}</td>
-   <td>${data.transit.toLocaleString()}</td>
-   </tr>`;
+ body=document.querySelector('#storeTable tbody'); body.innerHTML='';
+ Object.entries(storeSummary).sort((a,b)=>b[1]-a[1]).forEach(([s,u])=>{
+  body.innerHTML+=`<tr><td>${s}</td><td>${u.toLocaleString()}</td></tr>`;
+ });
+
+ body=document.querySelector('#colourTable tbody'); body.innerHTML='';
+ Object.entries(colourSummary).sort((a,b)=>b[1]-a[1]).forEach(([c,u])=>{
+  body.innerHTML+=`<tr><td>${c}</td><td>${u.toLocaleString()}</td></tr>`;
+ });
+
+ body=document.querySelector('#sizeTable tbody'); body.innerHTML='';
+ Object.entries(sizeTotals).forEach(([s,u])=>{
+  body.innerHTML+=`<tr><td>${s}</td><td>${u.toLocaleString()}</td></tr>`;
+ });
+
+ body=document.querySelector('#rawTable tbody'); body.innerHTML='';
+ returnsData.slice(0,5000).forEach(r=>{
+  body.innerHTML+=`<tr>
+  <td>${r.store}</td><td>${r.category}</td><td>${r.style}</td><td>${r.colour}</td><td>${r.qty}</td>
+  <td>${r.s4}</td><td>${r.s5}</td><td>${r.s6}</td><td>${r.s7}</td><td>${r.s8}</td><td>${r.s9}</td><td>${r.s10}</td><td>${r.s11}</td><td>${r.os}</td>
+  </tr>`;
  });
 }
 
 function clearConsole(){
- if(!confirm('Clear all console data?')) return;
- returnsData=[];
- transitData=[];
+ if(!confirm('Clear all saved console data?')) return;
+ returnsData=[]; transitData=[];
+ saveData();
  refreshData();
 }
-</script>
 
+refreshData();
+</script>
 </body>
 </html>
