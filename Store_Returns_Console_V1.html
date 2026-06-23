@@ -190,7 +190,7 @@ window.addEventListener('load',async()=>{
 
 <div class="section">
 <h3>Biggest Return Styles</h3>
-<table id="styleSummaryTable"><thead><tr><th>Style</th><th>Colour</th><th>Units</th><th>Stores</th></tr></thead><tbody></tbody></table>
+<table id="styleSummaryTable"><thead><tr><th>Style</th><th>Top Colour</th><th>Total Units</th><th>Other Colours</th></tr></thead><tbody></tbody></table>
 </div>
 
 <div class="section">
@@ -336,20 +336,21 @@ function refreshData(){
 
  
  returnsData.forEach(r=>{
-   const styleKey=r.style+'|'+r.colour;
 
-   if(!styleSummary[styleKey]){
-      styleSummary[styleKey]={
-         style:r.style,
-         colour:r.colour,
-         units:0,
+   if(!styleSummary[r.style]){
+      styleSummary[r.style]={
+         totalUnits:0,
+         colours:{},
          stores:new Set(),
          transit:0
       };
    }
 
-   styleSummary[styleKey].units+=r.qty;
-   styleSummary[styleKey].stores.add(r.store);
+   styleSummary[r.style].totalUnits+=r.qty;
+   styleSummary[r.style].stores.add(r.store);
+
+   styleSummary[r.style].colours[r.colour]=
+      (styleSummary[r.style].colours[r.colour]||0)+r.qty;
 
    if(!storeSummary[r.store]) storeSummary[r.store]={units:0,styles:new Set()};
    storeSummary[r.store].units+=r.qty;
@@ -376,14 +377,44 @@ function refreshData(){
  document.getElementById('returnProgress').innerText=(units?((transitTotal/units)*100).toFixed(1):0)+'%';
  document.getElementById('avgUnits').innerText=(styles.size?Math.round(units/styles.size):0);
  
- let ls='-',lsv=0; Object.entries(styleSummary).forEach(([k,v])=>{if(v.units>lsv){lsv=v.units;ls=k}});
+ let ls='-',lsv=0; Object.entries(styleSummary).forEach(([k,v])=>{if(v.totalUnits>lsv){lsv=v.totalUnits;ls=k}});
  let lstore='-',stv=0; Object.entries(storeSummary).forEach(([k,v])=>{if(v.units>stv){stv=v.units;lstore=k}});
  document.getElementById('largestStyle').innerText=ls;
  document.getElementById('largestStore').innerText=lstore;
 
  const sb=document.querySelector('#storeSummaryTable tbody'); if(sb){sb.innerHTML='';Object.entries(storeSummary).sort((a,b)=>b[1].units-a[1].units).forEach(([k,v])=>sb.innerHTML+=`<tr><td>${k}</td><td>${v.units}</td><td>${v.styles.size}</td></tr>`);}
- const stb=document.querySelector('#styleSummaryTable tbody'); if(stb){stb.innerHTML='';Object.entries(styleSummary).sort((a,b)=>b[1].units-a[1].units).forEach(([k,v])=>stb.innerHTML+=`<tr><td>${v.style}</td><td>${v.colour}</td><td>${v.units}</td><td>${v.stores.size}</td></tr>`);}
- const pb=document.querySelector('#progressTable tbody'); if(pb){pb.innerHTML='';Object.entries(styleSummary).forEach(([k,v])=>{let rem=Math.max(v.units-v.transit,0);let pct=v.units?((v.transit/v.units)*100).toFixed(1):0;pb.innerHTML+=`<tr><td>${v.style}</td><td>${v.colour}</td><td>${v.units}</td><td>${v.transit}</td><td>${rem}</td><td>${pct}%</td></tr>`;});}
+ 
+const stb=document.querySelector('#styleSummaryTable tbody');
+
+if(stb){
+stb.innerHTML='';
+
+Object.entries(styleSummary)
+.sort((a,b)=>b[1].totalUnits-a[1].totalUnits)
+.forEach(([style,data])=>{
+
+ const colours=Object.entries(data.colours)
+ .sort((a,b)=>b[1]-a[1]);
+
+ const topColour=colours[0]?.[0]||'-';
+
+ const others=colours
+ .slice(1)
+ .map(c=>`${c[0]} (${c[1]})`)
+ .join(', ');
+
+ stb.innerHTML+=`
+ <tr>
+   <td>${style}</td>
+   <td>${topColour}</td>
+   <td>${data.totalUnits}</td>
+   <td>${others}</td>
+ </tr>`;
+
+});
+}
+
+const pb=document.querySelector('#progressTable tbody'); if(pb){pb.innerHTML='';Object.entries(styleSummary).forEach(([k,v])=>{let rem=Math.max(v.totalUnits-v.transit,0);let pct=v.totalUnits?((v.transit/v.totalUnits)*100).toFixed(1):0;let top=Object.entries(v.colours).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';pb.innerHTML+=`<tr><td>${k}</td><td>${top}</td><td>${v.totalUnits}</td><td>${v.transit}</td><td>${rem}</td><td>${pct}%</td></tr>`;});}
  const cb=document.querySelector('#colourSummaryTable tbody'); if(cb){cb.innerHTML='';Object.entries(colourSummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>cb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
  const catb=document.querySelector('#categorySummaryTable tbody'); if(catb){catb.innerHTML='';Object.entries(categorySummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>catb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
  const sizeb=document.querySelector('#sizeTable tbody'); if(sizeb){sizeb.innerHTML='';Object.entries(sizeTotals).forEach(([k,v])=>sizeb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
