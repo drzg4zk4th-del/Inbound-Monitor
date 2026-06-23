@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Store Returns Console V1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#020817;color:white;padding:20px}
+h1{margin-top:0}
+.dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-bottom:20px}
+.card{background:#0f172a;border:1px solid #1e293b;border-radius:18px;padding:20px}
+.big-number{font-size:36px;font-weight:bold}
+button,input{padding:12px;border-radius:10px;margin:5px}
+button{background:#2563eb;color:white;border:none;cursor:pointer}
+.table-wrap{overflow:auto;border:1px solid #1e293b}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:left}
+th{background:#111827}
+</style>
+</head>
+<body>
+
+<h1>📦 Store Returns Console V1</h1>
+
+<div class="dashboard-grid">
+<div class="card"><h3>Returned Units</h3><div id="returnedUnits" class="big-number">0</div></div>
+<div class="card"><h3>Unique Styles</h3><div id="uniqueStyles" class="big-number">0</div></div>
+<div class="card"><h3>Participating Stores</h3><div id="storeCount" class="big-number">0</div></div>
+<div class="card"><h3>Transit Units</h3><div id="transitUnits" class="big-number">0</div></div>
+</div>
+
+<input type="file" id="returnsFile">
+<button onclick="importReturns()">Import Merch Returns</button>
+
+<input type="file" id="transitFile">
+<button onclick="importTransit()">Import Transit Updates</button>
+
+<button onclick="clearConsole()">Clear Console</button>
+
+<h2>Top Returned Styles</h2>
+<div class="table-wrap">
+<table id="styleTable">
+<thead>
+<tr><th>Style</th><th>Returned Units</th><th>Stores</th><th>Transit Units</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+
+<script>
+let returnsData=[];
+let transitData=[];
+
+async function importReturns(){
+ const file=document.getElementById('returnsFile').files[0];
+ if(!file) return alert('Select file');
+ const wb=XLSX.read(await file.arrayBuffer());
+ const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+ rows.forEach(r=>{
+   returnsData.push({
+      store:r['From Store']||'',
+      category:r['Category']||'',
+      style:String(r['Style']||'').trim(),
+      colour:String(r['Colour']||'').trim(),
+      qty:Number(r['Qty']||0),
+      s4:Number(r['4']||0),
+      s5:Number(r['5']||0),
+      s6:Number(r['6']||0),
+      s7:Number(r['7']||0),
+      s8:Number(r['8']||0),
+      s9:Number(r['9']||0),
+      s10:Number(r['10']||0),
+      s11:Number(r['11']||0),
+      os:Number(r['OS']||0)
+   });
+ });
+
+ refreshData();
+}
+
+async function importTransit(){
+ const file=document.getElementById('transitFile').files[0];
+ if(!file) return alert('Select file');
+ const wb=XLSX.read(await file.arrayBuffer());
+ const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+ rows.forEach(r=>{
+   transitData.push({
+      style:String(r['Style']||'').trim(),
+      qty:Number(r['Qty']||0)
+   });
+ });
+
+ refreshData();
+}
+
+function refreshData(){
+ let units=0;
+ let stores=new Set();
+ let styles=new Set();
+ let summary={};
+
+ returnsData.forEach(r=>{
+   units+=r.qty;
+   stores.add(r.store);
+   styles.add(r.style);
+
+   if(!summary[r.style]){
+      summary[r.style]={units:0,stores:new Set(),transit:0};
+   }
+
+   summary[r.style].units+=r.qty;
+   summary[r.style].stores.add(r.store);
+ });
+
+ transitData.forEach(t=>{
+   if(!summary[t.style]){
+      summary[t.style]={units:0,stores:new Set(),transit:0};
+   }
+   summary[t.style].transit+=t.qty;
+ });
+
+ document.getElementById('returnedUnits').innerText=units.toLocaleString();
+ document.getElementById('uniqueStyles').innerText=styles.size;
+ document.getElementById('storeCount').innerText=stores.size;
+ document.getElementById('transitUnits').innerText=transitData.reduce((a,b)=>a+b.qty,0).toLocaleString();
+
+ const body=document.querySelector('#styleTable tbody');
+ body.innerHTML='';
+
+ Object.entries(summary)
+ .sort((a,b)=>b[1].units-a[1].units)
+ .forEach(([style,data])=>{
+   body.innerHTML+=`
+   <tr>
+   <td>${style}</td>
+   <td>${data.units.toLocaleString()}</td>
+   <td>${data.stores.size}</td>
+   <td>${data.transit.toLocaleString()}</td>
+   </tr>`;
+ });
+}
+
+function clearConsole(){
+ if(!confirm('Clear all console data?')) return;
+ returnsData=[];
+ transitData=[];
+ refreshData();
+}
+</script>
+
+</body>
+</html>
