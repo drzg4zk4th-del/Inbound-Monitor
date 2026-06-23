@@ -47,23 +47,78 @@ let returnsData=[];
 let transitData=[];
 
 async function saveReturnsConsole(){
- await db.collection('storeReturnsConsole').doc('main').set({
-   returnsData,
-   transitData,
+
+ const chunkSize = 500;
+
+ const returnChunks = [];
+ for(let i=0;i<returnsData.length;i+=chunkSize){
+   returnChunks.push(returnsData.slice(i,i+chunkSize));
+ }
+
+ const transitChunks = [];
+ for(let i=0;i<transitData.length;i+=chunkSize){
+   transitChunks.push(transitData.slice(i,i+chunkSize));
+ }
+
+ await db.collection('storeReturnsConsole').doc('metadata').set({
+   returnChunks:returnChunks.length,
+   transitChunks:transitChunks.length,
    lastUpdated:new Date().toISOString()
  });
- console.log('Firebase save successful');
+
+ for(let i=0;i<returnChunks.length;i++){
+   await db.collection('storeReturnsConsole')
+     .doc('returns_'+i)
+     .set({rows:returnChunks[i]});
+ }
+
+ for(let i=0;i<transitChunks.length;i++){
+   await db.collection('storeReturnsConsole')
+     .doc('transit_'+i)
+     .set({rows:transitChunks[i]});
+ }
+
+ console.log('Firebase chunked save successful');
 }
 
 async function loadReturnsConsole(){
- const snap=await db.collection('storeReturnsConsole').doc('main').get();
- if(!snap.exists) return;
 
- const data=snap.data();
- returnsData=data.returnsData||[];
- transitData=data.transitData||[];
+ returnsData=[];
+ transitData=[];
 
- console.log('Store Returns Console Loaded',
+ const meta =
+ await db.collection('storeReturnsConsole')
+ .doc('metadata')
+ .get();
+
+ if(!meta.exists) return;
+
+ const m = meta.data();
+
+ const returnChunks = m.returnChunks || 0;
+ const transitChunks = m.transitChunks || 0;
+
+ for(let i=0;i<returnChunks;i++){
+   const snap = await db.collection('storeReturnsConsole')
+   .doc('returns_'+i)
+   .get();
+
+   if(snap.exists){
+      returnsData.push(...(snap.data().rows||[]));
+   }
+ }
+
+ for(let i=0;i<transitChunks;i++){
+   const snap = await db.collection('storeReturnsConsole')
+   .doc('transit_'+i)
+   .get();
+
+   if(snap.exists){
+      transitData.push(...(snap.data().rows||[]));
+   }
+ }
+
+ console.log('Chunked data loaded',
  returnsData.length,
  transitData.length);
 }
