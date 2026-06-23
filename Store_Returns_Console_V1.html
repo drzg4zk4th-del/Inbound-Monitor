@@ -190,7 +190,7 @@ window.addEventListener('load',async()=>{
 
 <div class="section">
 <h3>Biggest Return Styles</h3>
-<table id="styleSummaryTable"><thead><tr><th>Style</th><th>Top Colour</th><th>Total Units</th><th>Other Colours</th></tr></thead><tbody></tbody></table>
+<table id="styleSummaryTable"><thead><tr><th>Style</th><th>Top Colour</th><th>Total / Top Colour</th><th>Other Colours</th></tr></thead><tbody></tbody></table>
 </div>
 
 <div class="section">
@@ -396,20 +396,21 @@ Object.entries(styleSummary)
  const colours=Object.entries(data.colours)
  .sort((a,b)=>b[1]-a[1]);
 
- const topColour=colours[0]?.[0]||'-';
+const topColour=colours[0]?.[0]||'-';
+const topColourUnits=colours[0]?.[1]||0;
 
- const others=colours
+const others=colours
  .slice(1)
  .map(c=>`${c[0]} (${c[1]})`)
  .join(', ');
 
- stb.innerHTML+=`
- <tr>
+stb.innerHTML+=`
+<tr>
    <td>${style}</td>
    <td>${topColour}</td>
-   <td>${data.totalUnits}</td>
+   <td>${data.totalUnits} / ${topColourUnits}</td>
    <td>${others}</td>
- </tr>`;
+</tr>`;
 
 });
 }
