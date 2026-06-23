@@ -167,19 +167,45 @@ async function importReturns(){
  const wb=XLSX.read(await file.arrayBuffer());
  const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
+ 
+let importedCount=0;
+
  rows.forEach(r=>{
-  if(String(r['To Store']||'').trim().toUpperCase()!=='VIRTUAL WAREHOUSE') return;
+
+  const toStore=String(
+    r['To Store']||
+    r['TO STORE']||
+    r['To store']||
+    ''
+  ).trim().toUpperCase();
+
+  if(toStore && toStore!=='VIRTUAL WAREHOUSE'){
+    return;
+  }
+
+  importedCount++;
 
   returnsData.push({
    store:r['From Store']||'',
    category:r['CATEGORY']||'',
    style:String(r['STYLE']||'').trim(),
    colour:String(r['COLOUR']||'').trim(),
-   qty:Number(r['QTY']||0)
+   qty:Number(r['QTY']||0),
+   s4:Number(r['4']||0),
+   s5:Number(r['5']||0),
+   s6:Number(r['6']||0),
+   s7:Number(r['7']||0),
+   s8:Number(r['8']||0),
+   s9:Number(r['9']||0),
+   s10:Number(r['10']||0),
+   s11:Number(r['11']||0),
+   os:Number(r['OS']||0)
   });
  });
 
  await saveReturnsConsole();
+ alert(importedCount+' rows imported');
+
  refreshData();
  alert('Imported '+rows.length+' rows');
 }
@@ -190,15 +216,45 @@ async function importTransit(){
  const wb=XLSX.read(await file.arrayBuffer());
  const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
+ 
+let importedCount=0;
+
  rows.forEach(r=>{
-   const vals=Object.values(r);
-   transitData.push({
-      style:String(vals[0]||'').trim(),
-      qty:Number(vals[1]||0)
-   });
+
+  const toStore=String(
+    r['To Store']||
+    r['TO STORE']||
+    r['To store']||
+    ''
+  ).trim().toUpperCase();
+
+  if(toStore && toStore!=='VIRTUAL WAREHOUSE'){
+    return;
+  }
+
+  importedCount++;
+
+  returnsData.push({
+   store:r['From Store']||'',
+   category:r['CATEGORY']||'',
+   style:String(r['STYLE']||'').trim(),
+   colour:String(r['COLOUR']||'').trim(),
+   qty:Number(r['QTY']||0),
+   s4:Number(r['4']||0),
+   s5:Number(r['5']||0),
+   s6:Number(r['6']||0),
+   s7:Number(r['7']||0),
+   s8:Number(r['8']||0),
+   s9:Number(r['9']||0),
+   s10:Number(r['10']||0),
+   s11:Number(r['11']||0),
+   os:Number(r['OS']||0)
+  });
  });
 
  await saveReturnsConsole();
+ alert(importedCount+' rows imported');
+
  refreshData();
 }
 
