@@ -3394,11 +3394,12 @@ function refreshRetailMetricsHotfix(){
  if(typeof db==='undefined') return;
 
  db.collection('dispatch_pickruns').onSnapshot(snapshot=>{
-   let totalUnits=0;
-   let totalPickruns=0;
-   let discrepancies=0;
-   let openDiscrepancies=0;
-  let totalStores=0;
+let totalUnits=0;
+let totalPickruns=0;
+let discrepancies=0;
+let discrepancyPickruns=0;
+let openDiscrepancies=0;
+let totalStores=0;
 
   snapshot.forEach(doc=>{
    const d=doc.data() || {};
@@ -3413,9 +3414,10 @@ if(!d.archived && !d.completed){
 }
 
    // Only count completed / archived pickruns
-   if(d.archived || d.completed){
-      discrepancies += disc;
-   }
+if((d.archived || d.completed) && disc > 0){
+   discrepancies += disc;
+   discrepancyPickruns++;
+}
 
    if(!d.archived && !d.completed){
       openDiscrepancies += disc;
@@ -3457,10 +3459,9 @@ const discrepancyRate =
    : '0.00';
 
 const avgDiscrepancies =
-   archivedPickruns > 0
-   ? (discrepancies / archivedPickruns).toFixed(1)
+   discrepancyPickruns > 0
+   ? (discrepancies / discrepancyPickruns).toFixed(1)
    : '0.0';
-
    update(['retailMetricAvgDiscrepancies'], avgDiscrepancies + ' Avg');
    update(['retailMetricDiscrepancyRate'], discrepancyRate + '%');
  });
