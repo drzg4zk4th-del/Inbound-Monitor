@@ -1130,17 +1130,17 @@ style="max-width:280px;"
 <table>
 <thead>
 <tr>
-<th>Printed</th>
-<th>Completed</th>
-<th>Discrepancies<br>Left Qty</th>
- <th>Pickrun Number</th>
-<th>Description</th>
-<th>Qty</th>
-<th>Total Stores</th>
-<th>Urgency</th>
-<th>Order Type</th>
-<th>Date Created</th>
-<th>Date Completed</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Printed ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Completed ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Discrepancies<br>Left Qty ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Pickrun Number ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Description ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Qty ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Total Stores ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Urgency ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Order Type ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Date Created ↕</th>
+<th onclick="sortRetailTable(this)" style="cursor:pointer;">Date Completed ↕</th>
 <th>Delete</th>
 </tr>
 </thead>
@@ -3039,6 +3039,69 @@ rows.forEach(row=>{
 table.appendChild(row);
 });
 
+}
+
+let retailSort = {
+  index:null,
+  asc:true
+};
+
+function sortRetailTable(header){
+
+  const table = header.closest('table');
+  const tbody = table.querySelector('tbody');
+
+  const headers = Array.from(
+    table.querySelectorAll('thead th')
+  );
+
+  const index = headers.indexOf(header);
+
+  const asc =
+    retailSort.index === index
+      ? !retailSort.asc
+      : true;
+
+  retailSort = {
+    index:index,
+    asc:asc
+  };
+
+  const rows = Array.from(tbody.rows);
+
+  rows.sort((a,b)=>{
+
+    let aVal;
+    let bVal;
+
+    const aCheckbox =
+      a.cells[index].querySelector('input[type="checkbox"]');
+
+    const bCheckbox =
+      b.cells[index].querySelector('input[type="checkbox"]');
+
+    if(aCheckbox){
+      aVal = aCheckbox.checked ? 1 : 0;
+      bVal = bCheckbox.checked ? 1 : 0;
+    }else{
+      aVal = a.cells[index].innerText.trim();
+      bVal = b.cells[index].innerText.trim();
+    }
+
+    const aNum = parseFloat(aVal);
+    const bNum = parseFloat(bVal);
+
+    if(!isNaN(aNum) && !isNaN(bNum)){
+      return asc ? aNum - bNum : bNum - aNum;
+    }
+
+    return asc
+      ? aVal.localeCompare(bVal)
+      : bVal.localeCompare(aVal);
+
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
 }
 
 function applyFilters(){
