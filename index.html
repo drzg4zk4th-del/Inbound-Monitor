@@ -3441,9 +3441,19 @@ update(['mainRetailPickruns'], totalPickruns.toLocaleString());
       return d.archived || d.completed;
    }).length;
 
+let archivedUnits = 0;
+
+snapshot.forEach(doc=>{
+   const d = doc.data() || {};
+
+   if(d.archived || d.completed){
+      archivedUnits += Number(d.qty || 0);
+   }
+});
+
 const discrepancyRate =
-   archivedPickruns > 0
-   ? ((discrepancies / archivedPickruns) * 100).toFixed(2)
+   archivedUnits > 0
+   ? ((discrepancies / archivedUnits) * 100).toFixed(2)
    : '0.00';
 
 const avgDiscrepancies =
