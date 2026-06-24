@@ -469,10 +469,15 @@ td[contenteditable="true"]:focus{
 
 <style>
 #retailPage .form-grid{
-  display:grid !important;
-  grid-template-columns:repeat(4,minmax(180px,1fr)) !important;
+  display:flex !important;
+  flex-direction:column !important;
   gap:12px !important;
   margin-bottom:15px !important;
+}
+
+#retailPage .form-grid input,
+#retailPage .form-grid select{
+  width:100% !important;
 }
 #retailPage .add-btn{
   width:auto !important;
@@ -3360,6 +3365,14 @@ await db.collection('dispatch_pickruns').add({
    archived:false,
    dateCreated:new Date().toISOString()
 });
+
+document.getElementById('retailPickrunNumber').value='';
+document.getElementById('retailDescription').value='';
+document.getElementById('retailQty').value='';
+document.getElementById('retailStores').value='';
+document.getElementById('retailOrderType').selectedIndex=0;
+document.getElementById('retailUrgency').selectedIndex=0;
+ 
 }
 </script>
 
