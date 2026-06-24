@@ -1123,16 +1123,16 @@ style="max-width:280px;"
 <table>
 <thead>
 <tr>
-<th>Pickrun Number</th>
+<th>Printed</th>
+<th>Completed</th>
+<th>Discrepancies Left Qty</th>
+ <th>Pickrun Number</th>
 <th>Description</th>
 <th>Qty</th>
 <th>Total Stores</th>
 <th>Urgency</th>
 <th>Order Type</th>
 <th>Date Created</th>
-<th>Printed</th>
-<th>Completed</th>
-<th>Discrepancies Left Qty</th>
 <th>Date Completed</th>
 <th>Delete</th>
 </tr>
@@ -3546,6 +3546,11 @@ function loadRetailUnified(){
       
       const row=`
       <tr>
+
+        <td><input type="checkbox" ${d.printed?'checked':''} onchange="retailPrinted('${doc.id}',this.checked)"></td>
+      <td><input type="checkbox" ${d.completed?'checked':''} onchange="retailCompleted('${doc.id}',this.checked)"></td>
+      <td contenteditable="true" onblur="retailUpdate('${doc.id}','discrepancies',this.innerText)">${d.discrepancies||0}</td>
+      
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','pickrunNumber',this.innerText)">${d.pickrunNumber||''}</td>
 
       <td>
@@ -3590,9 +3595,7 @@ ${d.stores||0}
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','urgency',this.innerText)">${d.urgency||''}</td>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','orderType',this.innerText)">${d.orderType||''}</td>
       <td>${d.dateCreated?new Date(d.dateCreated).toLocaleString():''}</td>
-      <td><input type="checkbox" ${d.printed?'checked':''} onchange="retailPrinted('${doc.id}',this.checked)"></td>
-      <td><input type="checkbox" ${d.completed?'checked':''} onchange="retailCompleted('${doc.id}',this.checked)"></td>
-      <td contenteditable="true" onblur="retailUpdate('${doc.id}','discrepancies',this.innerText)">${d.discrepancies||0}</td>
+    
       <td>
 <input
 type="datetime-local"
