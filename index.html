@@ -2812,7 +2812,7 @@ let locationHtml = "";
             const styleList = [...g.styleNames].join("<br>");
 
 shipmentHtml += `
-<div class="card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
+<div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
 <h3>🚢 Shipment Required</h3>
 
 <b>PO:</b> ${po}<br>
@@ -2840,7 +2840,7 @@ document.getElementById('ship-${po}').value
             const styleList = [...g.styleNames].join("<br>");
 
 locationHtml += `
-<div class="card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
+<div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
 <h3>📍 Storage Location Required</h3>
 
 <b>PO:</b> ${po}<br>
@@ -2865,7 +2865,17 @@ document.getElementById('loc-${po}').value
 
     document.getElementById("missingLocationCount").innerText=count;
 
-    container.innerHTML = `
+container.innerHTML = `
+
+<div style="margin-bottom:20px;">
+    <input
+        type="text"
+        id="exceptionSearch"
+        placeholder="Search PO, Style, Warehouse or Shipment..."
+        onkeyup="filterExceptions()"
+        style="width:100%;padding:10px;font-size:16px;border-radius:6px;">
+</div>
+
 <div style="
 display:grid;
 grid-template-columns:1fr 1fr;
@@ -2885,6 +2895,24 @@ ${locationHtml || "<div style='color:#22c55e'>None</div>"}
 
 </div>
 `;
+}
+
+function filterExceptions(){
+
+    const search = document
+        .getElementById("exceptionSearch")
+        .value
+        .toLowerCase();
+
+    document.querySelectorAll(".exception-card").forEach(card=>{
+
+        card.style.display =
+            card.innerText.toLowerCase().includes(search)
+            ? ""
+            : "none";
+
+    });
+
 }
  
 function updateLocationFromException(po, location){
