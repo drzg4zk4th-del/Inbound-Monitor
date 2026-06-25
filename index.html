@@ -1902,192 +1902,144 @@ function excelDateToJS(value){
     return value.toString().trim();
 }
  
- async function importSpreadsheet(){
+async function importSpreadsheet(){
 
     const file = document.getElementById("importFile").files[0];
 
     if(!file){
-        alert("Select a file first");
+        alert("Select a file first.");
         return;
     }
 
     const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data);
+    const workbook = XLSX.read(data,{cellDates:false});
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const preview = XLSX.utils.sheet_to_json(sheet, {
-    header: 1
-});
 
-console.log(preview);
+    const rows = XLSX.utils.sheet_to_json(sheet,{
+        defval:""
+    });
 
-  if(rows.length===0){
+    if(rows.length===0){
         alert("No rows found.");
         return;
     }
-   
-  // Detect which spreadsheet was imported
-    const purchaseImport =
-    Object.keys(rows[0]).includes("DEL INTO W/H") ||
-    Object.keys(rows[0]).includes("RANGE");
 
-    alert(JSON.stringify(Object.keys(rows[0]), null, 2));
-  
+    // Detect which spreadsheet has been imported
+    const firstRow = rows.find(r=>Object.keys(r).length>0);
+
+    const purchaseImport =
+        firstRow &&
+        (
+            "DEL INTO W/H" in firstRow ||
+            "RANGE" in firstRow
+        );
+
     rows.forEach(item=>{
 
-        // ===========================
-        // NEW PURCHASING SPREADSHEET
-        // ===========================
+        // Ignore section headings / blank rows
+        if(
+            !item["PURCHASE ORDER #"] ||
+            !item["STYLE CODE"]
+        ){
+            return;
+        }
+
+        // Warehouse mapping
+        let warehouse = "Main Warehouse";
+
+        const customer = String(item["CUSTOMER"] || "")
+            .trim()
+            .toUpperCase();
+
+        if(customer==="RET"){
+            warehouse="Virtual Warehouse";
+        }
+        else if(customer==="MKPR"){
+            warehouse="PR Warehouse";
+        }
+
+        // ETA conversion
+        let eta="";
+
         if(purchaseImport){
 
-            if(!item["PURCHASE ORDER #"] || !item["STYLE CODE"]) return;
+            const excelDate = item["DEL INTO W/H"];
 
-            let warehouse="Main Warehouse";
+            if(typeof excelDate==="number"){
 
-            const customer=(item["CUSTOMER"]||"")
-                .toString()
-                .trim()
-                .toUpperCase();
+                const d = XLSX.SSF.parse_date_code(excelDate);
 
-            if(customer==="RET"){
-                warehouse="Virtual Warehouse";
+                eta =
+                    d.y + "-" +
+                    String(d.m).padStart(2,"0") + "-" +
+                    String(d.d).padStart(2,"0");
+
+            }else{
+
+                eta = excelDate || "";
+
             }
-            else if(customer==="MKPR"){
-                warehouse="PR Warehouse";
-            }
 
-            const etaValue = excelDateToJS(item["DEL INTO W/H"]);
+        }else{
 
-alert(
-    "Raw: " + item["DEL INTO W/H"] +
-    "\nConverted: " + etaValue
-);
-
-            createRow({
-
-                shipment:"",
-
-                po:item["PURCHASE ORDER #"] || "",
-
-                sku:item["STYLE CODE"] || "",
-
-                style:item["STYLE NAME"] || "",
-
-                colour:item["COLOUR CODE"] || "",
-
-                eta: etaValue,
-             
-                dispatchWeek:"Week Not Assigned",
-
-                loosePallets:0,
-
-                packPallets:0,
-
-                unitsPerCarton:0,
-
-                cartons:0,
-
-                qty:item["QTY"] || 0,
-
-                totalPacks:0,
-
-                warehouse:warehouse,
-
-                priority:"Normal",
-
-                location:"",
-
-                currentLocation:"",
-
-                action:"No Action Required",
-
-                status:"In Transit",
-
-                notes:
-                    (item["RANGE"] || "") +
-                    (
-                        item["ORDER TYPE"]
-                        ? "\n" + item["ORDER TYPE"]
-                        : ""
-                    )
-
-            });
-
-         console.log(item["DEL INTO W/H"], typeof item["DEL INTO W/H"]);
+            eta = item["ETA"] || "";
 
         }
 
-        // ===========================
-        // EXISTING SHIPMENT IMPORT
-        // ===========================
-        else{
+        createRow({
 
-            let warehouse="Main Warehouse";
+            shipment: purchaseImport ? "" : (item["ORDER"] || ""),
 
-            const customer=(item["CUSTOMER"]||"")
-                .toString()
-                .trim()
-                .toUpperCase();
+            po: item["PURCHASE ORDER #"],
 
-            if(customer==="RET"){
-                warehouse="Virtual Warehouse";
-            }
-            else if(customer==="MKPR"){
-                warehouse="PR Warehouse";
-            }
+            sku: item["STYLE CODE"],
 
-            createRow({
+            style: item["STYLE NAME"],
 
-                shipment:item["ORDER"] || "",
+            colour: item["COLOUR CODE"],
 
-                po:item["PURCHASE ORDER #"] || "",
+            eta: eta,
 
-                sku:item["STYLE CODE"] || "",
+            dispatchWeek:"Week Not Assigned",
 
-                style:item["STYLE NAME"] || "",
+            loosePallets:0,
 
-                colour:item["COLOUR CODE"] || "",
+            packPallets:0,
 
-                eta:item["ETA"] || "",
+            unitsPerCarton:0,
 
-                dispatchWeek:"Week Not Assigned",
+            cartons:0,
 
-                loosePallets:0,
+            qty:Number(item["QTY"]) || 0,
 
-                packPallets:0,
+            totalPacks:0,
 
-                unitsPerCarton:0,
+            warehouse:warehouse,
 
-                cartons:0,
+            priority:"Normal",
 
-                qty:item["QTY"] || 0,
+            location:"",
 
-                totalPacks:0,
+            currentLocation:"",
 
-                warehouse:warehouse,
+            action:"No Action Required",
 
-                priority:"Normal",
+            status:"In Transit",
 
-                location:"",
+            notes: purchaseImport
+                ? [item["RANGE"],item["ORDER TYPE"]]
+                    .filter(Boolean)
+                    .join("\n")
+                : (item["ORDER TYPE"] || "")
 
-                currentLocation:"",
-
-                action:"No Action Required",
-
-                status:"In Transit",
-
-                notes:item["ORDER TYPE"] || ""
-
-            });
-
-        }
+        });
 
     });
 
     refreshDashboard();
-
     saveAll();
 
-    alert(rows.length + " rows imported");
+    alert(rows.length + " rows imported.");
 
 }
 
