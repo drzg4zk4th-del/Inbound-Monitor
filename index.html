@@ -2769,95 +2769,92 @@ refreshShipmentOverview();
 
 function updateExceptions(){
 
-    const container =
-    document.getElementById('exceptionContent');
-
+    const container=document.getElementById("exceptionContent");
     if(!container) return;
 
-    let html = '';
-    let missingLocationCount = 0;
-    let missingShipmentCount = 0;
+    const rows=Array.from(shipmentTable.rows).slice(1);
 
-    const rows =
-    Array.from(shipmentTable.rows).slice(1);
+    const groups={};
 
     rows.forEach(row=>{
 
-        const shipment = row.cells[0].innerText.trim();
-        const po = row.cells[1].innerText.trim();
-        const style = row.cells[3].innerText.trim();
-        const warehouse = row.cells[13].querySelector('select').value;
-        const location = row.cells[15].innerText.trim();
+        const po=row.cells[1].innerText.trim();
 
-        // -------------------------
-        // Missing Shipment
-        // -------------------------
-        if(shipment === ""){
+        if(!po) return;
 
-            missingShipmentCount++;
-
-            html += `
-            <div style="
-            padding:10px;
-            margin-bottom:10px;
-            border-left:4px solid #3b82f6;
-            background:#1e293b;
-            ">
-            🚢 <b>Shipment Required</b><br>
-            <b>PO:</b> ${po}<br>
-            <b>Style:</b> ${style}<br><br>
-
-            <input
-            id="ship-${po}"
-            placeholder="Shipment Number">
-
-            <button onclick="updateShipmentFromException('${po}',document.getElementById('ship-${po}').value)">
-            Update
-            </button>
-
-            </div>
-            `;
+        if(!groups[po]){
+            groups[po]={
+                shipment:row.cells[0].innerText.trim(),
+                location:row.cells[15].innerText.trim(),
+                warehouse:row.cells[13].querySelector("select").value,
+                styles:0
+            };
         }
 
-        // -------------------------
-        // Missing Storage Location
-        // -------------------------
-        if(location === ""){
+        groups[po].styles++;
 
-            missingLocationCount++;
+    });
 
-            html += `
-            <div style="
-            padding:10px;
-            margin-bottom:10px;
-            border-left:4px solid #ef4444;
-            background:#1e293b;
-            ">
-            📍 <b>Storage Location Required</b><br>
+    let html="";
+    let count=0;
+
+    Object.keys(groups).forEach(po=>{
+
+        const g=groups[po];
+
+        if(g.shipment===""){
+
+            count++;
+
+            html+=`
+            <div class="card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
+            <h3>🚢 Shipment Required</h3>
+
             <b>PO:</b> ${po}<br>
-            <b>Style:</b> ${style}<br>
-            <b>Warehouse:</b> ${warehouse}<br><br>
+            <b>Styles:</b> ${g.styles}<br><br>
 
-            <input
-            id="loc-${po}"
-            placeholder="Storage Location">
+            <input id="ship-${po}" placeholder="Shipment Number">
 
-            <button onclick="updateLocationFromException('${po}',document.getElementById('loc-${po}').value)">
-            Update
-            </button>
+            <button onclick="
+            updateShipmentFromException(
+            '${po}',
+            document.getElementById('ship-${po}').value
+            )">Update</button>
 
-            </div>
-            `;
+            </div>`;
+        }
+
+        if(g.location===""){
+
+            count++;
+
+            html+=`
+            <div class="card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
+            <h3>📍 Storage Location Required</h3>
+
+            <b>PO:</b> ${po}<br>
+            <b>Warehouse:</b> ${g.warehouse}<br>
+            <b>Styles:</b> ${g.styles}<br><br>
+
+            <input id="loc-${po}" placeholder="Storage Location">
+
+            <button onclick="
+            updateLocationFromException(
+            '${po}',
+            document.getElementById('loc-${po}').value
+            )">Update</button>
+
+            </div>`;
         }
 
     });
 
-    document.getElementById("missingLocationCount").innerText =
-        missingLocationCount + missingShipmentCount;
+    document.getElementById("missingLocationCount").innerText=count;
 
-    container.innerHTML =
+    container.innerHTML=
         html ||
-        "<div style='color:#22c55e'>✅ No operational exceptions.</div>";
+        "<div style='color:#22c55e'>✅ No exceptions.</div>";
+
 }
  
 function updateLocationFromException(po, location){
@@ -2879,16 +2876,15 @@ function updateLocationFromException(po, location){
     refreshDashboard();
 }
 
- function updateShipmentFromException(po, shipment){
+function updateShipmentFromException(po,shipment){
 
-    const rows =
-    Array.from(shipmentTable.rows).slice(1);
+    const rows=Array.from(shipmentTable.rows).slice(1);
 
     rows.forEach(row=>{
 
-        if(row.cells[1].innerText.trim() === po){
+        if(row.cells[1].innerText.trim()===po){
 
-            row.cells[0].innerText = shipment;
+            row.cells[0].innerText=shipment;
 
         }
 
@@ -2896,6 +2892,7 @@ function updateLocationFromException(po, location){
 
     saveAll();
     refreshDashboard();
+
 }
 
 async function saveAll(){
