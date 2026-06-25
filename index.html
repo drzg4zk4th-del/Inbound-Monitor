@@ -1884,7 +1884,20 @@ Math.max(incoming - packs,0);
 
 }
 
-async function importSpreadsheet(){
+function formatExcelDate(value){
+
+    if(value === undefined || value === null || value === ""){
+        return "";
+    }
+
+    if(typeof value === "number"){
+        return XLSX.SSF.format("dd-mmm-yyyy", value);
+    }
+
+    return value;
+}
+ 
+ async function importSpreadsheet(){
 
     const file = document.getElementById("importFile").files[0];
 
@@ -1944,7 +1957,7 @@ async function importSpreadsheet(){
 
                 colour:item["COLOUR CODE"] || "",
 
-                eta:item["DEL INTO W/H"] || "",
+                eta: formatExcelDate(item["DEL INTO W/H"]),
 
                 dispatchWeek:"Week Not Assigned",
 
