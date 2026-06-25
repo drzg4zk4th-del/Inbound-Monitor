@@ -1912,6 +1912,9 @@ function formatExcelDate(value){
     const rows = XLSX.utils.sheet_to_json(sheet, {
     raw: false,
     dateNF: "dd-mmm-yyyy"
+
+    console.log(Object.keys(rows[0]));
+console.log(rows[0]);
 });
 
     if(rows.length===0){
