@@ -1884,17 +1884,20 @@ Math.max(incoming - packs,0);
 
 }
 
-function formatExcelDate(value){
+function excelDateToJS(value){
 
-    if(value === undefined || value === null || value === ""){
+    if(value === "" || value === null || value === undefined){
         return "";
     }
 
-    if(typeof value === "number"){
-        return XLSX.SSF.format("dd-mmm-yyyy", value);
+    // Already a text date
+    if(isNaN(value)){
+        return value;
     }
 
-    return value;
+    const date = new Date((value - 25569) * 86400 * 1000);
+
+    return date.toISOString().split("T")[0];
 }
  
  async function importSpreadsheet(){
@@ -1918,13 +1921,6 @@ function formatExcelDate(value){
         alert("No rows found.");
         return;
     }
-
-  const preview = XLSX.utils.sheet_to_json(sheet, {
-    header: 1,
-    blankrows: true
-});
-
-console.log(preview.slice(0,10));
    
   // Detect which spreadsheet was imported
     const purchaseImport = rows[0]["RANGE"] !== undefined;
@@ -1964,7 +1960,7 @@ console.log(preview.slice(0,10));
 
                 colour:item["COLOUR CODE"] || "",
 
-                eta: formatExcelDate(item["DEL INTO W/H"]),
+                eta:excelDateToJS(item["DEL INTO W/H"]),
 
                 dispatchWeek:"Week Not Assigned",
 
