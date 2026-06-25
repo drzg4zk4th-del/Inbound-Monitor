@@ -1,15 +1,4 @@
-if(!groups[po]){
-    groups[po]={
-        shipment:row.cells[0].innerText.trim(),
-        location:row.cells[15].innerText.trim(),
-        warehouse:row.cells[13].querySelector("select").value,
-        styles:0,
-        styleNames:new Set()
-    };
-}
-
-groups[po].styles++;
-groups[po].styleNames.add(row.cells[3].innerText.trim());<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
