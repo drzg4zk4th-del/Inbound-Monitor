@@ -1912,10 +1912,7 @@ function excelDateToJS(value){
     const data = await file.arrayBuffer();
     const workbook = XLSX.read(data);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, {
-    raw: false,
-    dateNF: "dd-mmm-yyyy"
-});
+    const rows = XLSX.utils.sheet_to_json(sheet);
 
   if(rows.length===0){
         alert("No rows found.");
@@ -1997,6 +1994,8 @@ function excelDateToJS(value){
                     )
 
             });
+
+         console.log(item["DEL INTO W/H"], typeof item["DEL INTO W/H"]);
 
         }
 
