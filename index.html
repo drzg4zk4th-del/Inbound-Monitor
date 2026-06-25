@@ -2775,64 +2775,91 @@ function updateExceptions(){
     if(!container) return;
 
     let html = '';
-    let missingCount = 0;
+    let missingLocationCount = 0;
+    let missingShipmentCount = 0;
 
     const rows =
     Array.from(shipmentTable.rows).slice(1);
 
     rows.forEach(row=>{
 
-        const po =
-        row.cells[1].innerText.trim();
+        const shipment = row.cells[0].innerText.trim();
+        const po = row.cells[1].innerText.trim();
+        const style = row.cells[3].innerText.trim();
+        const warehouse = row.cells[13].querySelector('select').value;
+        const location = row.cells[15].innerText.trim();
 
-        const style =
-        row.cells[3].innerText.trim();
+        // -------------------------
+        // Missing Shipment
+        // -------------------------
+        if(shipment === ""){
 
-        const warehouse =
-        row.cells[13].querySelector('select')?.value || '';
+            missingShipmentCount++;
 
-        const location =
-        row.cells[15].innerText.trim();
-
-        if(location === ''){
-
-            missingCount++;
             html += `
-<div style="
-padding:10px;
-margin-bottom:8px;
-border-left:4px solid #ef4444;
-background:#1e293b;
-">
-🔴 Missing Storage Location<br>
-<b>PO:</b> ${po}<br>
-<b>Style:</b> ${style}<br>
-<b>Warehouse:</b> ${warehouse}<br><br>
+            <div style="
+            padding:10px;
+            margin-bottom:10px;
+            border-left:4px solid #3b82f6;
+            background:#1e293b;
+            ">
+            🚢 <b>Shipment Required</b><br>
+            <b>PO:</b> ${po}<br>
+            <b>Style:</b> ${style}<br><br>
 
-<input
-id="loc-${po}"
-placeholder="Enter Location"
-style="margin-right:8px;"
->
+            <input
+            id="ship-${po}"
+            placeholder="Shipment Number">
 
-<button onclick="updateLocationFromException('${po}',document.getElementById('loc-${po}').value)">
-Update
-</button>
+            <button onclick="updateShipmentFromException('${po}',document.getElementById('ship-${po}').value)">
+            Update
+            </button>
 
-</div>
-`;
+            </div>
+            `;
+        }
+
+        // -------------------------
+        // Missing Storage Location
+        // -------------------------
+        if(location === ""){
+
+            missingLocationCount++;
+
+            html += `
+            <div style="
+            padding:10px;
+            margin-bottom:10px;
+            border-left:4px solid #ef4444;
+            background:#1e293b;
+            ">
+            📍 <b>Storage Location Required</b><br>
+            <b>PO:</b> ${po}<br>
+            <b>Style:</b> ${style}<br>
+            <b>Warehouse:</b> ${warehouse}<br><br>
+
+            <input
+            id="loc-${po}"
+            placeholder="Storage Location">
+
+            <button onclick="updateLocationFromException('${po}',document.getElementById('loc-${po}').value)">
+            Update
+            </button>
+
+            </div>
+            `;
         }
 
     });
 
-    document.getElementById('missingLocationCount').innerText =
-missingCount;
-    
+    document.getElementById("missingLocationCount").innerText =
+        missingLocationCount + missingShipmentCount;
+
     container.innerHTML =
         html ||
-        '<div style="color:#22c55e;">✅ No location exceptions found</div>';
+        "<div style='color:#22c55e'>✅ No operational exceptions.</div>";
 }
-
+ 
 function updateLocationFromException(po, location){
 
     const rows =
@@ -2843,6 +2870,25 @@ function updateLocationFromException(po, location){
         if(row.cells[1].innerText.trim() === po){
 
             row.cells[15].innerText = location;
+
+        }
+
+    });
+
+    saveAll();
+    refreshDashboard();
+}
+
+ function updateShipmentFromException(po, shipment){
+
+    const rows =
+    Array.from(shipmentTable.rows).slice(1);
+
+    rows.forEach(row=>{
+
+        if(row.cells[1].innerText.trim() === po){
+
+            row.cells[0].innerText = shipment;
 
         }
 
