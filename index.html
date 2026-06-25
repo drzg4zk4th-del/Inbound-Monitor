@@ -1926,7 +1926,7 @@ function excelDateToJS(value){
     Object.keys(rows[0]).includes("DEL INTO W/H") ||
     Object.keys(rows[0]).includes("RANGE");
 
-    alert("Purchase Import = " + purchaseImport);
+    alert(JSON.stringify(Object.keys(rows[0]), null, 2));
   
     rows.forEach(item=>{
 
