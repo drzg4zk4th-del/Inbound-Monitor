@@ -1924,6 +1924,8 @@ function excelDateToJS(value){
   // Detect which spreadsheet was imported
     const purchaseImport = rows[0]["RANGE"] !== undefined;
 
+    alert("Purchase Import = " + purchaseImport);
+  
     rows.forEach(item=>{
 
         // ===========================
