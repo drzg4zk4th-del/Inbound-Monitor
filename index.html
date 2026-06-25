@@ -1919,8 +1919,12 @@ function formatExcelDate(value){
         return;
     }
 
-  console.log(Object.keys(rows[0]));
-  console.log(rows[0]);
+  const preview = XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    blankrows: true
+});
+
+console.log(preview.slice(0,10));
    
   // Detect which spreadsheet was imported
     const purchaseImport = rows[0]["RANGE"] !== undefined;
