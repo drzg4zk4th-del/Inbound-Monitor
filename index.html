@@ -1881,74 +1881,173 @@ Math.max(incoming - packs,0);
 
 async function importSpreadsheet(){
 
-const file =
-document.getElementById('importFile').files[0];
+    const file = document.getElementById("importFile").files[0];
 
-if(!file){
-alert('Select a file first');
-return;
-}
+    if(!file){
+        alert("Select a file first");
+        return;
+    }
 
-const data = await file.arrayBuffer();
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
 
-const workbook =
-XLSX.read(data);
+    if(rows.length===0){
+        alert("No rows found.");
+        return;
+    }
 
-const sheet =
-workbook.Sheets[
-workbook.SheetNames[0]
-];
+    // Detect which spreadsheet was imported
+    const purchaseImport = rows[0]["RANGE"] !== undefined;
 
-const rows =
-XLSX.utils.sheet_to_json(sheet);
+    rows.forEach(item=>{
 
-rows.forEach(item=>{
+        // ===========================
+        // NEW PURCHASING SPREADSHEET
+        // ===========================
+        if(purchaseImport){
 
-let warehouse = "Main Warehouse";
+            if(!item["PURCHASE ORDER #"] || !item["STYLE CODE"]) return;
 
-if(item["CUSTOMER"] === "RET"){
-   warehouse = "Virtual Warehouse";
-}
-else if(item["CUSTOMER"] === "MKPR"){
-   warehouse = "PR Warehouse";
-}
- 
-createRow({
+            let warehouse="Main Warehouse";
 
-shipment: item["ORDER"] || "",
-po: item["PURCHASE ORDER #"] || "",
-sku: item["STYLE CODE"] || "",
-style: item["STYLE NAME"] || "",
-colour: item["COLOUR CODE"] || "",
+            const customer=(item["CUSTOMER"]||"")
+                .toString()
+                .trim()
+                .toUpperCase();
 
-qty: item["QTY"] || 0,
+            if(customer==="RET"){
+                warehouse="Virtual Warehouse";
+            }
+            else if(customer==="MKPR"){
+                warehouse="PR Warehouse";
+            }
 
-dispatchWeek: "Week Not Assigned",
+            createRow({
 
-loosePallets: 0,
-packPallets: 0,
-unitsPerCarton: 0,
-cartons: 0,
+                shipment:"",
 
-warehouse: warehouse,
-priority: "Normal",
+                po:item["PURCHASE ORDER #"] || "",
 
-location: "",
-currentLocation: "",
+                sku:item["STYLE CODE"] || "",
 
-action: "No Action Required",
-status: "In Transit",
+                style:item["STYLE NAME"] || "",
 
-notes: ""
+                colour:item["COLOUR CODE"] || "",
 
-});
+                eta:item["DEL INTO W/H"] || "",
 
-});
+                dispatchWeek:"Week Not Assigned",
 
-refreshDashboard();
-saveAll();
+                loosePallets:0,
 
-alert(rows.length + " rows imported");
+                packPallets:0,
+
+                unitsPerCarton:0,
+
+                cartons:0,
+
+                qty:item["QTY"] || 0,
+
+                totalPacks:0,
+
+                warehouse:warehouse,
+
+                priority:"Normal",
+
+                location:"",
+
+                currentLocation:"",
+
+                action:"No Action Required",
+
+                status:"In Transit",
+
+                notes:
+                    (item["RANGE"] || "") +
+                    (
+                        item["ORDER TYPE"]
+                        ? "\n" + item["ORDER TYPE"]
+                        : ""
+                    )
+
+            });
+
+        }
+
+        // ===========================
+        // EXISTING SHIPMENT IMPORT
+        // ===========================
+        else{
+
+            let warehouse="Main Warehouse";
+
+            const customer=(item["CUSTOMER"]||"")
+                .toString()
+                .trim()
+                .toUpperCase();
+
+            if(customer==="RET"){
+                warehouse="Virtual Warehouse";
+            }
+            else if(customer==="MKPR"){
+                warehouse="PR Warehouse";
+            }
+
+            createRow({
+
+                shipment:item["ORDER"] || "",
+
+                po:item["PURCHASE ORDER #"] || "",
+
+                sku:item["STYLE CODE"] || "",
+
+                style:item["STYLE NAME"] || "",
+
+                colour:item["COLOUR CODE"] || "",
+
+                eta:item["ETA"] || "",
+
+                dispatchWeek:"Week Not Assigned",
+
+                loosePallets:0,
+
+                packPallets:0,
+
+                unitsPerCarton:0,
+
+                cartons:0,
+
+                qty:item["QTY"] || 0,
+
+                totalPacks:0,
+
+                warehouse:warehouse,
+
+                priority:"Normal",
+
+                location:"",
+
+                currentLocation:"",
+
+                action:"No Action Required",
+
+                status:"In Transit",
+
+                notes:item["ORDER TYPE"] || ""
+
+            });
+
+        }
+
+    });
+
+    refreshDashboard();
+
+    saveAll();
+
+    alert(rows.length + " rows imported");
 
 }
 
