@@ -839,6 +839,11 @@ Export Unallocated Rows
 Import Spreadsheet
 </button>
 
+<button class="delete-btn" onclick="clearAllRows()">
+<i class="fa-solid fa-trash"></i>
+Clear All Rows
+</button>
+
 <button class="add-btn" onclick="addSimilar()">
 <i class="fa-solid fa-copy"></i>
 Add Similar
@@ -2251,6 +2256,23 @@ btn.closest('tr').remove();
 
 refreshDashboard();
 saveAll();
+
+}
+
+function clearAllRows(){
+
+    if(!confirm("Delete ALL active shipment rows?")){
+        return;
+    }
+
+    while(shipmentTable.rows.length > 1){
+        shipmentTable.deleteRow(1);
+    }
+
+    refreshDashboard();
+    saveAll();
+
+    alert("All active shipment rows deleted.");
 
 }
 
