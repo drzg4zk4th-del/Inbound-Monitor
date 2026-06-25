@@ -1949,7 +1949,10 @@ function excelDateToJS(value){
 
             const etaValue = excelDateToJS(item["DEL INTO W/H"]);
 
-console.log("ETA:", etaValue, typeof etaValue);
+alert(
+    "Raw: " + item["DEL INTO W/H"] +
+    "\nConverted: " + etaValue
+);
 
             createRow({
 
