@@ -1922,7 +1922,9 @@ function excelDateToJS(value){
     }
    
   // Detect which spreadsheet was imported
-    const purchaseImport = rows[0]["RANGE"] !== undefined;
+    const purchaseImport =
+    Object.keys(rows[0]).includes("DEL INTO W/H") ||
+    Object.keys(rows[0]).includes("RANGE");
 
     alert("Purchase Import = " + purchaseImport);
   
