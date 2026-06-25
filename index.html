@@ -1945,6 +1945,10 @@ function excelDateToJS(value){
                 warehouse="PR Warehouse";
             }
 
+            const etaValue = item["DEL INTO W/H"];
+
+console.log("ETA:", etaValue, typeof etaValue);
+
             createRow({
 
                 shipment:"",
@@ -1957,10 +1961,8 @@ function excelDateToJS(value){
 
                 colour:item["COLOUR CODE"] || "",
 
-                console.log(item["DEL INTO W/H"]);
-
-                eta:item["DEL INTO W/H"],
-
+                eta: etaValue,
+             
                 dispatchWeek:"Week Not Assigned",
 
                 loosePallets:0,
