@@ -2795,7 +2795,8 @@ function updateExceptions(){
 
     });
 
-    let html="";
+    let shipmentHtml = "";
+let locationHtml = "";
     let count=0;
 
     Object.keys(groups).forEach(po=>{
@@ -2806,7 +2807,7 @@ function updateExceptions(){
 
             count++;
 
-            html+=`
+            hipmentHtml += `
             <div class="card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
             <h3>🚢 Shipment Required</h3>
 
@@ -2828,7 +2829,7 @@ function updateExceptions(){
 
             count++;
 
-            html+=`
+            locationHtml += `
             <div class="card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
             <h3>📍 Storage Location Required</h3>
 
@@ -2851,10 +2852,26 @@ function updateExceptions(){
 
     document.getElementById("missingLocationCount").innerText=count;
 
-    container.innerHTML=
-        html ||
-        "<div style='color:#22c55e'>✅ No exceptions.</div>";
+    container.innerHTML = `
+<div style="
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+align-items:start;
+">
 
+<div>
+<h3>🚢 Shipment Required</h3>
+${shipmentHtml || "<div style='color:#22c55e'>None</div>"}
+</div>
+
+<div>
+<h3>📍 Storage Locations Required</h3>
+${locationHtml || "<div style='color:#22c55e'>None</div>"}
+</div>
+
+</div>
+`;
 }
  
 function updateLocationFromException(po, location){
