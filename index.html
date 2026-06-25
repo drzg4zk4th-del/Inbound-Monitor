@@ -1,4 +1,15 @@
-<!DOCTYPE html>
+if(!groups[po]){
+    groups[po]={
+        shipment:row.cells[0].innerText.trim(),
+        location:row.cells[15].innerText.trim(),
+        warehouse:row.cells[13].querySelector("select").value,
+        styles:0,
+        styleNames:new Set()
+    };
+}
+
+groups[po].styles++;
+groups[po].styleNames.add(row.cells[3].innerText.trim());<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -2783,15 +2794,17 @@ function updateExceptions(){
         if(!po) return;
 
         if(!groups[po]){
-            groups[po]={
-                shipment:row.cells[0].innerText.trim(),
-                location:row.cells[15].innerText.trim(),
-                warehouse:row.cells[13].querySelector("select").value,
-                styles:0
-            };
-        }
+    groups[po]={
+        shipment:row.cells[0].innerText.trim(),
+        location:row.cells[15].innerText.trim(),
+        warehouse:row.cells[13].querySelector("select").value,
+        styles:0,
+        styleNames:new Set()
+    };
+}
 
-        groups[po].styles++;
+groups[po].styles++;
+groups[po].styleNames.add(row.cells[3].innerText.trim());
 
     });
 
@@ -2807,46 +2820,56 @@ let locationHtml = "";
 
             count++;
 
-            shipmentHtml += `
-            <div class="card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
-            <h3>🚢 Shipment Required</h3>
+            const styleList = [...g.styleNames].join("<br>");
 
-            <b>PO:</b> ${po}<br>
+shipmentHtml += `
+<div class="card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
+<h3>🚢 Shipment Required</h3>
+
+<b>PO:</b> ${po}<br>
 <b>Warehouse:</b> ${g.warehouse}<br>
-<b>Styles:</b> ${g.styles}<br><br>
+<b>Style Count:</b> ${g.styles}<br><br>
 
-            <input id="ship-${po}" placeholder="Shipment Number">
+<b>Styles:</b><br>
+${styleList}<br><br>
 
-            <button onclick="
-            updateShipmentFromException(
-            '${po}',
-            document.getElementById('ship-${po}').value
-            )">Update</button>
+<input id="ship-${po}" placeholder="Shipment Number">
 
-            </div>`;
+<button onclick="
+updateShipmentFromException(
+'${po}',
+document.getElementById('ship-${po}').value
+)">Update</button>
+
+</div>`;
         }
 
         if(g.location===""){
 
             count++;
 
-            locationHtml += `
-            <div class="card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
-            <h3>📍 Storage Location Required</h3>
+            const styleList = [...g.styleNames].join("<br>");
 
-            <b>PO:</b> ${po}<br>
-            <b>Warehouse:</b> ${g.warehouse}<br>
-            <b>Styles:</b> ${g.styles}<br><br>
+locationHtml += `
+<div class="card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
+<h3>📍 Storage Location Required</h3>
 
-            <input id="loc-${po}" placeholder="Storage Location">
+<b>PO:</b> ${po}<br>
+<b>Warehouse:</b> ${g.warehouse}<br>
+<b>Style Count:</b> ${g.styles}<br><br>
 
-            <button onclick="
-            updateLocationFromException(
-            '${po}',
-            document.getElementById('loc-${po}').value
-            )">Update</button>
+<b>Styles:</b><br>
+${styleList}<br><br>
 
-            </div>`;
+<input id="loc-${po}" placeholder="Storage Location">
+
+<button onclick="
+updateLocationFromException(
+'${po}',
+document.getElementById('loc-${po}').value
+)">Update</button>
+
+</div>`;
         }
 
     });
