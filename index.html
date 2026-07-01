@@ -1104,8 +1104,28 @@ style="max-width:280px;"
 <div class="big-number" id="retailMetricAvgDiscrepancies">0 Avg</div>
 <div class="metric-sub" id="retailMetricDiscrepancyRate">0%</div>
 </div>
-<div class="card"><h3>Yesterday Despatched</h3><div class="big-number" id="retailMetricYesterday">0</div></div>
-<div class="card"><h3>Last 7 Days Despatched</h3><div class="big-number" id="retailMetricLast7">0</div></div>
+<div class="card" style="grid-column:span 2;">
+    <div style="display:flex;height:100%;">
+
+        <div style="flex:1;padding-right:20px;">
+            <h3>Yesterday Despatched</h3>
+            <div class="big-number" id="retailMetricYesterday">0</div>
+        </div>
+
+        <div style="width:1px;background:#1e293b;margin:0 20px;"></div>
+
+        <div style="flex:1;padding-left:20px;">
+            <h3>Today Despatched</h3>
+            <div class="big-number" id="retailMetricToday">0</div>
+        </div>
+
+    </div>
+</div>
+
+<div class="card">
+    <h3>Last 7 Days Despatched</h3>
+    <div class="big-number" id="retailMetricLast7">0</div>
+</div>
 <div class="card"><h3>Monthly Despatch</h3><div class="big-number" id="retailMetricMonth">0</div></div>
 <div class="card"><h3>Current Financial Year Total</h3><div class="big-number" id="retailMetricFY">0</div></div>
 <div class="card">
@@ -3967,6 +3987,7 @@ function retailMetricsFinalHotfix(){
    const currentMonth=now.getMonth();
    const currentYear=now.getFullYear();
    const fyStart=(currentMonth>=6)?new Date(currentYear,6,1):new Date(currentYear-1,6,1);
+  let today = 0;
 
    snapshot.forEach(doc=>{
       const d=doc.data()||{};
@@ -3984,6 +4005,7 @@ function retailMetricsFinalHotfix(){
 
         if(diff===1) yesterday += qty;
         if(diff<=7) last7 += qty;
+       if(diff === 0) today += qty;
 
         if(completedDate.getMonth()===currentMonth &&
            completedDate.getFullYear()===currentYear){
@@ -4004,6 +4026,8 @@ function retailMetricsFinalHotfix(){
    set('retailMetricOldest', oldest + ' days');
    set('retailOldestPickrun', oldest + ' days');
    set('mainRetailOldest', oldest + ' days');
+
+  set('retailMetricToday', today.toLocaleString());
 
    set('retailMetricYesterday', yesterday.toLocaleString());
    set('retailYesterday', yesterday.toLocaleString());
