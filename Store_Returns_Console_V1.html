@@ -454,7 +454,12 @@ stb.innerHTML+=`
 });
 }
 
-const pb=document.querySelector('#progressTable tbody'); if(pb){pb.innerHTML='';Object.entries(styleSummary).forEach(([k,v])=>{let rem=Math.max(v.totalUnits-v.transit,0);let pct=v.totalUnits?((v.transit/v.totalUnits)*100).toFixed(1):0;let top=Object.entries(v.colours).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';pb.innerHTML+=`<tr><td>${k}</td><td>${top}</td><td>${v.totalUnits}</td><td>${v.transit}</td><td>${rem}</td><td>${pct}%</td></tr>`;});}
+const pb=document.querySelector('#progressTable tbody'); if(pb){pb.innerHTML='';Object.entries(styleSummary).forEach(([k,v])=>{let rem=Math.max(v.totalUnits-v.transit,0);let pct=v.totalUnits?((v.transit/v.totalUnits)*100).toFixed(1):0;
+const colourList = Object.entries(v.colours)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([colour,qty]) => `${colour} (${qty})`)
+    .join(", ");
+    pb.innerHTML+=`<tr><td>${k}</td><td>${colourList}</td><td>${v.totalUnits}</td><td>${v.transit}</td><td>${rem}</td><td>${pct}%</td></tr>`;});}
  const cb=document.querySelector('#colourSummaryTable tbody'); if(cb){cb.innerHTML='';Object.entries(colourSummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>cb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
  const catb=document.querySelector('#categorySummaryTable tbody'); if(catb){catb.innerHTML='';Object.entries(categorySummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>catb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
  const sizeb=document.querySelector('#sizeTable tbody'); if(sizeb){sizeb.innerHTML='';Object.entries(sizeTotals).forEach(([k,v])=>sizeb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
