@@ -2810,89 +2810,100 @@ function updateExceptions(){
         if(!po) return;
 
         if(!groups[po]){
-    groups[po]={
-        shipment:row.cells[0].innerText.trim(),
-        location:row.cells[15].innerText.trim(),
-        warehouse:row.cells[13].querySelector("select").value,
-        styles:0,
-        styleNames:new Set()
-    };
-}
+            groups[po]={
+                shipment:row.cells[0].innerText.trim(),
+                location:row.cells[15].innerText.trim(),
+                warehouse:row.cells[13].querySelector("select").value,
+                styleCount:0,
+                styles:{}
+            };
+        }
 
-groups[po].styles++;
-groups[po].styleNames.add(row.cells[3].innerText.trim());
+        groups[po].styleCount++;
+
+        const style=row.cells[3].innerText.trim();
+        const colour=row.cells[4].innerText.trim();
+
+        if(!groups[po].styles[style]){
+            groups[po].styles[style]=new Set();
+        }
+
+        if(colour){
+            groups[po].styles[style].add(colour);
+        }
 
     });
 
-    let shipmentHtml = "";
-let locationHtml = "";
+    let shipmentHtml="";
+    let locationHtml="";
     let count=0;
 
     Object.keys(groups).forEach(po=>{
 
         const g=groups[po];
 
+        const styleList=Object.entries(g.styles)
+        .map(([style,colours])=>`
+            <b>${style}</b><br>
+            ${[...colours].join(", ")}
+        `)
+        .join("<br>");
+
         if(g.shipment===""){
 
             count++;
 
-            const styleList = [...g.styleNames].join("<br>");
+            shipmentHtml+=`
+            <div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
+                <h3>🚢 Shipment Required</h3>
 
-shipmentHtml += `
-<div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
-<h3>🚢 Shipment Required</h3>
+                <b>PO:</b> ${po}<br>
+                <b>Warehouse:</b> ${g.warehouse}<br>
+                <b>Style Count:</b> ${g.styleCount}<br><br>
 
-<b>PO:</b> ${po}<br>
-<b>Warehouse:</b> ${g.warehouse}<br>
-<b>Style Count:</b> ${g.styles}<br><br>
+                ${styleList}<br><br>
 
-<b>Styles:</b><br>
-${styleList}<br><br>
+                <input id="ship-${po}" placeholder="Shipment Number">
 
-<input id="ship-${po}" placeholder="Shipment Number">
+                <button onclick="
+                updateShipmentFromException(
+                '${po}',
+                document.getElementById('ship-${po}').value
+                )">Update</button>
 
-<button onclick="
-updateShipmentFromException(
-'${po}',
-document.getElementById('ship-${po}').value
-)">Update</button>
-
-</div>`;
+            </div>`;
         }
 
         if(g.location===""){
 
             count++;
 
-            const styleList = [...g.styleNames].join("<br>");
+            locationHtml+=`
+            <div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
+                <h3>📍 Storage Location Required</h3>
 
-locationHtml += `
-<div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
-<h3>📍 Storage Location Required</h3>
+                <b>PO:</b> ${po}<br>
+                <b>Warehouse:</b> ${g.warehouse}<br>
+                <b>Style Count:</b> ${g.styleCount}<br><br>
 
-<b>PO:</b> ${po}<br>
-<b>Warehouse:</b> ${g.warehouse}<br>
-<b>Style Count:</b> ${g.styles}<br><br>
+                ${styleList}<br><br>
 
-<b>Styles:</b><br>
-${styleList}<br><br>
+                <input id="loc-${po}" placeholder="Storage Location">
 
-<input id="loc-${po}" placeholder="Storage Location">
+                <button onclick="
+                updateLocationFromException(
+                '${po}',
+                document.getElementById('loc-${po}').value
+                )">Update</button>
 
-<button onclick="
-updateLocationFromException(
-'${po}',
-document.getElementById('loc-${po}').value
-)">Update</button>
-
-</div>`;
+            </div>`;
         }
 
     });
 
     document.getElementById("missingLocationCount").innerText=count;
 
-container.innerHTML = `
+    container.innerHTML=`
 
 <div style="margin-bottom:20px;">
     <input
@@ -2922,6 +2933,7 @@ ${locationHtml || "<div style='color:#22c55e'>None</div>"}
 
 </div>
 `;
+
 }
 
 function filterExceptions(){
