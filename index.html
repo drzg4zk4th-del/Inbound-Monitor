@@ -4051,17 +4051,65 @@ function rebuildRetailArchive(){
 
       body.innerHTML += `
       <tr>
-      <td>${d.pickrunNumber||''}</td>
-      <td>${d.description||''}</td>
-      <td>${d.qty||0}</td>
-      <td>${d.stores||0}</td>
-      <td>${d.urgency||''}</td>
-      <td>${d.orderType||''}</td>
-      <td>${d.dateCreated||''}</td>
-      <td>${d.printed?'✓':''}</td>
-      <td>${d.completed?'✓':''}</td>
-      <td>${d.discrepancies||0}</td>
-      <td>
+<td contenteditable="true"
+    onblur="retailUpdate('${doc.id}','pickrunNumber',this.innerText)">
+    ${d.pickrunNumber||''}
+</td>
+
+<td contenteditable="true"
+    onblur="retailUpdate('${doc.id}','description',this.innerText)">
+    ${d.description||''}
+</td>
+
+<td contenteditable="true"
+    onblur="retailUpdate('${doc.id}','qty',Number(this.innerText)||0)">
+    ${d.qty||0}
+</td>
+
+<td contenteditable="true"
+    onblur="retailUpdate('${doc.id}','stores',Number(this.innerText)||0)">
+    ${d.stores||0}
+</td>
+
+<td>
+<select onchange="retailUpdate('${doc.id}','urgency',this.value)">
+    <option value="Low" ${d.urgency==='Low'?'selected':''}>Low</option>
+    <option value="Medium" ${d.urgency==='Medium'?'selected':''}>Medium</option>
+    <option value="High" ${d.urgency==='High'?'selected':''}>High</option>
+</select>
+</td>
+
+<td>
+<select onchange="retailUpdate('${doc.id}','orderType',this.value)">
+    <option value="Replen" ${d.orderType==='Replen'?'selected':''}>Replen</option>
+    <option value="Repeat" ${d.orderType==='Repeat'?'selected':''}>Repeat</option>
+    <option value="Top Up" ${d.orderType==='Top Up'?'selected':''}>Top Up</option>
+    <option value="Store Request" ${d.orderType==='Store Request'?'selected':''}>Store Request</option>
+    <option value="Store Supplies" ${d.orderType==='Store Supplies'?'selected':''}>Store Supplies</option>
+    <option value="Pre Alert" ${d.orderType==='Pre Alert'?'selected':''}>Pre Alert</option>
+</select>
+</td>
+
+<td>${d.dateCreated||''}</td>
+
+<td>
+<input type="checkbox"
+       ${d.printed?'checked':''}
+       onchange="retailPrinted('${doc.id}',this.checked)">
+</td>
+
+<td>
+<input type="checkbox"
+       ${d.completed?'checked':''}
+       onchange="retailCompleted('${doc.id}',this.checked)">
+</td>
+
+<td contenteditable="true"
+    onblur="retailUpdate('${doc.id}','discrepancies',Number(this.innerText)||0)">
+    ${d.discrepancies||0}
+</td>
+
+<td>
 <input
 type="datetime-local"
 value="${
