@@ -879,6 +879,12 @@ style="max-width:280px;"
 <div id="dispatchProjectionContainer"></div>
 </div>
 
+<button class="add-btn" onclick="toggleShipmentTable()" id="toggleShipmentBtn">
+📋 Show Active Shipments
+</button>
+
+<div id="shipmentTableContainer" style="display:none;">
+
 <div class="table-wrap">
 
 <table id="shipmentTable">
@@ -905,6 +911,8 @@ style="max-width:280px;"
 </tr>
 
 </table>
+
+</div>
 
 </div>
 
@@ -1456,6 +1464,25 @@ ${row.cells[15].textContent.trim()}
 });
 
 results.innerHTML=html;
+
+}
+
+let shipmentTableVisible = false;
+
+function toggleShipmentTable(){
+
+    const container = document.getElementById("shipmentTableContainer");
+    const button = document.getElementById("toggleShipmentBtn");
+
+    shipmentTableVisible = !shipmentTableVisible;
+
+    if(shipmentTableVisible){
+        container.style.display = "block";
+        button.innerHTML = "📋 Hide Active Shipments";
+    }else{
+        container.style.display = "none";
+        button.innerHTML = "📋 Show Active Shipments";
+    }
 
 }
 
