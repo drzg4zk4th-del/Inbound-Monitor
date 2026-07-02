@@ -3860,6 +3860,47 @@ function retailCompleted(id,val){
  });
 }
 
+async function partialComplete(id){
+
+    const snap = await db.collection("dispatch_pickruns").doc(id).get();
+
+    const d = snap.data();
+
+    const remaining = Number(prompt(
+        `Original Qty: ${d.qty}\n\nHow many units are remaining?`
+    ));
+
+    if(isNaN(remaining)) return;
+
+    if(remaining <= 0 || remaining >= d.qty){
+        alert("Remaining quantity must be between 1 and " + (d.qty-1));
+        return;
+    }
+
+    const completedQty = d.qty - remaining;
+
+    // Create completed copy
+    await db.collection("dispatch_pickruns").add({
+
+        ...d,
+
+        qty: completedQty,
+
+        completed:true,
+        archived:true,
+        dateCompleted:new Date().toISOString()
+
+    });
+
+    // Update original
+    await db.collection("dispatch_pickruns").doc(id).update({
+
+        qty: remaining
+
+    });
+
+}
+
 function retailUndoComplete(id){
 
  db.collection('dispatch_pickruns')
@@ -3971,9 +4012,10 @@ new Date(this.value).toISOString()
 )
 "
 >
+<td>
+<button onclick="partialComplete('${doc.id}')">Partial</button>
+<button class="delete-btn" onclick="retailDelete('${doc.id}')">Delete</button>
 </td>
-      <td><button class="delete-btn" onclick="retailDelete('${doc.id}')">Delete</button></td>
-      </tr>`;
 
       const isArchived =
       d.archived === true ||
