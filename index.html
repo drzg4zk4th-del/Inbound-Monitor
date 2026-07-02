@@ -495,61 +495,68 @@ td[contenteditable="true"]:focus{
 }
 
 /* ===========================
-   Retail Urgency
+   Retail Urgency Colours
 =========================== */
 
 /* High */
 .retail-high{
-    background:#1E293B !important;
-    border:3px solid #DC2626;
-    transition:all .2s ease;
+    background:#E74C3C !important;
+    color:#1E293B !important;
+    transition:background .2s ease;
 }
 
 .retail-high:hover{
-    background:#263449 !important;
+    background:#E25747 !important;
 }
 
 /* Medium */
 .retail-medium{
-    background:#1E293B !important;
-    border:3px solid #EAB308;
-    transition:all .2s ease;
+    background:#F8D164 !important;
+    color:#1E293B !important;
+    transition:background .2s ease;
 }
 
 .retail-medium:hover{
-    background:#263449 !important;
+    background:#F5CB53 !important;
 }
 
 /* Low */
 .retail-low{
-    background:#1E293B !important;
-    border:3px solid #EBC6B0;
-    transition:all .2s ease;
+    background:#EBC6B0 !important;
+    color:#1E293B !important;
+    transition:background .2s ease;
 }
 
 .retail-low:hover{
-    background:#263449 !important;
+    background:#E7BFA8 !important;
 }
+
+/* ===========================
+   48 Hour Overdue Pulse
+=========================== */
 
 .retail-overdue{
-    animation:rowPulse 1.8s ease-in-out infinite;
+    animation:overduePulse 1.8s ease-in-out infinite;
 }
 
-@keyframes rowPulse{
+@keyframes overduePulse{
 
     0%{
+        filter:brightness(100%);
+        font-weight:400;
         box-shadow:0 0 0 rgba(255,255,255,0);
-        transform:scale(1);
     }
 
     50%{
-        box-shadow:0 0 12px rgba(255,255,255,.35);
-        transform:scale(1.003);
+        filter:brightness(118%);
+        font-weight:700;
+        box-shadow:0 0 18px rgba(255,255,255,.45);
     }
 
     100%{
+        filter:brightness(100%);
+        font-weight:400;
         box-shadow:0 0 0 rgba(255,255,255,0);
-        transform:scale(1);
     }
 
 }
