@@ -494,61 +494,62 @@ td[contenteditable="true"]:focus{
   margin-bottom:15px !important;
 }
 
-/* Retail urgency colours */
+/* ===========================
+   Retail Urgency
+=========================== */
 
-/* High - Pinkham */
 .retail-high{
-    background:#EBC6B0 !important;
-    color:#1f2937 !important;
+    background:#1E293B !important;
+    border-left:6px solid #EBC6B0;
+    transition:all .2s ease;
 }
 
 .retail-high:hover{
-    background:#E7BFA8 !important;
-    color:#1f2937 !important;
+    background:#263449 !important;
 }
 
-/* Medium - Warm Nude */
 .retail-medium{
-    background:#D8B39A !important;
-    color:#1f2937 !important;
+    background:#1E293B !important;
+    border-left:6px solid #D4AF37;
+    transition:all .2s ease;
 }
 
 .retail-medium:hover{
-    background:#D2AC92 !important;
-    color:#1f2937 !important;
+    background:#263449 !important;
 }
 
-/* Low - Soft Taupe */
 .retail-low{
-    background:#C5A48F !important;
-    color:#1f2937 !important;
+    background:#1E293B !important;
+    border-left:6px solid #5FA8A0;
+    transition:all .2s ease;
 }
 
 .retail-low:hover{
-    background:#BF9D87 !important;
-    color:#1f2937 !important;
+    background:#263449 !important;
 }
 
- .retail-overdue{
-    animation:overduePulse 1.8s ease-in-out infinite;
+.retail-overdue{
+    animation:borderPulse 1.8s ease-in-out infinite;
 }
 
-@keyframes overduePulse{
+@keyframes borderPulse{
 
     0%{
+        border-left-width:6px;
         filter:brightness(100%);
-        box-shadow:0 0 0 rgba(235,198,176,0);
     }
 
     50%{
-        filter:brightness(115%);
-        box-shadow:0 0 18px rgba(235,198,176,.6);
+        border-left-width:10px;
+        filter:brightness(108%);
     }
 
     100%{
+        border-left-width:6px;
         filter:brightness(100%);
-        box-shadow:0 0 0 rgba(235,198,176,0);
     }
+
+}
 
 }
 </style>
