@@ -528,6 +528,29 @@ td[contenteditable="true"]:focus{
     background:#BF9D87 !important;
     color:#1f2937 !important;
 }
+
+ .retail-overdue{
+    animation:overduePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes overduePulse{
+
+    0%{
+        filter:brightness(100%);
+        box-shadow:0 0 0 rgba(235,198,176,0);
+    }
+
+    50%{
+        filter:brightness(115%);
+        box-shadow:0 0 18px rgba(235,198,176,.6);
+    }
+
+    100%{
+        filter:brightness(100%);
+        box-shadow:0 0 0 rgba(235,198,176,0);
+    }
+
+}
 </style>
 
 </head>
@@ -3996,12 +4019,20 @@ function updateRetailRowColour(cell){
    });
 
 }
+
+   const ageHours = d.dateCreated
+        ? (Date.now() - new Date(d.dateCreated)) / 3600000
+        : 0;
+
+    const overdue = ageHours >= 48;
+
       
       const row=`
 <tr class="
 ${d.urgency==='High' ? 'retail-high' :
   d.urgency==='Medium' ? 'retail-medium' :
-  'retail-low'}">
+  'retail-low'}
+${overdue ? ' retail-overdue' : ''}">
 
         <td><input type="checkbox" ${d.printed?'checked':''} onchange="retailPrinted('${doc.id}',this.checked)"></td>
       <td><input type="checkbox" ${d.completed?'checked':''} onchange="retailCompleted('${doc.id}',this.checked)"></td>
