@@ -493,6 +493,32 @@ td[contenteditable="true"]:focus{
   padding:12px 24px !important;
   margin-bottom:15px !important;
 }
+
+/* Retail urgency colours */
+
+.retail-high{
+    background:#7f1d1d !important;
+}
+
+.retail-high:hover{
+    background:#991b1b !important;
+}
+
+.retail-medium{
+    background:#78350f !important;
+}
+
+.retail-medium:hover{
+    background:#92400e !important;
+}
+
+.retail-low{
+    background:#052e16 !important;
+}
+
+.retail-low:hover{
+    background:#14532d !important;
+}
 </style>
 
 </head>
@@ -3913,7 +3939,28 @@ function retailUndoComplete(id){
 
 }
 
-function loadRetailUnified(){
+function updateRetailRowColour(cell){
+
+    const row = cell.closest("tr");
+    const urgency = cell.innerText.trim().toLowerCase();
+
+    row.classList.remove(
+        "retail-high",
+        "retail-medium",
+        "retail-low"
+    );
+
+    if(urgency==="high"){
+        row.classList.add("retail-high");
+    }else if(urgency==="medium"){
+        row.classList.add("retail-medium");
+    }else{
+        row.classList.add("retail-low");
+    }
+
+}
+ 
+ function loadRetailUnified(){
  if(typeof db==='undefined') return;
 
  db.collection('dispatch_pickruns').onSnapshot(snapshot=>{
@@ -3942,11 +3989,14 @@ function loadRetailUnified(){
 }
       
       const row=`
-      <tr>
+<tr class="
+${d.urgency==='High' ? 'retail-high' :
+  d.urgency==='Medium' ? 'retail-medium' :
+  'retail-low'}">
 
         <td><input type="checkbox" ${d.printed?'checked':''} onchange="retailPrinted('${doc.id}',this.checked)"></td>
       <td><input type="checkbox" ${d.completed?'checked':''} onchange="retailCompleted('${doc.id}',this.checked)"></td>
-      <td contenteditable="true" onblur="retailUpdate('${doc.id}','discrepancies',this.innerText)">${d.discrepancies||0}</td>
+      <td contenteditable="true" onblur="retailUpdate('${doc.id}','discrepancies',this.innerText);">${d.discrepancies||0}</td>
       
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','pickrunNumber',this.innerText)">${d.pickrunNumber||''}</td>
 
@@ -3989,7 +4039,7 @@ style="font-size:12px;padding:4px;">
 onblur="retailUpdate('${doc.id}','stores',this.innerText)">
 ${d.stores||0}
 </td>
-      <td contenteditable="true" onblur="retailUpdate('${doc.id}','urgency',this.innerText)">${d.urgency||''}</td>
+      <td contenteditable="true" onblur="retailUpdate('${doc.id}','urgency',this.innerText);updateRetailRowColour(this);">${d.urgency||''}</td>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','orderType',this.innerText)">${d.orderType||''}</td>
       <td>${d.dateCreated?new Date(d.dateCreated).toLocaleString():''}</td>
     
