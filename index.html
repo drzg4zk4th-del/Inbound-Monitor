@@ -517,18 +517,27 @@ td[contenteditable="true"]:focus{
 }
 
 .retail-medium:hover{
-    background:#F5CB53 !important;
+    background:#F4CB4F !important;
 }
 
 /* Low */
 .retail-low{
     background:#2A3A52 !important;
-    color:#1E293B !important;
+    color:#FFFFFF !important;
     transition:background .2s ease;
 }
 
 .retail-low:hover{
     background:#3C4D66 !important;
+    color:#FFFFFF !important;
+}
+
+/* Force all text inside Low rows to stay white */
+.retail-low td,
+.retail-low input,
+.retail-low select,
+.retail-low button{
+    color:#FFFFFF !important;
 }
 
 /* ===========================
