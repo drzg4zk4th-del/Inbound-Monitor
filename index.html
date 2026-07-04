@@ -4231,13 +4231,12 @@ ${d.urgency==='High' ? 'retail-high' :
   'retail-low'}
 ${overdue ? ' retail-overdue' : ''}">
 
-        <td><input type="checkbox" ${d.printed?'checked':''} onchange="retailPrinted('${doc.id}',this.checked)"></td>
-      <td><input type="checkbox" ${d.completed?'checked':''} onchange="retailCompleted('${doc.id}',this.checked)"></td>
-      <td contenteditable="true" onblur="retailUpdate('${doc.id}','discrepancies',this.innerText);">${d.discrepancies||0}</td>
-      
-      <td contenteditable="true" onblur="retailUpdate('${doc.id}','pickrunNumber',this.innerText)">${d.pickrunNumber||''}</td>
+<td contenteditable="true"
+onblur="retailUpdate('${doc.id}','pickrunNumber',this.innerText)">
+${d.pickrunNumber||''}
+</td>
 
-      <td>
+<td>
 
 <div style="
 display:flex;
@@ -4270,30 +4269,59 @@ style="font-size:12px;padding:4px;">
 </div>
 
 </td>
-      
-      <td contenteditable="true" onblur="retailUpdate('${doc.id}','qty',this.innerText)">${d.qty||0}</td>
-      <td contenteditable="true"
+
+<td contenteditable="true"
+onblur="retailUpdate('${doc.id}','qty',this.innerText)">
+${d.qty||0}
+</td>
+
+<td contenteditable="true"
 onblur="retailUpdate('${doc.id}','stores',this.innerText)">
 ${d.stores||0}
 </td>
-      <td contenteditable="true" onblur="retailUpdate('${doc.id}','urgency',this.innerText);updateRetailRowColour(this);">${d.urgency||''}</td>
-      <td contenteditable="true" onblur="retailUpdate('${doc.id}','orderType',this.innerText)">${d.orderType||''}</td>
-      <td>${d.dateCreated?new Date(d.dateCreated).toLocaleDateString("en-AU",{
-    timeZone:"Australia/Sydney"
-}):''}</td>
-    
+
+<td contenteditable="true"
+onblur="retailUpdate('${doc.id}','urgency',this.innerText);updateRetailRowColour(this);">
+${d.urgency||''}
+</td>
+
+<td contenteditable="true"
+onblur="retailUpdate('${doc.id}','orderType',this.innerText)">
+${d.orderType||''}
+</td>
+
+<td>
+${d.dateCreated
+? new Date(d.dateCreated).toLocaleDateString("en-AU",{
+timeZone:"Australia/Sydney"
+})
+:''}
+</td>
+
+<td>
+<input
+type="checkbox"
+${d.printed?'checked':''}
+onchange="retailPrinted('${doc.id}',this.checked)">
+</td>
+
+<td>
+<input
+type="checkbox"
+${d.completed?'checked':''}
+onchange="retailCompleted('${doc.id}',this.checked)">
+</td>
+
+<td contenteditable="true"
+onblur="retailUpdate('${doc.id}','discrepancies',this.innerText);">
+${d.discrepancies||0}
+</td>
+
 <td>
 <input
 type="date"
 value="${d.dateCompleted ? d.dateCompleted.substring(0,10) : ''}"
-onchange="
-retailUpdate(
-'${doc.id}',
-'dateCompleted',
-this.value
-)
-"
->
+onchange="retailUpdate('${doc.id}','dateCompleted',this.value)">
 </td>
 
 <td>
