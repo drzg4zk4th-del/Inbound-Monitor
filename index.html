@@ -4054,7 +4054,16 @@ function updateRetailRowColour(cell){
 
    const plannerData=[];
   
-  snapshot.forEach(doc=>{
+const docs = snapshot.docs.sort((a,b)=>{
+
+    const aDate = new Date(a.data().dateCreated || "9999-12-31");
+    const bDate = new Date(b.data().dateCreated || "9999-12-31");
+
+    return aDate - bDate;   // oldest → newest
+
+});
+
+docs.forEach(doc=>{
       const d=doc.data()||{};
     if(
    !d.archived &&
@@ -4269,7 +4278,16 @@ function rebuildRetailArchive(){
 
    let count=0, units=0;
 
-   snapshot.forEach(doc=>{
+  const docs = snapshot.docs.sort((a,b)=>{
+
+    const aDate = new Date(a.data().dateCompleted || "9999-12-31");
+    const bDate = new Date(b.data().dateCompleted || "9999-12-31");
+
+    return aDate - bDate;   // oldest completed → newest completed
+
+});
+
+docs.forEach(doc=>{
       const d=doc.data()||{};
 
       const archived =
