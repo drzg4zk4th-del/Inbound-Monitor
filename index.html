@@ -2466,20 +2466,20 @@ function updateShipmentETA(shipment, newDate){
 
     if(!newDate) return;
 
-    Array.from(shipmentTable.rows).slice(1).forEach(row=>{
+    const rows = Array.from(shipmentTable.rows).slice(1);
 
-        if(row.cells[0].innerText.trim() === shipment){
+    rows.forEach(row=>{
 
-            row.cells[5].innerText = newDate;
+        if(row.cells[0].innerText.trim() !== shipment) return;
 
-        }
+        row.cells[5].textContent = newDate;
 
     });
 
-    refreshDashboard();
     saveAll();
-}
+    refreshDashboard();
 
+}
 function arriveShipment(shipment){
 
 const rows =
@@ -2568,7 +2568,7 @@ row.innerHTML = `
 <td>${data.eta}</td>
 
 <td>
-<input type="date">
+<input type="date" value="${data.eta}">
 
 <button onclick="
 updateShipmentETA(
