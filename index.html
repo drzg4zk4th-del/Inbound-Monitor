@@ -4035,10 +4035,10 @@ window.addEventListener("load", () => {
 
         document.getElementById("completeModal").style.display = "none";
 
-        partialComplete(
-            currentRetailID,
-            Number(document.getElementById("modalDiscrepancies").value) || 0
-        );
+        partialCompleteFromModal(
+    currentRetailID,
+    Number(document.getElementById("modalDiscrepancies").value) || 0
+);
 
     };
 
@@ -4096,6 +4096,50 @@ async function partialComplete(id, discrepancies = null){
     discrepancies: discrepancies
 
 });
+
+ loadRetailUnified();
+
+}
+
+async function partialCompleteFromModal(id, discrepancies){
+
+    const snap = await db.collection("dispatch_pickruns").doc(id).get();
+    const d = snap.data();
+
+    const remaining = Number(prompt(
+        `Original Qty: ${d.qty}\n\nHow many units are remaining?`
+    ));
+
+    if(isNaN(remaining)) return;
+
+    if(remaining <= 0 || remaining >= d.qty){
+        alert("Remaining quantity must be between 1 and " + (d.qty-1));
+        return;
+    }
+
+    const completedQty = d.qty - remaining;
+
+    await db.collection("dispatch_pickruns").add({
+
+        ...d,
+
+        qty: completedQty,
+        discrepancies: discrepancies,
+
+        completed: true,
+        archived: true,
+        dateCompleted: document.getElementById("modalCompletedDate").value
+
+    });
+
+    await db.collection("dispatch_pickruns").doc(id).update({
+
+        qty: remaining,
+        discrepancies: discrepancies
+
+    });
+
+ loadRetailUnified();
 
 }
 
