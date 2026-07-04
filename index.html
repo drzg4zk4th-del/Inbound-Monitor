@@ -4305,11 +4305,9 @@ this.value
       d.completed === true ||
       !!d.dateCompleted;
 
-      if(isArchived){
-        if(archiveBody) archiveBody.innerHTML += row;
-      }else{
-        if(body) body.innerHTML += row;
-      }
+      if(!isArchived){
+    body.innerHTML += row;
+}
    });
 
 renderPlannerBoard(plannerData);
