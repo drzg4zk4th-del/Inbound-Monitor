@@ -3955,9 +3955,25 @@ function retailCompleted(id,val){
     });
 
     const completedDate = prompt(
-        "Enter completion date (YYYY-MM-DD)",
-        today
-    );
+    "Enter completion date (YYYY-MM-DD)",
+    today
+);
+
+if (completedDate === null) return;
+
+const discrepancies = prompt(
+    "Enter Discrepancies Left Qty",
+    "0"
+);
+
+if (discrepancies === null) return;
+
+db.collection("dispatch_pickruns").doc(id).update({
+    completed: true,
+    archived: true,
+    dateCompleted: completedDate,
+    discrepancies: Number(discrepancies) || 0
+});
 
     if(completedDate === null){
         loadRetailUnified();
