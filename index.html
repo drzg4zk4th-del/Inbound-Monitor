@@ -66,37 +66,6 @@ function repairShiftedRows(){
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-<script>
- let weeklyNotesArchive=[];
-
-function getWeekEndingDate(){
- const d=new Date();
- const day=d.getDay();
- const saturday=new Date(d);
- saturday.setDate(d.getDate()+(6-day));
- return saturday.toLocaleDateString();
-}
-
-function archiveWeeklyNotes(){
- const weekEnding=getWeekEndingDate();
- const card=document.createElement('div');
- card.className='card';
- card.innerHTML=`
- <h3>Week Ending ${weekEnding}</h3>
- <p><b>Sunday</b><br>${sunNote.value}</p>
- <p><b>Monday</b><br>${monNote.value}</p>
- <p><b>Tuesday</b><br>${tueNote.value}</p>
- <p><b>Wednesday</b><br>${wedNote.value}</p>
- <p><b>Thursday</b><br>${thuNote.value}</p>
- <p><b>Friday</b><br>${friNote.value}</p>
- <p><b>Saturday</b><br>${satNote.value}</p>
- <button class="delete-btn" onclick="this.parentElement.remove();saveAll()">Delete</button>`;
- document.getElementById('notesArchiveContainer').appendChild(card);
- saveAll();
-}
-
-</script>
-
 <style>
 
 *{
@@ -3264,6 +3233,9 @@ if(!snapshot.exists)return;
 
 const data = snapshot.data();
 
+ console.log(snapshot.exists);
+console.log(data);
+
 virtualTaken.value =
 data.virtualTaken || 0;
 
@@ -3673,8 +3645,7 @@ main.classList.toggle('full');
 
 }
 
-
-let weeklyNotesArchive=[];
+ let weeklyNotesArchive=[];
 
 function getWeekEndingDate(){
  const d=new Date();
@@ -3684,25 +3655,22 @@ function getWeekEndingDate(){
  return saturday.toLocaleDateString();
 }
 
-function archiveWeeklyNotesLegacy(){
+function archiveWeeklyNotes(){
  const weekEnding=getWeekEndingDate();
-
- const notes=`Sunday: ${sunNote.value}<br>
- Monday: ${monNote.value}<br>
- Tuesday: ${tueNote.value}<br>
- Wednesday: ${wedNote.value}<br>
- Thursday: ${thuNote.value}<br>
- Friday: ${friNote.value}<br>
- Saturday: ${satNote.value}`;
-
- const row=notesArchiveTable.insertRow(-1);
- row.innerHTML=`<td>${weekEnding}</td><td>${notes}</td><td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>`;
-
+ const card=document.createElement('div');
+ card.className='card';
+ card.innerHTML=`
+ <h3>Week Ending ${weekEnding}</h3>
+ <p><b>Sunday</b><br>${sunNote.value}</p>
+ <p><b>Monday</b><br>${monNote.value}</p>
+ <p><b>Tuesday</b><br>${tueNote.value}</p>
+ <p><b>Wednesday</b><br>${wedNote.value}</p>
+ <p><b>Thursday</b><br>${thuNote.value}</p>
+ <p><b>Friday</b><br>${friNote.value}</p>
+ <p><b>Saturday</b><br>${satNote.value}</p>
+ <button class="delete-btn" onclick="this.parentElement.remove();saveAll()">Delete</button>`;
+ document.getElementById('notesArchiveContainer').appendChild(card);
  saveAll();
-}
-
-
-
 
 function exportCurrentWeekNotes(){
  let txt=`Sunday\n${sunNote.value}\n\nMonday\n${monNote.value}\n\nTuesday\n${tueNote.value}\n\nWednesday\n${wedNote.value}\n\nThursday\n${thuNote.value}\n\nFriday\n${friNote.value}\n\nSaturday\n${satNote.value}`;
