@@ -4002,6 +4002,7 @@ function retailCompleted(id,val){
         });
 
     document.getElementById("modalDiscrepancies").value = 0;
+    document.getElementById("modalRemainingQty").value = "";
 
     document.getElementById("completeModal").style.display="flex";
 
@@ -4106,9 +4107,9 @@ async function partialCompleteFromModal(id, discrepancies){
     const snap = await db.collection("dispatch_pickruns").doc(id).get();
     const d = snap.data();
 
-    const remaining = Number(prompt(
-        `Original Qty: ${d.qty}\n\nHow many units are remaining?`
-    ));
+    const remaining = Number(
+    document.getElementById("modalRemainingQty").value
+);
 
     if(isNaN(remaining)) return;
 
@@ -4716,6 +4717,9 @@ return `${day.substring(0,3).toUpperCase()} ${u.toLocaleString()} / ${avg} (${s}
 
         <label>Discrepancies Left Qty</label>
         <input type="number" id="modalDiscrepancies" value="0">
+
+     <label>Remaining Qty</label>
+<input type="number" id="modalRemainingQty" value="">
 
         <div class="modal-buttons">
             <button id="modalPartialBtn">Partial Complete</button>
