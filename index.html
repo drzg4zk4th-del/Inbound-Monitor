@@ -4084,6 +4084,76 @@ window.addEventListener("load", () => {
 
 });
 
+async function fixCompletedDates(){
+
+    const snap = await db.collection("dispatch_pickruns").get();
+
+    let updated = 0;
+
+    for(const doc of snap.docs){
+
+        const d = doc.data();
+
+        if(!d.dateCompleted) continue;
+
+        let newDate = "";
+
+        // Already YYYY-MM-DD
+        if(/^\d{4}-\d{2}-\d{2}$/.test(d.dateCompleted)){
+            continue;
+        }
+
+        // DD/MM/YYYY
+        else if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d.dateCompleted)){
+
+            const parts = d.dateCompleted.split("/");
+
+            const day = parts[0].padStart(2,"0");
+            const month = parts[1].padStart(2,"0");
+            const year = parts[2];
+
+            newDate = `${year}-${month}-${day}`;
+
+        }
+
+        // Any other valid date
+        else{
+
+            const dt = new Date(d.dateCompleted);
+
+            if(!isNaN(dt)){
+
+                newDate = dt.toISOString().split("T")[0];
+
+            }else{
+
+                console.log("Couldn't convert:",doc.id,d.dateCompleted);
+                continue;
+
+            }
+
+        }
+
+        await db.collection("dispatch_pickruns")
+        .doc(doc.id)
+        .update({
+            dateCompleted:newDate
+        });
+
+        console.log(
+            d.dateCompleted,
+            "→",
+            newDate
+        );
+
+        updated++;
+
+    }
+
+    alert(updated+" dates repaired.");
+
+}
+
 async function partialComplete(id, discrepancies = null){
 
     const snap = await db.collection("dispatch_pickruns").doc(id).get();
