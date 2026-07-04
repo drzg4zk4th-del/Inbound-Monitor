@@ -4446,6 +4446,11 @@ onchange="retailUpdate('${doc.id}','dateCompleted',this.value)">
 if(!isArchived){
     body.innerHTML += row;
 }
+ }else{
+    if(body){
+        body.innerHTML += row;
+    }
+}
    });
 
 renderPlannerBoard(plannerData);
