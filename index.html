@@ -3672,6 +3672,8 @@ function archiveWeeklyNotes(){
  document.getElementById('notesArchiveContainer').appendChild(card);
  saveAll();
 
+}
+
 function exportCurrentWeekNotes(){
  let txt=`Sunday\n${sunNote.value}\n\nMonday\n${monNote.value}\n\nTuesday\n${tueNote.value}\n\nWednesday\n${wedNote.value}\n\nThursday\n${thuNote.value}\n\nFriday\n${friNote.value}\n\nSaturday\n${satNote.value}`;
  const blob=new Blob([txt],{type:'text/plain'});
