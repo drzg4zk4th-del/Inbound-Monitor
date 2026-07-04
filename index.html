@@ -3942,7 +3942,7 @@ function retailPrinted(id,val){
 function retailCompleted(id,val){
 
     if(!val){
-        db.collection('dispatch_pickruns').doc(id).update({
+        db.collection("dispatch_pickruns").doc(id).update({
             completed:false,
             archived:false,
             dateCompleted:null
@@ -3955,44 +3955,58 @@ function retailCompleted(id,val){
     });
 
     const completedDate = prompt(
-    "Enter completion date (YYYY-MM-DD)",
-    today
-);
-
-if (completedDate === null) return;
-
-const discrepancies = prompt(
-    "Enter Discrepancies Left Qty",
-    "0"
-);
-
-if (discrepancies === null) return;
-
-db.collection("dispatch_pickruns").doc(id).update({
-    completed: true,
-    archived: true,
-    dateCompleted: completedDate,
-    discrepancies: Number(discrepancies) || 0
-});
+        "Enter completion date (YYYY-MM-DD)",
+        today
+    );
 
     if(completedDate === null){
         loadRetailUnified();
         return;
     }
 
+ if(confirm("Press OK to Complete.\nPress Cancel for Partial Complete.")){
+
+    const discrepancies = prompt(
+        "Enter Discrepancies Left Qty",
+        "0"
+    );
+
+    if(discrepancies === null){
+        loadRetailUnified();
+        return;
+    }
+
     db.collection("dispatch_pickruns").doc(id).update({
-        completed:true,
-        archived:true,
-        dateCompleted:completedDate
+    completed: true,
+    archived: true,
+    dateCompleted: completedDate,
+    discrepancies: Number(discrepancies) || 0
+});
+
+}else{
+
+    partialComplete(id, Number(discrepancies) || 0);
+
+}
+     
     });
 
 }
 
-async function partialComplete(id){
+async function partialComplete(id, discrepancies = null){
 
     const snap = await db.collection("dispatch_pickruns").doc(id).get();
 
     const d = snap.data();
+
+ if(discrepancies === null){
+    discrepancies = Number(prompt(
+        "Enter Discrepancies Left Qty",
+        d.discrepancies || 0
+    ));
+
+    if(isNaN(discrepancies)) return;
+}
 
     const remaining = Number(prompt(
         `Original Qty: ${d.qty}\n\nHow many units are remaining?`
@@ -4010,24 +4024,27 @@ async function partialComplete(id){
     // Create completed copy
     await db.collection("dispatch_pickruns").add({
 
-        ...d,
+    ...d,
 
-        qty: completedQty,
+    qty: completedQty,
 
-        completed:true,
-        archived:true,
-        dateCompleted:new Date().toLocaleDateString("en-CA",{
-    timeZone:"Australia/Sydney"
-})
+    discrepancies: discrepancies,
 
-    });
+    completed:true,
+    archived:true,
+    dateCompleted:new Date().toLocaleDateString("en-CA",{
+        timeZone:"Australia/Sydney"
+    })
+
+});
 
     // Update original
     await db.collection("dispatch_pickruns").doc(id).update({
 
-        qty: remaining
+    qty: remaining,
+    discrepancies: discrepancies
 
-    });
+});
 
 }
 
