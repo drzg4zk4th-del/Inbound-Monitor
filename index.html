@@ -574,10 +574,14 @@ td[contenteditable="true"]:focus{
 
 }
 
- .created-by{
-    margin-top:10px;
-    margin-bottom:20px;
-    text-align:center;
+.header-title{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+.created-by{
+    margin-top:8px;
     font-size:18px;
     font-weight:500;
     color:#ffffff;
@@ -662,10 +666,15 @@ Sign In
 Sign Out
 </button>
 
-<h1>Billini Inbound / Retail PLanner</h1>
+<div class="header-title">
+
+    <h1>Billini Inbound / Retail Planner</h1>
+
     <h4 class="created-by">
         Created by Mark Greenup
     </h4>
+
+</div>
 
 <div id="financialWeekBox">
 FY Week
