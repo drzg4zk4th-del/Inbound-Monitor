@@ -4130,7 +4130,9 @@ ${d.stores||0}
 </td>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','urgency',this.innerText);updateRetailRowColour(this);">${d.urgency||''}</td>
       <td contenteditable="true" onblur="retailUpdate('${doc.id}','orderType',this.innerText)">${d.orderType||''}</td>
-      <td>${d.dateCreated?new Date(d.dateCreated).toLocaleString():''}</td>
+      <td>${d.dateCreated?new Date(d.dateCreated).toLocaleDateString("en-AU",{
+    timeZone:"Australia/Sydney"
+}):''}</td>
     
       <td>
 <input
