@@ -3933,11 +3933,36 @@ function retailPrinted(id,val){
 }
 
 function retailCompleted(id,val){
- db.collection('dispatch_pickruns').doc(id).update({
-   completed:val,
-   archived:val,
-   dateCompleted: val ? new Date().toISOString() : null
- });
+
+    if(!val){
+        db.collection('dispatch_pickruns').doc(id).update({
+            completed:false,
+            archived:false,
+            dateCompleted:null
+        });
+        return;
+    }
+
+    const today = new Date().toLocaleDateString("en-CA",{
+        timeZone:"Australia/Sydney"
+    });
+
+    const completedDate = prompt(
+        "Enter completion date (YYYY-MM-DD)",
+        today
+    );
+
+    if(completedDate === null){
+        loadRetailUnified();
+        return;
+    }
+
+    db.collection("dispatch_pickruns").doc(id).update({
+        completed:true,
+        archived:true,
+        dateCompleted:completedDate
+    });
+
 }
 
 async function partialComplete(id){
@@ -3968,7 +3993,9 @@ async function partialComplete(id){
 
         completed:true,
         archived:true,
-        dateCompleted:new Date().toISOString()
+        dateCompleted:new Date().toLocaleDateString("en-CA",{
+    timeZone:"Australia/Sydney"
+})
 
     });
 
@@ -4107,20 +4134,13 @@ ${d.stores||0}
     
       <td>
 <input
-type="datetime-local"
-value="${
-d.dateCompleted
-? new Date(d.dateCompleted)
-    .toLocaleString('sv-SE',{timeZone:'Australia/Sydney'})
-    .replace(' ','T')
-    .slice(0,16)
-: ''
-}"
+type="date"
+value="${d.dateCompleted || ''}"
 onchange="
 retailUpdate(
 '${doc.id}',
 'dateCompleted',
-new Date(this.value).toISOString()
+this.value
 )
 "
 >
@@ -4332,8 +4352,7 @@ onchange="
 retailUpdate(
 '${doc.id}',
 'dateCompleted',
-new Date(this.value).toISOString()
-)
+this.value)
 "
 >
 </td>
