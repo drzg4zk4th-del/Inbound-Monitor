@@ -4434,19 +4434,32 @@ if(completedDate){
     if(completedString === yesterdayString)
         yesterday += qty;
 
-    const diff = Math.floor((new Date(todayString) - completedDate) / 86400000);
+   const diff = Math.floor(
+(
+new Date(todayString + "T00:00:00") -
+new Date(d.dateCompleted + "T00:00:00")
+) / 86400000
+);
 
-    if(diff >= 0 && diff < 7)
-        last7 += qty;
+if(diff >= 0 && diff <= 6){
+    last7 += qty;
+}
 
-    if(completedDate.getMonth() === currentMonth &&
-       completedDate.getFullYear() === currentYear){
+    if(d.dateCompleted){
+
+    const completedString = d.dateCompleted.substring(0,10);
+
+    if(completedString.substring(0,7) === todayString.substring(0,7)){
         month += qty;
     }
 
-    if(completedDate >= fyStart){
-        fy += qty;
-    }
+}
+
+    const completed = new Date(d.dateCompleted + "T00:00:00");
+
+if(completed >= fyStart){
+    fy += qty;
+}
 }
    });
 
