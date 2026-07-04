@@ -4030,6 +4030,8 @@ window.addEventListener("load", () => {
 
         document.getElementById("completeModal").style.display = "none";
 
+     rebuildRetailArchive();
+
     };
 
     document.getElementById("modalPartialBtn").onclick = function(){
@@ -4141,6 +4143,7 @@ async function partialCompleteFromModal(id, discrepancies){
     });
 
  loadRetailUnified();
+ rebuildRetailArchive();
 
 }
 
@@ -4301,12 +4304,12 @@ this.value
 </tr>
 `;
 
-      const isArchived =
+     const isArchived =
       d.archived === true ||
       d.completed === true ||
       !!d.dateCompleted;
 
-      if(!isArchived){
+if(!isArchived){
     body.innerHTML += row;
 }
    });
@@ -4532,7 +4535,11 @@ Delete
    if(u) u.innerText=units.toLocaleString();
  });
 }
-window.addEventListener('load',()=>setTimeout(rebuildRetailArchive,1500));
+window.addEventListener("load", () => {
+    setTimeout(() => {
+        rebuildRetailArchive();
+    }, 1500);
+});
 
 window.addEventListener('load', () => {
 
