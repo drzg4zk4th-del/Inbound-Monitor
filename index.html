@@ -2512,8 +2512,6 @@ shipmentOverviewTable.innerHTML = `
 <th>Bulk Arrive</th>
 </tr>
 `;
-
-const safeShipment = JSON.stringify(shipment);
  
 const rows =
 Array.from(shipmentTable.rows).slice(1);
@@ -2555,6 +2553,8 @@ groups[shipment].pallets += pallets;
 });
 
 Object.keys(groups).forEach(shipment=>{
+
+const safeShipment = JSON.stringify(shipment);
 
 const data = groups[shipment];
 
