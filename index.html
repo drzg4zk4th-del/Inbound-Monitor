@@ -2513,6 +2513,8 @@ shipmentOverviewTable.innerHTML = `
 </tr>
 `;
 
+const safeShipment = JSON.stringify(shipment);
+ 
 const rows =
 Array.from(shipmentTable.rows).slice(1);
 
@@ -2570,7 +2572,7 @@ row.innerHTML = `
 
 <button onclick="
 updateShipmentETA(
-'${shipment}',
+${safeShipment},
 this.previousElementSibling.value
 )
 ">
@@ -2582,7 +2584,7 @@ Update
 
 <button
 class="restore-btn"
-onclick="arriveShipment('${shipment}')"
+onclick="arriveShipment(${safeShipment})"
 >
 
 Mark All Arrived
