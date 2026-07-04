@@ -2527,7 +2527,7 @@ groups[shipment].pallets += pallets;
 
 Object.keys(groups).forEach(shipment=>{
 
-const safeShipment = JSON.stringify(shipment);
+const safeShipment = shipment.replace(/'/g, "\\'");
 
 const data = groups[shipment];
 
@@ -2543,16 +2543,16 @@ row.innerHTML = `
 <td>
     <input type="date" value="${data.eta}">
 
-    <button onclick="updateShipmentETA(${safeShipment}, this.previousElementSibling.value)">
-        Update
-    </button>
+    <button onclick="updateShipmentETA('${safeShipment}', this.previousElementSibling.value)">
+    Update
+</button>
 </td>
 
 <td>
 
 <button
 class="restore-btn"
-onclick="arriveShipment(${safeShipment})"
+onclick="arriveShipment('${safeShipment}')"
 >
 
 Mark All Arrived
