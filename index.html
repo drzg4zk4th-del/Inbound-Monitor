@@ -4194,7 +4194,6 @@ async function partialComplete(id, discrepancies = null){
     completed:true,
     archived:true,
     dateCompleted:new Date().toISOString().split("T")[0]
-    })
 
 });
 
@@ -4312,8 +4311,7 @@ docs.forEach(doc=>{
       const d=doc.data()||{};
     if(
    !d.archived &&
-   !d.completed &&
-   !d.dateCompleted
+   !d.completed
 ){
 
    plannerData.push({
@@ -4439,15 +4437,15 @@ onchange="retailUpdate('${doc.id}','dateCompleted',this.value)">
 `;
 
      const isArchived =
-      d.archived === true ||
-      d.completed === true ||
-      !!d.dateCompleted;
+    d.archived === true ||
+    d.completed === true;
 
-if(!isArchived){
-    body.innerHTML += row;
-}
- }else{
-    if(body){
+if (isArchived) {
+    if (archiveBody) {
+        archiveBody.innerHTML += row;
+    }
+} else {
+    if (body) {
         body.innerHTML += row;
     }
 }
@@ -4527,8 +4525,6 @@ if(
 ){
     month += qty;
 }
-
-    const completed = new Date(d.dateCompleted + "T00:00:00");
 
 if(completed >= fyStart){
     fy += qty;
