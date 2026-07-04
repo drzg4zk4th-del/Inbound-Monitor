@@ -2460,24 +2460,22 @@ notesInput.value='';
 
 }
 
-function updateShipmentETA(shipment,newDate){
+function updateShipmentETA(shipment, newDate){
 
-const rows =
-Array.from(shipmentTable.rows).slice(1);
+    if(!newDate) return;
 
-rows.forEach(row=>{
+    Array.from(shipmentTable.rows).slice(1).forEach(row=>{
 
-if(row.cells[0].innerText === shipment){
+        if(row.cells[0].innerText.trim() === shipment){
 
-row.cells[5].innerText = newDate;
+            row.cells[5].innerText = newDate;
 
-}
+        }
 
-});
+    });
 
-refreshDashboard();
-saveAll();
-
+    refreshDashboard();
+    saveAll();
 }
 
 function arriveShipment(shipment){
@@ -2566,12 +2564,12 @@ row.innerHTML = `
 <td>${data.eta}</td>
 
 <td>
-<input type="date" id="eta-${shipment}">
+<input type="date">
 
 <button onclick="
 updateShipmentETA(
 '${shipment}',
-document.getElementById('eta-${shipment}').value
+this.previousElementSibling.value
 )
 ">
 Update
