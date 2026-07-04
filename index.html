@@ -2508,7 +2508,7 @@ const pallets =
 incomingPallets + packsPallets;
 
 const eta =
-row.cells[5].innerText;
+row.cells[5].textContent.trim();
 
 if(!groups[shipment]){
 
@@ -2541,16 +2541,11 @@ row.innerHTML = `
 <td>${data.eta}</td>
 
 <td>
-<input type="date" value="${data.eta}">
+    <input type="date" value="${data.eta}">
 
-<button onclick="
-updateShipmentETA(
-${safeShipment},
-this.previousElementSibling.value
-)
-">
-Update
-</button>
+    <button onclick="updateShipmentETA(${safeShipment}, this.previousElementSibling.value)">
+        Update
+    </button>
 </td>
 
 <td>
@@ -3139,7 +3134,7 @@ po: row.cells[1].innerText,
 sku: row.cells[2].innerText,
 style: row.cells[3].innerText,
 colour: row.cells[4].innerText,
-eta: row.cells[5].innerText,
+eta: row.cells[5].textContent.trim(),
 dispatchWeek: row.cells[6].querySelector('select').value,
 loosePallets: row.cells[7].innerText,
 packPallets: row.cells[8].innerText,
