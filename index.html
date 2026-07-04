@@ -4177,7 +4177,7 @@ ${d.stores||0}
     timeZone:"Australia/Sydney"
 }):''}</td>
     
-      <td>
+<td>
 <input
 type="date"
 value="${d.dateCompleted ? d.dateCompleted.substring(0,10) : ''}"
@@ -4189,6 +4189,8 @@ this.value
 )
 "
 >
+</td>
+
 <td>
 <button onclick="partialComplete('${doc.id}')">Partial</button>
 <button class="delete-btn" onclick="retailDelete('${doc.id}')">Delete</button>
