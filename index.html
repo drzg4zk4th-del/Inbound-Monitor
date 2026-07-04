@@ -4358,22 +4358,9 @@ this.value
 <input
 type="date"
 value="${d.dateCompleted || ''}"
-onchange="
-retailUpdate(
-'${doc.id}',
-'dateCompleted',
-this.value
-)
-"
->
-onchange="
-retailUpdate(
-'${doc.id}',
-'dateCompleted',
-this.value)
-"
->
+onchange="retailUpdate('${doc.id}','dateCompleted',this.value)">
 </td>
+
 <td>
 <button class="restore-btn" onclick="retailUndoComplete('${doc.id}')">
 Undo Complete
