@@ -574,6 +574,46 @@ td[contenteditable="true"]:focus{
     font-weight:500;
     color:#ffffff;
 }
+
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    z-index:9999;
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-box{
+    width:420px;
+    background:#0f172a;
+    border:1px solid #334155;
+    border-radius:18px;
+    padding:24px;
+}
+
+.modal-box h2{
+    margin-bottom:20px;
+}
+
+.modal-box label{
+    display:block;
+    margin-top:12px;
+    margin-bottom:6px;
+}
+
+.modal-box input{
+    width:100%;
+}
+
+.modal-buttons{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:25px;
+}
+ 
 </style>
 
 </head>
@@ -3939,58 +3979,70 @@ function retailPrinted(id,val){
  db.collection('dispatch_pickruns').doc(id).update({printed:val});
 }
 
+let currentRetailID = null;
+
 function retailCompleted(id,val){
 
     if(!val){
+
         db.collection("dispatch_pickruns").doc(id).update({
             completed:false,
             archived:false,
             dateCompleted:null
         });
+
         return;
     }
 
-    const today = new Date().toLocaleDateString("en-CA",{
-        timeZone:"Australia/Sydney"
-    });
+    currentRetailID = id;
 
-    const completedDate = prompt(
-        "Enter completion date (YYYY-MM-DD)",
-        today
-    );
+    document.getElementById("modalCompletedDate").value =
+        new Date().toLocaleDateString("en-CA",{
+            timeZone:"Australia/Sydney"
+        });
 
-    if(completedDate === null){
+    document.getElementById("modalDiscrepancies").value = 0;
+
+    document.getElementById("completeModal").style.display="flex";
+
+}
+
+window.addEventListener("load", () => {
+
+    document.getElementById("modalCancelBtn").onclick = function(){
+
+        document.getElementById("completeModal").style.display = "none";
         loadRetailUnified();
-        return;
-    }
 
- if(confirm("Press OK to Complete.\nPress Cancel for Partial Complete.")){
+    };
 
-    const discrepancies = prompt(
-        "Enter Discrepancies Left Qty",
-        "0"
-    );
+    document.getElementById("modalCompleteBtn").onclick = async function(){
 
-    if(discrepancies === null){
-        loadRetailUnified();
-        return;
-    }
+        await db.collection("dispatch_pickruns").doc(currentRetailID).update({
 
-    db.collection("dispatch_pickruns").doc(id).update({
-    completed: true,
-    archived: true,
-    dateCompleted: completedDate,
-    discrepancies: Number(discrepancies) || 0
+            completed: true,
+            archived: true,
+            dateCompleted: document.getElementById("modalCompletedDate").value,
+            discrepancies: Number(document.getElementById("modalDiscrepancies").value) || 0
+
+        });
+
+        document.getElementById("completeModal").style.display = "none";
+
+    };
+
+    document.getElementById("modalPartialBtn").onclick = function(){
+
+        document.getElementById("completeModal").style.display = "none";
+
+        partialComplete(
+            currentRetailID,
+            Number(document.getElementById("modalDiscrepancies").value) || 0
+        );
+
+    };
+
 });
-
-}else{
-
-    partialComplete(id);
-
-}
-     
-
-}
 
 async function partialComplete(id, discrepancies = null){
 
@@ -4611,6 +4663,26 @@ return `${day.substring(0,3).toUpperCase()} ${u.toLocaleString()} / ${avg} (${s}
 }
 }
 </script>
+
+ <div id="completeModal" class="modal">
+    <div class="modal-box">
+
+        <h2>Complete Pickrun</h2>
+
+        <label>Completion Date</label>
+        <input type="date" id="modalCompletedDate">
+
+        <label>Discrepancies Left Qty</label>
+        <input type="number" id="modalDiscrepancies" value="0">
+
+        <div class="modal-buttons">
+            <button id="modalPartialBtn">Partial Complete</button>
+            <button id="modalCompleteBtn">Complete</button>
+            <button id="modalCancelBtn">Cancel</button>
+        </div>
+
+    </div>
+</div>
 
 </body>
 </html>
