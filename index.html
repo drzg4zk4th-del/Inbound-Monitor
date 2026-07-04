@@ -4370,25 +4370,47 @@ function retailMetricsFinalHotfix(){
         if(age>oldest) oldest=age;
       }
 
-      const completedDate = d.dateCompleted ? new Date(d.dateCompleted) : null;
+      const completedDate = d.dateCompleted ? new Date(d.dateCompleted + "T00:00:00") : null;
 
-      if(completedDate){
-        const diff=Math.floor((now-completedDate)/86400000);
-        const qty=Number(d.qty||0);
+if(completedDate){
 
-        if(diff===1) yesterday += qty;
-        if(diff<=7) last7 += qty;
-       if(diff === 0) today += qty;
+    const qty = Number(d.qty || 0);
 
-        if(completedDate.getMonth()===currentMonth &&
-           completedDate.getFullYear()===currentYear){
-           month += qty;
-        }
+    const todayString = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Australia/Sydney"
+    });
 
-        if(completedDate >= fyStart){
-           fy += qty;
-        }
-      }
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+
+    const yesterdayString = yesterdayDate.toLocaleDateString("en-CA", {
+        timeZone: "Australia/Sydney"
+    });
+
+    const completedString = completedDate.toLocaleDateString("en-CA", {
+        timeZone: "Australia/Sydney"
+    });
+
+    if(completedString === todayString)
+        today += qty;
+
+    if(completedString === yesterdayString)
+        yesterday += qty;
+
+    const diff = Math.floor((new Date(todayString) - completedDate) / 86400000);
+
+    if(diff >= 0 && diff < 7)
+        last7 += qty;
+
+    if(completedDate.getMonth() === currentMonth &&
+       completedDate.getFullYear() === currentYear){
+        month += qty;
+    }
+
+    if(completedDate >= fyStart){
+        fy += qty;
+    }
+}
    });
 
    const set=(id,val)=>{
