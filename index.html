@@ -2464,6 +2464,8 @@ notesInput.value='';
 
 function updateShipmentETA(shipment, newDate){
 
+ console.log("Updating", shipment, newDate);
+
     if(!newDate) return;
 
     const rows = Array.from(shipmentTable.rows).slice(1);
