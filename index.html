@@ -1343,6 +1343,41 @@ style="max-width:280px;"
 <div class="card"><h3>Archived Units</h3><div class="big-number" id="retailArchiveUnits">0</div></div>
 </div>
 
+<div class="card" style="margin-bottom:20px;">
+
+<div style="display:flex;justify-content:space-between;align-items:center;">
+
+<button onclick="changeArchiveMonth(-1)">◀</button>
+
+<h2 id="archiveSummaryTitle"></h2>
+
+<button onclick="changeArchiveMonth(1)">▶</button>
+
+</div>
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Date</th>
+<th>Pickruns</th>
+<th>Units</th>
+<th>Discrepancies</th>
+</tr>
+
+</thead>
+
+<tbody id="archiveSummaryBody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
 <div class="table-wrap">
 <table>
 <thead>
@@ -1467,6 +1502,9 @@ appId: "1:1016653351453:web:a2a1f597844adf51ba54f4"
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
+
+ let archiveMonth = new Date().getMonth();
+let archiveYear = new Date().getFullYear();
 
 const auth = firebase.auth();
 
@@ -4456,7 +4494,26 @@ window.addEventListener('load',function(){
 
 
 <script>
-function rebuildRetailArchive(){
+
+ function changeArchiveMonth(direction){
+
+    archiveMonth += direction;
+
+    if(archiveMonth < 0){
+        archiveMonth = 11;
+        archiveYear--;
+    }
+
+    if(archiveMonth > 11){
+        archiveMonth = 0;
+        archiveYear++;
+    }
+
+    rebuildRetailArchive();
+
+}
+ 
+ function rebuildRetailArchive(){
  if(typeof db==='undefined') return;
 
  db.collection('dispatch_pickruns').onSnapshot(snapshot=>{
@@ -4466,6 +4523,8 @@ function rebuildRetailArchive(){
    body.innerHTML='';
 
    let count=0, units=0;
+
+const dailySummary = {};
 
   const docs = snapshot.docs.sort((a,b)=>{
 
@@ -4478,6 +4537,35 @@ function rebuildRetailArchive(){
 
 docs.forEach(doc=>{
       const d=doc.data()||{};
+
+ if(d.dateCompleted){
+
+    const completed = new Date(d.dateCompleted);
+
+    if(
+        completed.getMonth() === archiveMonth &&
+        completed.getFullYear() === archiveYear
+    ){
+
+        const day = completed.toLocaleDateString("en-AU");
+
+        if(!dailySummary[day]){
+
+            dailySummary[day]={
+                pickruns:0,
+                units:0,
+                discrepancies:0
+            };
+
+        }
+
+        dailySummary[day].pickruns++;
+        dailySummary[day].units += Number(d.qty||0);
+        dailySummary[day].discrepancies += Number(d.discrepancies||0);
+
+    }
+
+}
 
       const archived =
         d.archived===true ||
@@ -4583,6 +4671,44 @@ Delete
    const u=document.getElementById('retailArchiveUnits');
    if(c) c.innerText=count;
    if(u) u.innerText=units.toLocaleString();
+
+const bodySummary =
+document.getElementById("archiveSummaryBody");
+
+const title =
+document.getElementById("archiveSummaryTitle");
+
+if(bodySummary){
+
+    bodySummary.innerHTML="";
+
+    title.innerText =
+        new Date(
+            archiveYear,
+            archiveMonth
+        ).toLocaleString("en-AU",{
+            month:"long",
+            year:"numeric"
+        });
+
+    Object.keys(dailySummary)
+        .sort((a,b)=>new Date(b)-new Date(a))
+        .forEach(day=>{
+
+            const d=dailySummary[day];
+
+            bodySummary.innerHTML += `
+            <tr>
+                <td>${day}</td>
+                <td>${d.pickruns}</td>
+                <td>${d.units.toLocaleString()}</td>
+                <td>${d.discrepancies}</td>
+            </tr>`;
+
+        });
+
+}
+  
  });
 }
 window.addEventListener("load", () => {
