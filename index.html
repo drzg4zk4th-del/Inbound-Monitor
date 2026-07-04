@@ -4123,8 +4123,7 @@ async function partialComplete(id, discrepancies = null){
 
     completed:true,
     archived:true,
-    dateCompleted:new Date().toLocaleDateString("en-CA",{
-        timeZone:"Australia/Sydney"
+    dateCompleted:new Date().toISOString().split("T")[0]
     })
 
 });
@@ -4445,14 +4444,13 @@ if(diff >= 0 && diff <= 6){
     last7 += qty;
 }
 
-    if(d.dateCompleted){
+    const completed = new Date(d.dateCompleted + "T00:00:00");
 
-    const completedString = d.dateCompleted.substring(0,10);
-
-    if(completedString.substring(0,7) === todayString.substring(0,7)){
-        month += qty;
-    }
-
+if(
+    completed.getMonth() === now.getMonth() &&
+    completed.getFullYear() === now.getFullYear()
+){
+    month += qty;
 }
 
     const completed = new Date(d.dateCompleted + "T00:00:00");
