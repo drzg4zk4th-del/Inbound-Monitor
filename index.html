@@ -4323,7 +4323,19 @@ function rebuildRetailArchive(){
 </select>
 </td>
 
-<td>${d.dateCreated||''}</td>
+<td>
+<input
+type="date"
+value="${d.dateCreated ? d.dateCreated.substring(0,10) : ''}"
+onchange="
+retailUpdate(
+'${doc.id}',
+'dateCreated',
+this.value
+)
+"
+>
+</td>
 
 <td>
 <input type="checkbox"
@@ -4344,12 +4356,16 @@ function rebuildRetailArchive(){
 
 <td>
 <input
-type="datetime-local"
-value="${
-d.dateCompleted
-? new Date(d.dateCompleted).toISOString().slice(0,16)
-: ''
-}"
+type="date"
+value="${d.dateCompleted || ''}"
+onchange="
+retailUpdate(
+'${doc.id}',
+'dateCompleted',
+this.value
+)
+"
+>
 onchange="
 retailUpdate(
 '${doc.id}',
