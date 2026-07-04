@@ -4180,7 +4180,7 @@ ${d.stores||0}
       <td>
 <input
 type="date"
-value="${d.dateCompleted || ''}"
+value="${d.dateCompleted ? d.dateCompleted.substring(0,10) : ''}"
 onchange="
 retailUpdate(
 '${doc.id}',
