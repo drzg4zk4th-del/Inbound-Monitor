@@ -960,6 +960,10 @@ Add Shipment
 </button>
 <button class="add-btn" onclick="exportTableCSV('shipmentTable','ActiveShipments.csv')">Export Active Shipments</button>
 
+<button class="add-btn" onclick="exportShipmentWorkbook()">
+📦 Export Shipment Workbook
+</button>
+
 <button class="add-btn" onclick="exportUnallocatedRows()">
 Export Unallocated Rows
 </button>
@@ -4036,6 +4040,159 @@ function exportUnallocatedRows(){
 
 
 <script>
+
+function exportShipmentWorkbook(){
+
+    const shipment = prompt("Enter Shipment Number");
+
+    if(!shipment) return;
+
+    const rows = Array.from(shipmentTable.rows).slice(1)
+        .filter(r => r.cells[0].innerText.trim() === shipment.trim());
+
+    if(rows.length === 0){
+        alert("Shipment not found.");
+        return;
+    }
+
+    const workbook = XLSX.utils.book_new();
+
+    // Summary data
+    const summary = [];
+
+    const warehouses = [
+        "Main Warehouse",
+        "PR Warehouse",
+        "Seven Hills Warehouse",
+        "Virtual Warehouse"
+    ];
+
+    warehouses.forEach(warehouse=>{
+
+        const warehouseRows = rows.filter(r=>{
+
+            return r.cells[13].querySelector("select").value === warehouse;
+
+        });
+
+        if(warehouseRows.length===0) return;
+
+        let totalLoose=0;
+        let totalPacks=0;
+        let totalPallets=0;
+
+        const sheetData = [[
+            "PO",
+            "SKU",
+            "Style",
+            "Colour",
+            "Loose Qty",
+            "Total Packs",
+            "Total Pallets"
+        ]];
+
+        warehouseRows.forEach(r=>{
+
+            const qty =
+                Number(r.cells[11].innerText||0);
+
+            const looseQty =
+                Number(r.cells[11].innerText||0);
+
+            const packs =
+                Number(r.cells[12].innerText||0);
+
+            const pallets =
+                Number(r.cells[7].innerText||0) +
+                Number(r.cells[8].innerText||0);
+
+            totalLoose += looseQty;
+            totalPacks += packs;
+            totalPallets += pallets;
+
+            sheetData.push([
+                r.cells[1].innerText,
+                r.cells[2].innerText,
+                r.cells[3].innerText,
+                r.cells[4].innerText,
+                looseQty,
+                packs,
+                pallets
+            ]);
+
+        });
+
+        // totals row
+
+        sheetData.push([]);
+
+        sheetData.push([
+            "",
+            "",
+            "",
+            "TOTAL",
+            totalLoose,
+            totalPacks,
+            totalPallets
+        ]);
+
+        const sheet =
+            XLSX.utils.aoa_to_sheet(sheetData);
+
+        sheet["!cols"] = [
+            {wch:12},
+            {wch:18},
+            {wch:25},
+            {wch:18},
+            {wch:12},
+            {wch:12},
+            {wch:12},
+            {wch:14}
+        ];
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            sheet,
+            warehouse.substring(0,31)
+        );
+
+        summary.push([
+            warehouse,
+            warehouseRows.length,
+            totalQty,
+            totalLoose,
+            totalPacks,
+            totalPallets
+        ]);
+
+    });
+
+    const summarySheet =
+        XLSX.utils.aoa_to_sheet([
+            [
+                "Warehouse",
+                "Styles",
+                "Qty",
+                "Loose Qty",
+                "Total Packs",
+                "Total Pallets"
+            ],
+            ...summary
+        ]);
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        summarySheet,
+        "Summary"
+    );
+
+    XLSX.writeFile(
+        workbook,
+        shipment + ".xlsx"
+    );
+
+}
+ 
 async function addRetailPickrunBeta4(){
  const pickrunNumber=document.getElementById('retailPickrunNumber').value;
  const description=document.getElementById('retailDescription').value;
