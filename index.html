@@ -2556,7 +2556,10 @@ shipmentOverviewTable.innerHTML = `
 <tr>
 <th onclick="sortTable(this)" style="cursor:pointer;">Shipment ↕</th>
 <th>Rows</th>
+<th>Total Units</th>
 <th>Total Pallets</th>
+<th>Retail %</th>
+<th>Wholesale %</th>
 <th onclick="sortTable(this)" style="cursor:pointer;">ETA ↕</th>
 <th>Bulk ETA Update</th>
 <th>Bulk Arrive</th>
@@ -2584,21 +2587,40 @@ Number(row.cells[8].innerText || 0);
 const pallets =
 incomingPallets + packsPallets;
 
+const qty = Number(row.cells[11].innerText || 0);
+
+const warehouse =
+row.cells[13].querySelector("select").value;
+
 const eta =
 row.cells[5].textContent.trim();
 
 if(!groups[shipment]){
 
 groups[shipment] = {
-rows:0,
-pallets:0,
-eta:eta
+    rows:0,
+    units:0,
+    pallets:0,
+    eta:eta,
+    virtualUnits:0,
+    wholesaleUnits:0
 };
 
 }
 
 groups[shipment].rows++;
 groups[shipment].pallets += pallets;
+groups[shipment].units += qty;
+
+if(warehouse === "Virtual Warehouse"){
+
+    groups[shipment].virtualUnits += qty;
+
+}else{
+
+    groups[shipment].wholesaleUnits += qty;
+
+}
 
 });
 
@@ -2608,13 +2630,32 @@ const safeShipment = shipment.replace(/'/g, "\\'");
 
 const data = groups[shipment];
 
+const totalUnits =
+data.virtualUnits + data.wholesaleUnits;
+
+const retailPercent =
+totalUnits > 0
+? Math.round((data.virtualUnits / totalUnits) * 100)
+: 0;
+
+const wholesalePercent =
+100 - retailPercent;
+
 const row =
 shipmentOverviewTable.insertRow(-1);
 
 row.innerHTML = `
 <td>${shipment}</td>
 <td>${data.rows}</td>
-<td>${data.pallets}</td>
+
+<td>${data.units.toLocaleString()}</td>
+
+<td>${data.pallets.toFixed(1)}</td>
+
+<td>${retailPercent}%</td>
+
+<td>${wholesalePercent}%</td>
+
 <td>${data.eta}</td>
 
 <td>
