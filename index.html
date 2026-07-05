@@ -1677,11 +1677,11 @@ ${row.cells[13].querySelector('select').value}
 </p>
 
 <p><b>Storage Location:</b>
-${row.cells[16].textContent.trim()}
+${row.cells[15].textContent.trim()}
 </p>
 
 <p><b>Current Location:</b>
-${row.cells[15].textContent.trim()}
+${row.cells[16].textContent.trim()}
 </p>
 
 </div>
@@ -3762,8 +3762,9 @@ if(select){
 
         weeks[week].units += Number(row.cells[11].innerText || 0);
         weeks[week].packs += Number(row.cells[12].innerText || 0);
-        weeks[week].pallets += Number(row.cells[8].innerText || 0);
-
+       weeks[week].pallets +=
+    Number(row.cells[7].innerText || 0) +
+    Number(row.cells[8].innerText || 0);
         weeks[week].rows.push(row);
 
     });
