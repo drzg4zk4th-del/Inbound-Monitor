@@ -1664,20 +1664,30 @@ html += `
 
 <h2>${row.cells[3].innerText}</h2>
 
+<p><b>Shipment:</b> ${row.cells[0].innerText}</p>
 <p><b>PO:</b> ${row.cells[1].innerText}</p>
-
 <p><b>SKU:</b> ${row.cells[2].innerText}</p>
-
+<p><b>Style:</b> ${row.cells[3].innerText}</p>
 <p><b>Colour:</b> ${row.cells[4].innerText}</p>
-
-<p><b>Qty:</b> ${row.cells[11].innerText}</p>
-
-<p><b>Cartons:</b> ${row.cells[10].innerText}</p>
-
 <p><b>ETA:</b> ${row.cells[5].innerText}</p>
+
+<p><b>Dispatch Week:</b>
+${row.cells[6].querySelector('select').value}
+</p>
+
+<p><b>Loose Pallets:</b> ${row.cells[7].innerText}</p>
+<p><b>Packs Pallets:</b> ${row.cells[8].innerText}</p>
+<p><b>Units Per Carton:</b> ${row.cells[9].innerText}</p>
+<p><b>Loose Cartons:</b> ${row.cells[10].innerText}</p>
+<p><b>Loose Qty:</b> ${row.cells[11].innerText}</p>
+<p><b>Total Packs:</b> ${row.cells[12].innerText}</p>
 
 <p><b>Warehouse:</b>
 ${row.cells[13].querySelector('select').value}
+</p>
+
+<p><b>Priority:</b>
+${row.cells[14].querySelector('select').value}
 </p>
 
 <p><b>Storage Location:</b>
@@ -1686,6 +1696,18 @@ ${row.cells[15].textContent.trim()}
 
 <p><b>Current Location:</b>
 ${row.cells[16].textContent.trim()}
+</p>
+
+<p><b>Action:</b>
+${row.cells[17].querySelector('select').value}
+</p>
+
+<p><b>Status:</b>
+${row.cells[18].querySelector('select').value}
+</p>
+
+<p><b>Notes:</b><br>
+${row.cells[19].innerHTML}
 </p>
 
 </div>
