@@ -3614,100 +3614,142 @@ visible ? '' : 'none';
 
 function updateDispatchProjection(){
 
-    const container =
-    document.getElementById("dispatchProjectionContainer");
-
+    const container = document.getElementById("dispatchProjectionContainer");
     if(!container) return;
 
-    const rows =
-    Array.from(shipmentTable.rows).slice(1);
+    const rows = Array.from(shipmentTable.rows).slice(1);
 
     const weeks = {};
 
     rows.forEach(row=>{
 
-        const week =
-        row.cells[6].querySelector("select")?.value || "";
+        const week = row.cells[6].querySelector("select")?.value || "";
 
-       if(!week || week === "Week Not Assigned") return;
+        if(!week || week==="Week Not Assigned") return;
 
         if(!weeks[week]){
             weeks[week]={
                 styles:new Set(),
                 units:0,
                 packs:0,
-                pallets:0
+                pallets:0,
+                rows:[]
             };
         }
 
-        weeks[week].styles.add(
-            row.cells[3].innerText.trim()
-        );
+        weeks[week].styles.add(row.cells[2].innerText.trim());
 
-        weeks[week].units +=
-            Number(row.cells[11].innerText || 0);
+        weeks[week].units += Number(row.cells[11].innerText || 0);
+        weeks[week].packs += Number(row.cells[12].innerText || 0);
+        weeks[week].pallets += Number(row.cells[8].innerText || 0);
 
-        weeks[week].packs +=
-            Number(row.cells[12].innerText || 0);
-
-        weeks[week].pallets +=
-            Number(row.cells[8].innerText || 0);
+        weeks[week].rows.push(row);
 
     });
-
-    let html=`
-    <table style="width:100%;min-width:100%;">
-    <tr>
-        <th>Dispatch Week</th>
-        <th>Styles</th>
-        <th>Original Units</th>
-        <th>Total Packs</th>
-        <th>Estimated Pallets</th>
-    </tr>
-    `;
 
     let totalStyles=0;
     let totalUnits=0;
     let totalPacks=0;
     let totalPallets=0;
 
-    Object.keys(weeks)
-    .sort()
-    .forEach(week=>{
+    let html="";
+
+    Object.keys(weeks).sort().forEach(week=>{
 
         const w=weeks[week];
 
-        const styleCount=w.styles.size;
+        totalStyles += w.styles.size;
+        totalUnits += w.units;
+        totalPacks += w.packs;
+        totalPallets += w.pallets;
 
-        totalStyles+=styleCount;
-        totalUnits+=w.units;
-        totalPacks+=w.packs;
-        totalPallets+=w.pallets;
+        html += `
+<details class="dispatchWeekCard" style="margin-bottom:15px;">
 
-        html+=`
-        <tr>
-            <td>${week}</td>
-            <td>${styleCount}</td>
-            <td>${w.units.toLocaleString()}</td>
-            <td>${w.packs.toLocaleString()}</td>
-            <td>${w.pallets.toFixed(1)}</td>
-        </tr>
-        `;
+<summary style="
+cursor:pointer;
+padding:14px;
+background:#0f172a;
+border:1px solid #334155;
+border-radius:10px;
+font-weight:bold;
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
+
+<span>${week}</span>
+
+<span>
+${w.styles.size} Styles |
+${w.units.toLocaleString()} Units |
+${w.packs.toLocaleString()} Packs |
+${w.pallets.toFixed(1)} Pack Pallets
+</span>
+
+</summary>
+
+<div class="table-wrap" style="margin-top:10px;max-height:400px;">
+
+<table style="width:100%;min-width:1200px;">
+
+<tr>
+<th>PO</th>
+<th>SKU</th>
+<th>Style</th>
+<th>Colour</th>
+<th>Qty</th>
+<th>Total Packs</th>
+<th>Pack Pallets</th>
+<th>Warehouse</th>
+</tr>
+`;
+
+        w.rows.forEach(row=>{
+
+            html += `
+<tr>
+<td>${row.cells[1].innerText}</td>
+<td>${row.cells[2].innerText}</td>
+<td>${row.cells[3].innerText}</td>
+<td>${row.cells[4].innerText}</td>
+<td>${Number(row.cells[11].innerText).toLocaleString()}</td>
+<td>${row.cells[12].innerText}</td>
+<td>${row.cells[8].innerText}</td>
+<td>${row.cells[13].querySelector("select").value}</td>
+</tr>
+`;
+
+        });
+
+        html += `
+</table>
+</div>
+</details>
+`;
+
     });
 
-    html+=`
-    <tr style="font-weight:bold;background:#0f172a;">
-        <td>TOTAL</td>
-        <td>${totalStyles}</td>
-        <td>${totalUnits.toLocaleString()}</td>
-        <td>${totalPacks.toLocaleString()}</td>
-        <td>${totalPallets.toFixed(1)}</td>
-    </tr>
-    `;
+    html += `
+<div style="
+margin-top:20px;
+padding:16px;
+background:#0f172a;
+border:1px solid #334155;
+border-radius:12px;
+font-weight:bold;
+">
 
-    html+="</table>";
+TOTAL —
+${totalStyles} Styles |
+${totalUnits.toLocaleString()} Units |
+${totalPacks.toLocaleString()} Packs |
+${totalPallets.toFixed(1)} Pack Pallets
 
-    container.innerHTML=html;
+</div>
+`;
+
+    container.innerHTML = html;
 
 }
 
