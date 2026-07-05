@@ -2609,6 +2609,7 @@ shipmentOverviewTable.innerHTML = `
 <th onclick="sortTable(this)" style="cursor:pointer;">Shipment ↕</th>
 <th>Rows</th>
 <th>Total Units</th>
+<th>Total Cartons</th>
 <th>Total Pallets</th>
 <th>Retail %</th>
 <th>Wholesale %</th>
@@ -2636,6 +2637,9 @@ Number(row.cells[7].innerText || 0);
 const packsPallets =
 Number(row.cells[8].innerText || 0);
 
+const cartons =
+Number(row.cells[10].innerText || 0);
+
 const pallets =
 incomingPallets + packsPallets;
 
@@ -2652,6 +2656,7 @@ if(!groups[shipment]){
 groups[shipment] = {
     rows:0,
     units:0,
+    cartons:0,
     pallets:0,
     eta:eta,
     virtualUnits:0,
@@ -2663,6 +2668,7 @@ groups[shipment] = {
 groups[shipment].rows++;
 groups[shipment].pallets += pallets;
 groups[shipment].units += qty;
+groups[shipment].cartons += cartons;
 
 if(warehouse === "Virtual Warehouse"){
 
@@ -2701,6 +2707,8 @@ row.innerHTML = `
 <td>${data.rows}</td>
 
 <td>${data.units.toLocaleString()}</td>
+
+<td>${data.cartons.toLocaleString()}</td>
 
 <td>${data.pallets.toFixed(1)}</td>
 
