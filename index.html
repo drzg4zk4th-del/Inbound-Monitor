@@ -652,6 +652,10 @@ Shipments
 <i class="fa-solid fa-box-archive"></i>
 Shipment Archive
 </button>
+
+<button onclick="showPage('dispatchPlannerPage')">
+Dispatch Week Overview
+</button>
  
 <button onclick="showPage('retailPage')">
 <i class="fa-solid fa-truck"></i>
@@ -1001,12 +1005,6 @@ style="max-width:280px;"
 
 </div>
 
-<div class="card" style="margin-bottom:20px;">
-<div class="metric-icon">📤</div>
-<h3>Dispatch Week Overview</h3>
-<div id="dispatchProjectionContainer"></div>
-</div>
-
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;flex-wrap:wrap;">
 
 <button
@@ -1061,6 +1059,14 @@ margin-bottom:0;
 </div>
 
 </div>
+
+</div>
+
+<div id="dispatchPlannerPage" class="page" style="display:none;">
+
+<h2>Dispatch Week Overview</h2>
+
+<div id="dispatchProjectionContainer"></div>
 
 </div>
 
@@ -3718,13 +3724,27 @@ function updateDispatchProjection(){
     const container = document.getElementById("dispatchProjectionContainer");
     if(!container) return;
 
-    const rows = Array.from(shipmentTable.rows).slice(1);
+    const rows = [
+
+...Array.from(shipmentTable.rows).slice(1),
+
+...Array.from(archiveTable.rows).slice(1)
+
+];
 
     const weeks = {};
 
     rows.forEach(row=>{
 
-        const week = row.cells[6].querySelector("select")?.value || "";
+       let week = "";
+
+const select = row.cells[6].querySelector("select");
+
+if(select){
+    week = select.value;
+}else{
+    week = row.cells[6].innerText.trim();
+}
 
         if(!week || week==="Week Not Assigned") return;
 
@@ -3817,7 +3837,11 @@ ${w.pallets.toFixed(1)} Pack Pallets
 <td>${Number(row.cells[11].innerText).toLocaleString()}</td>
 <td>${row.cells[12].innerText}</td>
 <td>${row.cells[8].innerText}</td>
-<td>${row.cells[13].querySelector("select").value}</td>
+<td>${
+row.cells[13].querySelector("select")
+    ? row.cells[13].querySelector("select").value
+    : row.cells[13].innerText.trim()
+}</td>
 </tr>
 `;
 
