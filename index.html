@@ -2992,6 +2992,7 @@ if(document.getElementById('qcStyles')){
 }
 
 refreshShipmentOverview();
+updateDispatchProjection();
 
 }
 
@@ -3628,7 +3629,7 @@ function updateDispatchProjection(){
         const week =
         row.cells[6].querySelector("select")?.value || "";
 
-        if(!week) return;
+       if(!week || week === "Week Not Assigned") return;
 
         if(!weeks[week]){
             weeks[week]={
