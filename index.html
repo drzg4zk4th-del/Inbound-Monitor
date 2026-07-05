@@ -1003,7 +1003,7 @@ style="max-width:280px;"
 
 <div class="card" style="margin-bottom:20px;">
 <div class="metric-icon">📤</div>
-<h3>Projected PACKS Outbound Pallets By Dispatch Week</h3>
+<h3>Dispatch Week Overview</h3>
 <div id="dispatchProjectionContainer"></div>
 </div>
 
@@ -3613,95 +3613,102 @@ visible ? '' : 'none';
 
 function updateDispatchProjection(){
 
-const container =
-document.getElementById(
-'dispatchProjectionContainer'
-);
+    const container =
+    document.getElementById("dispatchProjectionContainer");
 
-if(!container) return;
+    if(!container) return;
 
-const rows =
-Array.from(shipmentTable.rows).slice(1);
+    const rows =
+    Array.from(shipmentTable.rows).slice(1);
 
-const projections = {};
+    const weeks = {};
 
-rows.forEach(row=>{
+    rows.forEach(row=>{
 
-const week =
-row.cells[6].querySelector('select')?.value || '';
+        const week =
+        row.cells[6].querySelector("select")?.value || "";
 
-const incomingPallets =
-Number(row.cells[7].innerText || 0);
+        if(!week) return;
 
-const packsPallets =
-Number(row.cells[8].innerText || 0);
+        if(!weeks[week]){
+            weeks[week]={
+                styles:new Set(),
+                units:0,
+                packs:0,
+                pallets:0
+            };
+        }
 
-const pallets =
-incomingPallets + packsPallets;
+        weeks[week].styles.add(
+            row.cells[3].innerText.trim()
+        );
 
-if(week === '') return;
+        weeks[week].units +=
+            Number(row.cells[11].innerText || 0);
 
-if(!projections[week]){
-    projections[week] = {
-        pallets: 0,
-        packs: 0
-    };
+        weeks[week].packs +=
+            Number(row.cells[12].innerText || 0);
+
+        weeks[week].pallets +=
+            Number(row.cells[8].innerText || 0);
+
+    });
+
+    let html=`
+    <table style="width:100%;min-width:100%;">
+    <tr>
+        <th>Dispatch Week</th>
+        <th>Styles</th>
+        <th>Original Units</th>
+        <th>Total Packs</th>
+        <th>Estimated Pallets</th>
+    </tr>
+    `;
+
+    let totalStyles=0;
+    let totalUnits=0;
+    let totalPacks=0;
+    let totalPallets=0;
+
+    Object.keys(weeks)
+    .sort()
+    .forEach(week=>{
+
+        const w=weeks[week];
+
+        const styleCount=w.styles.size;
+
+        totalStyles+=styleCount;
+        totalUnits+=w.units;
+        totalPacks+=w.packs;
+        totalPallets+=w.pallets;
+
+        html+=`
+        <tr>
+            <td>${week}</td>
+            <td>${styleCount}</td>
+            <td>${w.units.toLocaleString()}</td>
+            <td>${w.packs.toLocaleString()}</td>
+            <td>${w.pallets.toFixed(1)}</td>
+        </tr>
+        `;
+    });
+
+    html+=`
+    <tr style="font-weight:bold;background:#0f172a;">
+        <td>TOTAL</td>
+        <td>${totalStyles}</td>
+        <td>${totalUnits.toLocaleString()}</td>
+        <td>${totalPacks.toLocaleString()}</td>
+        <td>${totalPallets.toFixed(1)}</td>
+    </tr>
+    `;
+
+    html+="</table>";
+
+    container.innerHTML=html;
+
 }
-
-projections[week].pallets += packsPallets;
-projections[week].packs += Number(row.cells[12].innerText || 0);
-
-});
-
-let html = `
-<table style="width:100%;min-width:100%;">
-<tr>
-<th>Dispatch Week</th>
-<th>Projected Outbound Pallets</th>
-<th> Total Packs</th>
-</tr>
-`;
-
-Object.keys(projections)
-.sort((a,b)=>{
-
-const aNum =
-Number(a.replace('Week ',''));
-
-const bNum =
-Number(b.replace('Week ',''));
-
-return aNum - bNum;
-
-})
-.forEach(week=>{
-
-html += `
-<tr>
-<td>${week}</td>
-<td>${projections[week].pallets}</td>
-<td>${projections[week].packs.toLocaleString()}</td>
-</tr>
-`;
-
-});
-
-html += '</table>';
-
-container.innerHTML = html;
-
-}
-
-const originalRefreshDashboard =
-refreshDashboard;
-
-refreshDashboard = function(){
-
-originalRefreshDashboard();
-
-updateDispatchProjection();
-
-};
 
 function toggleSidebar(){
 
