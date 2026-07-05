@@ -3762,9 +3762,7 @@ if(select){
 
         weeks[week].units += Number(row.cells[11].innerText || 0);
         weeks[week].packs += Number(row.cells[12].innerText || 0);
-       weeks[week].pallets +=
-    Number(row.cells[7].innerText || 0) +
-    Number(row.cells[8].innerText || 0);
+       weeks[week].pallets += Number(row.cells[8].innerText || 0);
         weeks[week].rows.push(row);
 
     });
