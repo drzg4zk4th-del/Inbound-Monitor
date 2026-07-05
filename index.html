@@ -4165,28 +4165,28 @@ function exportShipmentWorkbook(){
         );
 
         summary.push([
-            warehouse,
-            warehouseRows.length,
-            totalQty,
-            totalLoose,
-            totalPacks,
-            totalPallets
-        ]);
+    warehouse,
+    warehouseRows.length,
+    totalLoose,
+    totalCartons,
+    totalPacks,
+    totalPallets
+]);
 
     });
 
-    const summarySheet =
-        XLSX.utils.aoa_to_sheet([
-            [
-                "Warehouse",
-                "Styles",
-                "Qty",
-                "Loose Qty",
-                "Total Packs",
-                "Total Pallets"
-            ],
-            ...summary
-        ]);
+   const summarySheet =
+XLSX.utils.aoa_to_sheet([
+    [
+        "Warehouse",
+        "Styles",
+        "Loose Qty",
+        "Total Cartons",
+        "Total Packs",
+        "Total Pallets"
+    ],
+    ...summary
+]);
 
     XLSX.utils.book_append_sheet(
         workbook,
