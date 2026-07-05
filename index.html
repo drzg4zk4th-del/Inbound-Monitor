@@ -1007,9 +1007,27 @@ style="max-width:280px;"
 <div id="dispatchProjectionContainer"></div>
 </div>
 
-<button class="add-btn" onclick="toggleShipmentTable()" id="toggleShipmentBtn">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;flex-wrap:wrap;">
+
+<button
+class="add-btn"
+onclick="toggleShipmentTable()"
+id="toggleShipmentBtn"
+style="margin-bottom:0;">
 📋 Show Active Shipments
 </button>
+
+<input
+id="shipmentOverviewSearch"
+type="text"
+placeholder="🔍 Search Active Shipments..."
+oninput="applyShipmentOverviewSearch()"
+style="
+width:350px;
+margin-bottom:0;
+">
+
+</div>
 
 <div id="shipmentTableContainer" style="display:none;">
 
@@ -1686,6 +1704,40 @@ function toggleShipmentTable(){
         container.style.display = "none";
         button.innerHTML = "📋 Show Active Shipments";
     }
+
+}
+
+function applyShipmentOverviewSearch(){
+
+    const search =
+    document.getElementById("shipmentOverviewSearch")
+    .value
+    .toLowerCase()
+    .trim();
+
+    Array.from(shipmentTable.rows)
+    .slice(1)
+    .forEach(row=>{
+
+        const text = Array.from(row.cells)
+        .map(cell=>{
+
+            const select = cell.querySelector("select");
+
+            return select
+                ? select.value
+                : cell.innerText;
+
+        })
+        .join(" ")
+        .toLowerCase();
+
+        row.style.display =
+            text.includes(search)
+            ? ""
+            : "none";
+
+    });
 
 }
 
