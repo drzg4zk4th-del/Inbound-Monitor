@@ -2248,7 +2248,11 @@ async function importSpreadsheet(){
             "RANGE" in firstRow
         );
 
-    rows.forEach(item=>{
+    const importedPOs = new Set();
+const missingPOs = [];
+let imported = 0;
+ 
+ rows.forEach(item=>{
 
         // Ignore section headings / blank rows
         if(
@@ -2301,6 +2305,7 @@ async function importSpreadsheet(){
         }
 
      const po = String(item["PURCHASE ORDER #"]).trim();
+importedPOs.add(po);
 const sku = String(item["STYLE CODE"]).trim();
 
 const exists = Array.from(shipmentTable.rows)
@@ -2360,12 +2365,40 @@ if (exists) return;
 
         });
 
+  imported++;
+
     });
 
-    refreshDashboard();
+    Array.from(shipmentTable.rows)
+    .slice(1)
+    .forEach(row => {
+
+        const po = row.cells[1].innerText.trim();
+        const shipment = row.cells[0].innerText.trim();
+        const status = row.cells[18].querySelector("select").value;
+
+        if (
+            shipment === "" &&
+            status === "In Transit" &&
+            !importedPOs.has(po) &&
+            !missingPOs.includes(po)
+        ) {
+            missingPOs.push(po);
+        }
+
+    });
+ 
+ refreshDashboard();
     saveAll();
 
-    alert(rows.length + " rows imported.");
+    let message = `${imported} new rows imported.`;
+
+if (missingPOs.length) {
+    message += `\n\nPOs requiring shipment allocation:\n\n`;
+    message += missingPOs.join("\n");
+}
+
+alert(message);
 
 }
 
