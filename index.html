@@ -2300,6 +2300,18 @@ async function importSpreadsheet(){
 
         }
 
+     const po = String(item["PURCHASE ORDER #"]).trim();
+const sku = String(item["STYLE CODE"]).trim();
+
+const exists = Array.from(shipmentTable.rows)
+    .slice(1)
+    .some(row =>
+        row.cells[1].innerText.trim() === po &&
+        row.cells[2].innerText.trim() === sku
+    );
+
+if (exists) return;
+
         createRow({
 
             shipment: purchaseImport ? "" : (item["ORDER"] || ""),
