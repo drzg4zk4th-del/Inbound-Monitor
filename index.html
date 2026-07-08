@@ -2858,7 +2858,15 @@ const diff =
 
 if(diff <= 7 && diff >= 0){
 urgentPalletsTotal += pallets;
-cartonsNext7 += cartons;
+
+console.log(
+    row.cells[1].innerText,   // PO
+    row.cells[3].innerText,   // Style
+    eta,
+    cartons
+);
+ 
+ cartonsNext7 += cartons;
 }
 
 }
