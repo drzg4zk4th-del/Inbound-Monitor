@@ -2712,14 +2712,59 @@ function restoreRow(btn){
     saveAll();
 }
 
-let allocationRow=null;
+let allocationRow = null;
 
-function openAllocation(btn){
+function openAllocationFromPO(element){
 
-    allocationRow=btn.closest("tr");
+    allocationRow = element.closest("tr");
 
-    document.getElementById("allocationModal").style.display="block";
+    // Populate fields
+    document.getElementById("allocShipment").value =
+        allocationRow.cells[0].innerText.trim();
 
+    document.getElementById("allocPO").value =
+        allocationRow.cells[1].innerText.trim();
+
+    document.getElementById("allocSKU").value =
+        allocationRow.cells[2].innerText.trim();
+
+    document.getElementById("allocStyle").value =
+        allocationRow.cells[3].innerText.trim();
+
+    document.getElementById("allocColour").value =
+        allocationRow.cells[4].innerText.trim();
+
+    document.getElementById("allocETA").value =
+        allocationRow.cells[5].innerText.trim();
+
+    document.getElementById("allocLoose").value =
+        allocationRow.cells[7].innerText.trim();
+
+    document.getElementById("allocPacks").value =
+        allocationRow.cells[8].innerText.trim();
+
+    document.getElementById("allocUPC").value =
+        allocationRow.cells[9].innerText.trim();
+
+    document.getElementById("allocCartons").value =
+        allocationRow.cells[10].innerText.trim();
+
+    document.getElementById("allocQty").value =
+        allocationRow.cells[11].innerText.trim();
+
+    document.getElementById("allocTotalPacks").value =
+        allocationRow.cells[12].innerText.trim();
+
+    document.getElementById("allocLocation").value =
+        allocationRow.cells[15].innerText.trim();
+
+    document.getElementById("allocCurrentLocation").value =
+        allocationRow.cells[16].innerText.trim();
+
+    document.getElementById("allocNotes").value =
+        allocationRow.cells[19].innerText.trim();
+
+    document.getElementById("allocationModal").style.display = "block";
 }
 
 function closeAllocation(){
@@ -2730,8 +2775,60 @@ function closeAllocation(){
 
 function saveAllocation(){
 
+    if(!allocationRow) return;
+
+    allocationRow.cells[0].innerText =
+        document.getElementById("allocShipment").value;
+
+    allocationRow.cells[1].innerHTML =
+        `<span onclick="openAllocationFromPO(this)"
+        style="cursor:pointer;font-weight:bold;">
+        ${document.getElementById("allocPO").value}
+        </span>`;
+
+    allocationRow.cells[2].innerText =
+        document.getElementById("allocSKU").value;
+
+    allocationRow.cells[3].innerText =
+        document.getElementById("allocStyle").value;
+
+    allocationRow.cells[4].innerText =
+        document.getElementById("allocColour").value;
+
+    allocationRow.cells[5].innerText =
+        document.getElementById("allocETA").value;
+
+    allocationRow.cells[7].innerText =
+        document.getElementById("allocLoose").value;
+
+    allocationRow.cells[8].innerText =
+        document.getElementById("allocPacks").value;
+
+    allocationRow.cells[9].innerText =
+        document.getElementById("allocUPC").value;
+
+    allocationRow.cells[10].innerText =
+        document.getElementById("allocCartons").value;
+
+    allocationRow.cells[11].innerText =
+        document.getElementById("allocQty").value;
+
+    allocationRow.cells[12].innerText =
+        document.getElementById("allocTotalPacks").value;
+
+    allocationRow.cells[15].innerText =
+        document.getElementById("allocLocation").value;
+
+    allocationRow.cells[16].innerText =
+        document.getElementById("allocCurrentLocation").value;
+
+    allocationRow.cells[19].innerText =
+        document.getElementById("allocNotes").value;
+
     closeAllocation();
 
+    refreshDashboard();
+    saveAll();
 }
  
  function deleteRow(btn){
