@@ -620,7 +620,11 @@ td[contenteditable="true"]:focus{
 }
 
 .shipment-detail{
-    background:#101827;
+    background:#020817;
+}
+
+.shipment-detail:hover{
+    background: transparent !important;
 }
  
 </style>
@@ -2941,6 +2945,7 @@ detailRow.className = "shipment-detail";
 const detailCell = detailRow.insertCell(0);
 
 detailCell.colSpan = 10;
+detailCell.style.padding = "0";
 
 detailCell.innerHTML =
 buildShipmentBreakdown(shipment);
