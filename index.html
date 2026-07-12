@@ -1025,7 +1025,7 @@ style="margin-bottom:0;">
 
 <button
 class="add-btn"
-onclick="filterShipmentByName()"
+onclick="showSelectedShipment()"
 style="margin-bottom:0;">
 🚢 Show Shipment
 </button>
@@ -1795,6 +1795,18 @@ function filterShipmentByName(){
             }
 
         });
+
+}
+
+function showSelectedShipment(){
+
+    // Show the table if it's hidden
+    if(!shipmentTableVisible){
+        toggleShipmentTable();
+    }
+
+    // Apply the shipment filter
+    filterShipmentByName();
 
 }
 
