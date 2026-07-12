@@ -626,6 +626,15 @@ td[contenteditable="true"]:focus{
 .shipment-detail:hover{
     background: transparent !important;
 }
+
+#allocationModal table td{
+    padding:8px;
+}
+
+#allocationModal input{
+    width:100%;
+    box-sizing:border-box;
+}
  
 </style>
 
@@ -5769,23 +5778,44 @@ border-radius:10px;
 
 <h2>Allocation</h2>
 
-<label>Loose Pallets</label>
-<input type="number" id="allocLoose">
+<table style="width:100%;border-collapse:collapse;">
 
-<label>Packs Pallets</label>
-<input type="number" id="allocPacks">
+<tr>
+    <td>Loose Pallets</td>
+    <td><input type="number" id="allocLoose"></td>
+</tr>
 
-<label>Units Per Carton</label>
-<input type="number" id="allocUPC">
+<tr>
+    <td>Packs Pallets</td>
+    <td><input type="number" id="allocPacks"></td>
+</tr>
 
-<label>Cartons</label>
-<input type="number" id="allocCartons">
+<tr>
+    <td>Units Per Carton</td>
+    <td><input type="number" id="allocUPC"></td>
+</tr>
 
-<label>Qty</label>
-<input type="number" id="allocQty">
+<tr>
+    <td>Cartons</td>
+    <td><input type="number" id="allocCartons"></td>
+</tr>
 
-<label>Total Packs</label>
-<input type="number" id="allocTotalPacks">
+<tr>
+    <td>Qty</td>
+    <td><input type="number" id="allocQty"></td>
+</tr>
+
+<tr>
+    <td>Total Packs</td>
+    <td><input type="number" id="allocTotalPacks"></td>
+</tr>
+
+</table>
+
+<br>
+
+<button onclick="saveAllocation()">Save</button>
+<button onclick="closeAllocation()">Cancel</button>
 
 <script>
 
