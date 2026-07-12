@@ -1776,7 +1776,10 @@ function populateShipmentFilter(){
             .filter(s => s !== "")
     )].sort();
 
-    select.innerHTML = '<option value="">All Shipments</option>';
+    select.innerHTML = `
+        <option value="">All Shipments</option>
+        <option value="__NEEDS_ALLOCATION__">⚠ Needs Allocation</option>
+    `;
 
     shipments.forEach(shipment => {
 
@@ -1791,21 +1794,47 @@ function populateShipmentFilter(){
 
 function filterShipmentByName(){
 
-    const shipment =
+    const filter =
         document.getElementById("shipmentFilter").value;
 
     Array.from(shipmentTable.rows)
         .slice(1)
         .forEach(row=>{
 
-            if(
-                shipment === "" ||
-                row.cells[0].innerText.trim() === shipment
-            ){
+            if(filter === ""){
                 row.style.display = "";
-            }else{
-                row.style.display = "none";
+                return;
             }
+
+            if(filter === "__NEEDS_ALLOCATION__"){
+
+                const dispatchWeek =
+                    row.cells[6].querySelector("select").value;
+
+                const unitsPerCarton =
+                    Number(row.cells[9].innerText || 0);
+
+                const looseQty =
+                    Number(row.cells[11].innerText || 0);
+
+                const totalPacks =
+                    Number(row.cells[12].innerText || 0);
+
+                const needsAllocation =
+                    dispatchWeek === "Week Not Assigned" ||
+                    unitsPerCarton <= 0 ||
+                    (looseQty <= 0 && totalPacks <= 0);
+
+                row.style.display =
+                    needsAllocation ? "" : "none";
+
+                return;
+            }
+
+            row.style.display =
+                row.cells[0].innerText.trim() === filter
+                ? ""
+                : "none";
 
         });
 
