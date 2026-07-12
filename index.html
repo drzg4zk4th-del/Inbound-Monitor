@@ -3915,6 +3915,7 @@ const row = createRow(item);
 row.querySelectorAll('td').forEach((cell,index)=>{
 
 if(
+index !== 1 &&   // PO
 index !== 9 &&
 index !== 10 &&
 index !== 13 &&
@@ -3944,6 +3945,7 @@ qcRejectedTable.appendChild(row);
 row.querySelectorAll('td').forEach((cell,index)=>{
 
 if(
+index !== 1 &&   // PO
 index !== 9 &&
 index !== 10 &&
 index !== 13 &&
