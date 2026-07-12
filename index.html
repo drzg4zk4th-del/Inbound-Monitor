@@ -2856,8 +2856,52 @@ totalUnits > 0
 const wholesalePercent =
 100 - retailPercent;
 
-const row =
-shipmentOverviewTable.insertRow(-1);
+const row = shipmentOverviewTable.insertRow(-1);
+
+row.innerHTML = `
+<td>
+<button onclick="toggleShipmentDetails('${safeShipment}')">
+▶
+</button>
+</td>
+
+<td>${shipment}</td>
+<td>${data.rows}</td>
+<td>${data.units.toLocaleString()}</td>
+<td>${data.cartons.toLocaleString()}</td>
+<td>${data.pallets.toFixed(1)}</td>
+<td>${retailPercent}%</td>
+<td>${wholesalePercent}%</td>
+<td>${data.eta}</td>
+
+<td>
+<input type="date" value="${data.eta}">
+<button onclick="updateShipmentETA('${safeShipment}', this.previousElementSibling.value)">
+Update
+</button>
+</td>
+
+<td>
+<button class="restore-btn"
+onclick="arriveShipment('${safeShipment}')">
+Mark All Arrived
+</button>
+</td>
+`;
+
+const detailsRow = shipmentOverviewTable.insertRow(-1);
+
+detailsRow.id = "details_" + shipment;
+
+detailsRow.style.display = "none";
+
+detailsRow.innerHTML = `
+<td colspan="10">
+
+<div id="content_${shipment}"></div>
+
+</td>
+`;
 
 row.innerHTML = `
 <td>
@@ -3071,6 +3115,60 @@ function showShipmentBreakdown(shipment){
 
     document.body.insertAdjacentHTML("beforeend",html);
 
+}
+
+function toggleShipmentDetails(shipment){
+
+    const row = document.getElementById("details_" + shipment);
+
+    if(row.style.display === "none"){
+
+        row.style.display = "";
+
+        buildShipmentDetails(shipment);
+
+    }else{
+
+        row.style.display = "none";
+
+    }
+
+}
+
+function buildShipmentDetails(shipment){
+
+    const rows = Array.from(shipmentTable.rows).slice(1)
+        .filter(r => r.cells[0].innerText.trim() === shipment);
+
+    let retailUnits = 0;
+    let wholesaleUnits = 0;
+
+    rows.forEach(r=>{
+
+        const qty = Number(r.cells[11].innerText || 0);
+
+        const warehouse =
+            r.cells[13].querySelector("select").value;
+
+        if(warehouse === "Virtual Warehouse"){
+            retailUnits += qty;
+        }else{
+            wholesaleUnits += qty;
+        }
+
+    });
+
+    const total = retailUnits + wholesaleUnits;
+
+    document.getElementById("content_" + shipment).innerHTML = `
+
+<h3>Shipment Summary</h3>
+
+<p><b>Retail:</b> ${retailUnits.toLocaleString()} Units (${Math.round(retailUnits/total*100)}%)</p>
+
+<p><b>Wholesale:</b> ${wholesaleUnits.toLocaleString()} Units (${Math.round(wholesaleUnits/total*100)}%)</p>
+
+`;
 }
 
 function refreshDashboard(){
