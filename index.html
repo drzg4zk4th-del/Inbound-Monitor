@@ -1019,6 +1019,17 @@ style="margin-bottom:0;">
 📋 Show Active Shipments
 </button>
 
+<select id="shipmentFilter" onchange="filterShipmentByName()">
+    <option value="">All Shipments</option>
+</select>
+
+<button
+class="add-btn"
+onclick="filterShipmentByName()"
+style="margin-bottom:0;">
+🚢 Show Shipment
+</button>
+
 <input
 id="shipmentOverviewSearch"
 type="text"
@@ -1739,6 +1750,54 @@ function toggleShipmentTable(){
 
 }
 
+function populateShipmentFilter(){
+
+    const select = document.getElementById("shipmentFilter");
+
+    const current = select.value;
+
+    const shipments = [...new Set(
+        Array.from(shipmentTable.rows)
+            .slice(1)
+            .map(r => r.cells[0].innerText.trim())
+            .filter(s => s !== "")
+    )].sort();
+
+    select.innerHTML = '<option value="">All Shipments</option>';
+
+    shipments.forEach(shipment => {
+
+        select.innerHTML +=
+            `<option value="${shipment}">${shipment}</option>`;
+
+    });
+
+    select.value = current;
+
+}
+
+function filterShipmentByName(){
+
+    const shipment =
+        document.getElementById("shipmentFilter").value;
+
+    Array.from(shipmentTable.rows)
+        .slice(1)
+        .forEach(row=>{
+
+            if(
+                shipment === "" ||
+                row.cells[0].innerText.trim() === shipment
+            ){
+                row.style.display = "";
+            }else{
+                row.style.display = "none";
+            }
+
+        });
+
+}
+
 function applyShipmentOverviewSearch(){
 
     const search =
@@ -2143,6 +2202,8 @@ clearInputs();
 
 refreshDashboard();
 
+populateShipmentFilter();
+
 saveAll();
 
 }
@@ -2389,6 +2450,7 @@ if (exists) return;
     });
  
  refreshDashboard();
+populateShipmentFilter();
     saveAll();
 
     let message = `${imported} new rows imported.`;
@@ -2601,6 +2663,7 @@ function deleteRow(btn){
 btn.closest('tr').remove();
 
 refreshDashboard();
+ populateShipmentFilter();
 saveAll();
 
 }
@@ -3605,6 +3668,7 @@ archiveTable.appendChild(row);
 
 }
 refreshDashboard();
+ populateShipmentFilter();
 
 }
 
