@@ -2962,18 +2962,13 @@ function buildShipmentBreakdown(shipment){
             };
         }
 
-        categories[category].rows++;
-
-        const units =
-            Number(row.cells[11].innerText || 0);
-
-        const cartons =
-            Number(row.cells[10].innerText || 0);
-
+        const units = Number(row.cells[11].innerText || 0);
+        const cartons = Number(row.cells[10].innerText || 0);
         const pallets =
             Number(row.cells[7].innerText || 0) +
             Number(row.cells[8].innerText || 0);
 
+        categories[category].rows++;
         categories[category].units += units;
         categories[category].cartons += cartons;
         categories[category].pallets += pallets;
@@ -2988,6 +2983,46 @@ function buildShipmentBreakdown(shipment){
         }
 
     });
+
+    let html = `
+    <table class="shipment-group-table">
+        <tr>
+            <th>Category</th>
+            <th>Rows</th>
+            <th>Total Units</th>
+            <th>Total Cartons</th>
+            <th>Total Pallets</th>
+            <th>Retail %</th>
+            <th>Wholesale %</th>
+        </tr>
+    `;
+
+    Object.keys(categories).forEach(category=>{
+
+        const c = categories[category];
+
+        const total = c.retail + c.wholesale;
+
+        const retailPercent =
+            total ? Math.round((c.retail/total)*100) : 0;
+
+        html += `
+        <tr>
+            <td>${category}</td>
+            <td>${c.rows}</td>
+            <td>${c.units.toLocaleString()}</td>
+            <td>${c.cartons.toFixed(1)}</td>
+            <td>${c.pallets.toFixed(1)}</td>
+            <td>${retailPercent}%</td>
+            <td>${100-retailPercent}%</td>
+        </tr>
+        `;
+
+    });
+
+    html += "</table>";
+
+    return html;
 
 }
 
