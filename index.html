@@ -1818,8 +1818,7 @@ const packsPallets =
     parseFloat(row.cells[8].innerText.trim()) || 0;
 
 const needsAllocation =
-    dispatchWeek === "Week Not Assigned" ||
-    (loosePallets <= 0 && packsPallets <= 0);
+    loosePallets === 0 && packsPallets === 0;
                 row.style.display =
                     needsAllocation ? "" : "none";
 
