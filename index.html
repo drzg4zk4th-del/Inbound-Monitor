@@ -1811,20 +1811,15 @@ function filterShipmentByName(){
                 const dispatchWeek =
                     row.cells[6].querySelector("select").value;
 
-                const unitsPerCarton =
-                    Number(row.cells[9].innerText || 0);
+                const loosePallets =
+    Number(row.cells[7].innerText || 0);
 
-                const looseQty =
-                    Number(row.cells[11].innerText || 0);
+const packsPallets =
+    Number(row.cells[8].innerText || 0);
 
-                const totalPacks =
-                    Number(row.cells[12].innerText || 0);
-
-                const needsAllocation =
-                    dispatchWeek === "Week Not Assigned" ||
-                    unitsPerCarton <= 0 ||
-                    (looseQty <= 0 && totalPacks <= 0);
-
+const needsAllocation =
+    dispatchWeek === "Week Not Assigned" ||
+    (loosePallets <= 0 && packsPallets <= 0);
                 row.style.display =
                     needsAllocation ? "" : "none";
 
