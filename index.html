@@ -1812,10 +1812,10 @@ function filterShipmentByName(){
                     row.cells[6].querySelector("select").value;
 
                 const loosePallets =
-    Number(row.cells[7].innerText || 0);
+    parseFloat(row.cells[7].innerText.trim()) || 0;
 
 const packsPallets =
-    Number(row.cells[8].innerText || 0);
+    parseFloat(row.cells[8].innerText.trim()) || 0;
 
 const needsAllocation =
     dispatchWeek === "Week Not Assigned" ||
