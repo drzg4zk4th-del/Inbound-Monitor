@@ -2941,9 +2941,53 @@ buildShipmentBreakdown(shipment);
 
 function buildShipmentBreakdown(shipment){
 
-    // We'll build this next step.
+    const rows = Array.from(shipmentTable.rows)
+        .slice(1)
+        .filter(r => r.cells[0].innerText.trim() === shipment);
 
-}
+    const categories = {};
+
+    rows.forEach(row=>{
+
+        const category = getCategory(row.cells[2].innerText);
+
+        if(!categories[category]){
+            categories[category]={
+                rows:0,
+                units:0,
+                cartons:0,
+                pallets:0,
+                retail:0,
+                wholesale:0
+            };
+        }
+
+        categories[category].rows++;
+
+        const units =
+            Number(row.cells[11].innerText || 0);
+
+        const cartons =
+            Number(row.cells[10].innerText || 0);
+
+        const pallets =
+            Number(row.cells[7].innerText || 0) +
+            Number(row.cells[8].innerText || 0);
+
+        categories[category].units += units;
+        categories[category].cartons += cartons;
+        categories[category].pallets += pallets;
+
+        const warehouse =
+            row.cells[13].querySelector("select").value;
+
+        if(warehouse==="Virtual Warehouse"){
+            categories[category].retail += units;
+        }else{
+            categories[category].wholesale += units;
+        }
+
+    });
 
  function toggleShipmentBreakdown(cell){
 
