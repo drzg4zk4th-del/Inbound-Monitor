@@ -2755,6 +2755,8 @@ function openAllocationFromPO(element){
     document.getElementById("allocTotalPacks").value =
         allocationRow.cells[12].innerText.trim();
 
+ updateCartons();
+
     document.getElementById("allocLocation").value =
         allocationRow.cells[15].innerText.trim();
 
@@ -5823,7 +5825,54 @@ border-radius:10px;
 
 <h2>Allocation</h2>
 
-<div id="allocationContent"></div>
+<label>Loose Pallets</label>
+<input type="number" id="allocLoose">
+
+<label>Packs Pallets</label>
+<input type="number" id="allocPacks">
+
+<label>Units Per Carton</label>
+<input type="number" id="allocUPC">
+
+<label>Cartons</label>
+<input type="number" id="allocCartons">
+
+<label>Qty</label>
+<input type="number" id="allocQty">
+
+<label>Total Packs</label>
+<input type="number" id="allocTotalPacks">
+
+<script>
+
+function updateCartons(){
+
+const qty =
+Number(document.getElementById("allocQty").value);
+
+const upc =
+Number(document.getElementById("allocUPC").value);
+
+if(upc>0){
+
+document.getElementById("allocCartons").value =
+(qty/upc).toFixed(1);
+
+}else{
+
+document.getElementById("allocCartons").value = 0;
+
+}
+
+}
+
+document.getElementById("allocQty")
+.addEventListener("input",updateCartons);
+
+document.getElementById("allocUPC")
+.addEventListener("input",updateCartons);
+
+</script>
 
 <br>
 
