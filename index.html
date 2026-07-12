@@ -2718,55 +2718,22 @@ function openAllocationFromPO(element){
 
     allocationRow = element.closest("tr");
 
-    // Populate fields
-    document.getElementById("allocShipment").value =
-        allocationRow.cells[0].innerText.trim();
+    console.log(document.getElementById("allocShipment"));
+    console.log(document.getElementById("allocPO"));
+    console.log(document.getElementById("allocSKU"));
+    console.log(document.getElementById("allocStyle"));
+    console.log(document.getElementById("allocColour"));
+    console.log(document.getElementById("allocETA"));
+    console.log(document.getElementById("allocLoose"));
+    console.log(document.getElementById("allocPacks"));
+    console.log(document.getElementById("allocUPC"));
+    console.log(document.getElementById("allocCartons"));
+    console.log(document.getElementById("allocQty"));
+    console.log(document.getElementById("allocTotalPacks"));
+    console.log(document.getElementById("allocLocation"));
+    console.log(document.getElementById("allocCurrentLocation"));
+    console.log(document.getElementById("allocNotes"));
 
-    document.getElementById("allocPO").value =
-        allocationRow.cells[1].innerText.trim();
-
-    document.getElementById("allocSKU").value =
-        allocationRow.cells[2].innerText.trim();
-
-    document.getElementById("allocStyle").value =
-        allocationRow.cells[3].innerText.trim();
-
-    document.getElementById("allocColour").value =
-        allocationRow.cells[4].innerText.trim();
-
-    document.getElementById("allocETA").value =
-        allocationRow.cells[5].innerText.trim();
-
-    document.getElementById("allocLoose").value =
-        allocationRow.cells[7].innerText.trim();
-
-    document.getElementById("allocPacks").value =
-        allocationRow.cells[8].innerText.trim();
-
-    document.getElementById("allocUPC").value =
-        allocationRow.cells[9].innerText.trim();
-
-    document.getElementById("allocCartons").value =
-        allocationRow.cells[10].innerText.trim();
-
-    document.getElementById("allocQty").value =
-        allocationRow.cells[11].innerText.trim();
-
-    document.getElementById("allocTotalPacks").value =
-        allocationRow.cells[12].innerText.trim();
-
- updateCartons();
-
-    document.getElementById("allocLocation").value =
-        allocationRow.cells[15].innerText.trim();
-
-    document.getElementById("allocCurrentLocation").value =
-        allocationRow.cells[16].innerText.trim();
-
-    document.getElementById("allocNotes").value =
-        allocationRow.cells[19].innerText.trim();
-
-    document.getElementById("allocationModal").style.display = "block";
 }
 
 function closeAllocation(){
