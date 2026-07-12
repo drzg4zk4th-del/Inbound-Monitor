@@ -636,10 +636,27 @@ td[contenteditable="true"]:focus{
     box-sizing:border-box;
 }
 
+#allocationModal table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+#allocationModal td:first-child{
+    width:140px;
+    white-space:nowrap;
+}
+
+#allocationModal td:last-child{
+    width:auto;
+}
+ 
 #allocationModal .modal-content{
     width:500px;
     max-width:90%;
     margin:80px auto;
+    background:#0f172a;
+    padding:20px;
+    border-radius:10px;
 }
  
 </style>
@@ -5773,15 +5790,7 @@ background:rgba(0,0,0,.6);
 z-index:9999;
 ">
 
-<div
-style="
-width:450px;
-margin:80px auto;
-background:#0f172a;
-padding:20px;
-border-radius:10px;
-">
-
+<div class="modal-content">
 <h2>Allocation</h2>
 
 <table style="width:100%;border-collapse:collapse;">
