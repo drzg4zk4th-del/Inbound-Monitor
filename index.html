@@ -2754,11 +2754,41 @@ saveAll();
 
 }
 
+function getCategory(sku){
+
+    sku = sku.toUpperCase();
+
+    if(sku.startsWith("JBR")) return "Jewellery";
+    if(sku.startsWith("GIF")) return "Gifting";
+    if(sku.startsWith("HB")) return "Handbag";
+    if(sku.startsWith("BC")) return "Handbag";
+    if(sku.startsWith("BS")) return "Handbag";
+    if(sku.startsWith("JE")) return "Jewellery";
+    if(sku.startsWith("JW")) return "Jewellery";
+    if(sku.startsWith("JN")) return "Jewellery";
+    if(sku.startsWith("BT")) return "Belt";
+    if(sku.startsWith("AB")) return "Belt";
+    if(sku.startsWith("AS")) return "Scarf";
+    if(sku.startsWith("B-")) return "Sunglasses";
+    if(sku.startsWith("F")) return "Flat";
+    if(sku.startsWith("S")) return "Sandal";
+    if(sku.startsWith("H")) return "Heel";
+    if(sku.startsWith("B")) return "Boot";
+    if(sku.startsWith("K")) return "Kids";
+
+    return "Other";
+
+}
+ 
 function refreshShipmentOverview(){
 
 shipmentOverviewTable.innerHTML = `
 <tr>
-<th onclick="sortTable(this)" style="cursor:pointer;">Shipment ↕</th>
+<td
+onclick="toggleShipmentBreakdown(this)"
+style="cursor:pointer;font-weight:bold;">
+▶ ${shipment}
+</td>
 <th>Rows</th>
 <th>Total Units</th>
 <th>Total Cartons</th>
@@ -2892,7 +2922,49 @@ Mark All Arrived
 </td>
 `;
 
+ const detailRow = shipmentOverviewTable.insertRow(-1);
+
+detailRow.style.display = "none";
+
+detailRow.className = "shipment-detail";
+
+const detailCell = detailRow.insertCell(0);
+
+detailCell.colSpan = 10;
+
+detailCell.innerHTML =
+buildShipmentBreakdown(shipment);
+
 });
+
+}
+
+function buildShipmentBreakdown(shipment){
+
+    // We'll build this next step.
+
+}
+
+ function toggleShipmentBreakdown(cell){
+
+    const detailRow =
+        cell.parentNode.nextElementSibling;
+
+    if(detailRow.style.display==="none"){
+
+        detailRow.style.display="table-row";
+
+        cell.innerHTML =
+        cell.innerHTML.replace("▶","▼");
+
+    }else{
+
+        detailRow.style.display="none";
+
+        cell.innerHTML =
+        cell.innerHTML.replace("▼","▶");
+
+    }
 
 }
 
