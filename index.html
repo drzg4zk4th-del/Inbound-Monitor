@@ -2055,11 +2055,11 @@ const row = shipmentTable.insertRow(-1);
 row.innerHTML = `
 <td contenteditable="true">${data.shipment || ''}</td>
 <td>
-<span
-onclick="openAllocationFromPO(this)"
-style="cursor:pointer;font-weight:bold;">
-${data.po || ''}
-</span>
+    <span
+        onclick="openAllocationFromPO(this)"
+        style="cursor:pointer;font-weight:bold;">
+        ${data.po || ''}
+    </span>
 </td>
 <td contenteditable="true">${data.sku || ''}</td>
 <td contenteditable="true">${data.style || ''}</td>
