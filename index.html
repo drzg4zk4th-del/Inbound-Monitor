@@ -2855,7 +2855,13 @@ const row =
 shipmentOverviewTable.insertRow(-1);
 
 row.innerHTML = `
-<td>${shipment}</td>
+<td>
+<a href="#"
+onclick="showShipmentBreakdown('${safeShipment}');return false;"
+style="color:#60a5fa;font-weight:bold;">
+${shipment}
+</a>
+</td>
 <td>${data.rows}</td>
 
 <td>${data.units.toLocaleString()}</td>
@@ -2893,6 +2899,172 @@ Mark All Arrived
 `;
 
 });
+
+}
+
+function showShipmentBreakdown(shipment){
+
+    const rows = Array.from(shipmentTable.rows)
+        .slice(1)
+        .filter(r => r.cells[0].innerText.trim() === shipment);
+
+    if(rows.length===0) return;
+
+    let totalQty=0;
+    let totalCartons=0;
+    let totalPallets=0;
+
+    const categories={};
+
+    rows.forEach(row=>{
+
+        const sku=row.cells[2].innerText.trim().toLowerCase();
+
+        let category="Other";
+
+        if(sku.startsWith("f")) category="Flats";
+        else if(sku.startsWith("hb") || sku.startsWith("bc") || sku.startsWith("bs")) category="Handbags";
+        else if(sku.startsWith("s")) category="Sandals";
+        else if(sku.startsWith("h")) category="Heels";
+        else if(sku.startsWith("b-")) category="Sunglasses";
+        else if(sku.startsWith("b")) category="Boots";
+        else if(
+            sku.startsWith("je") ||
+            sku.startsWith("jw") ||
+            sku.startsWith("jbr") ||
+            sku.startsWith("jn")
+        ) category="Jewellery";
+        else if(
+            sku.startsWith("bt") ||
+            sku.startsWith("ab")
+        ) category="Belts";
+        else if(sku.startsWith("gif")) category="Gifting";
+        else if(sku.startsWith("k")) category="Kids";
+        else if(sku.startsWith("as")) category="Scarves";
+
+        const qty=Number(row.cells[11].innerText)||0;
+        const cartons=Number(row.cells[10].innerText)||0;
+        const pallets=
+            Number(row.cells[7].innerText||0)+
+            Number(row.cells[8].innerText||0);
+
+        totalQty+=qty;
+        totalCartons+=cartons;
+        totalPallets+=pallets;
+
+        if(!categories[category]){
+
+            categories[category]={
+                qty:0,
+                cartons:0,
+                pallets:0,
+                styles:0
+            };
+
+        }
+
+        categories[category].qty+=qty;
+        categories[category].cartons+=cartons;
+        categories[category].pallets+=pallets;
+        categories[category].styles++;
+
+    });
+
+    let html=`
+    <div id="shipmentBreakdownModal"
+    style="
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    z-index:99999;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    ">
+
+    <div style="
+    background:#071226;
+    width:900px;
+    max-height:90vh;
+    overflow:auto;
+    border-radius:18px;
+    padding:25px;
+    ">
+
+    <h2>${shipment}</h2>
+
+    <div class="dashboard-grid">
+
+        <div class="card">
+            <h3>Styles</h3>
+            <div class="big-number">${rows.length}</div>
+        </div>
+
+        <div class="card">
+            <h3>Units</h3>
+            <div class="big-number">${totalQty.toLocaleString()}</div>
+        </div>
+
+        <div class="card">
+            <h3>Cartons</h3>
+            <div class="big-number">${totalCartons.toLocaleString()}</div>
+        </div>
+
+        <div class="card">
+            <h3>Pallets</h3>
+            <div class="big-number">${totalPallets.toFixed(1)}</div>
+        </div>
+
+    </div>
+
+    <table style="width:100%;margin-top:20px;">
+
+    <tr>
+
+        <th>Category</th>
+        <th>Styles</th>
+        <th>Units</th>
+        <th>Cartons</th>
+        <th>Pallets</th>
+
+    </tr>
+    `;
+
+    Object.keys(categories).sort().forEach(cat=>{
+
+        const c=categories[cat];
+
+        html+=`
+        <tr>
+
+            <td>${cat}</td>
+            <td>${c.styles}</td>
+            <td>${c.qty.toLocaleString()}</td>
+            <td>${c.cartons.toLocaleString()}</td>
+            <td>${c.pallets.toFixed(1)}</td>
+
+        </tr>
+        `;
+
+    });
+
+    html+=`
+
+    </table>
+
+    <br>
+
+    <button class="add-btn"
+    onclick="document.getElementById('shipmentBreakdownModal').remove()">
+    Close
+    </button>
+
+    </div>
+
+    </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend",html);
 
 }
 
