@@ -2718,22 +2718,27 @@ function openAllocationFromPO(element){
 
     allocationRow = element.closest("tr");
 
-    console.log(document.getElementById("allocShipment"));
-    console.log(document.getElementById("allocPO"));
-    console.log(document.getElementById("allocSKU"));
-    console.log(document.getElementById("allocStyle"));
-    console.log(document.getElementById("allocColour"));
-    console.log(document.getElementById("allocETA"));
-    console.log(document.getElementById("allocLoose"));
-    console.log(document.getElementById("allocPacks"));
-    console.log(document.getElementById("allocUPC"));
-    console.log(document.getElementById("allocCartons"));
-    console.log(document.getElementById("allocQty"));
-    console.log(document.getElementById("allocTotalPacks"));
-    console.log(document.getElementById("allocLocation"));
-    console.log(document.getElementById("allocCurrentLocation"));
-    console.log(document.getElementById("allocNotes"));
+    document.getElementById("allocLoose").value =
+        allocationRow.cells[7].innerText.trim();
 
+    document.getElementById("allocPacks").value =
+        allocationRow.cells[8].innerText.trim();
+
+    document.getElementById("allocUPC").value =
+        allocationRow.cells[9].innerText.trim();
+
+    document.getElementById("allocCartons").value =
+        allocationRow.cells[10].innerText.trim();
+
+ updateCartons();
+
+    document.getElementById("allocQty").value =
+        allocationRow.cells[11].innerText.trim();
+
+    document.getElementById("allocTotalPacks").value =
+        allocationRow.cells[12].innerText.trim();
+
+    document.getElementById("allocationModal").style.display = "block";
 }
 
 function closeAllocation(){
@@ -2745,27 +2750,6 @@ function closeAllocation(){
 function saveAllocation(){
 
     if(!allocationRow) return;
-
-    allocationRow.cells[0].innerText =
-        document.getElementById("allocShipment").value;
-
-    allocationRow.cells[1].innerHTML =
-        `<span onclick="openAllocationFromPO(this)"
-        style="cursor:pointer;font-weight:bold;">
-        ${document.getElementById("allocPO").value}
-        </span>`;
-
-    allocationRow.cells[2].innerText =
-        document.getElementById("allocSKU").value;
-
-    allocationRow.cells[3].innerText =
-        document.getElementById("allocStyle").value;
-
-    allocationRow.cells[4].innerText =
-        document.getElementById("allocColour").value;
-
-    allocationRow.cells[5].innerText =
-        document.getElementById("allocETA").value;
 
     allocationRow.cells[7].innerText =
         document.getElementById("allocLoose").value;
@@ -2784,15 +2768,6 @@ function saveAllocation(){
 
     allocationRow.cells[12].innerText =
         document.getElementById("allocTotalPacks").value;
-
-    allocationRow.cells[15].innerText =
-        document.getElementById("allocLocation").value;
-
-    allocationRow.cells[16].innerText =
-        document.getElementById("allocCurrentLocation").value;
-
-    allocationRow.cells[19].innerText =
-        document.getElementById("allocNotes").value;
 
     closeAllocation();
 
