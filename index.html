@@ -2758,6 +2758,7 @@ function refreshShipmentOverview(){
 
 shipmentOverviewTable.innerHTML = `
 <tr>
+<th></th>
 <th onclick="sortTable(this)" style="cursor:pointer;">Shipment ↕</th>
 <th>Rows</th>
 <th>Total Units</th>
@@ -2813,6 +2814,10 @@ groups[shipment] = {
     eta:eta,
     virtualUnits:0,
     wholesaleUnits:0
+ mainUnits:0,
+virtualUnits:0,
+prUnits:0,
+sevenUnits:0
 };
 
 }
