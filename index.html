@@ -4715,7 +4715,7 @@ function refreshRetailMetricsHotfix(){
 let totalUnits=0;
 let totalPickruns=0;
 let discrepancies=0;
-let discrepancyPickruns=0;
+const discrepancyPickruns = new Set();
 let openDiscrepancies=0;
 let totalStores=0;
 
@@ -4731,10 +4731,14 @@ if(!d.archived && !d.completed){
    totalStores += Number(d.stores || 0);
 }
 
-   // Only count completed / archived pickruns
+// Only count completed / archived pickruns
 if((d.archived || d.completed) && disc > 0){
+
    discrepancies += disc;
-   discrepancyPickruns++;
+
+   // Count each pickrun only once
+   discrepancyPickruns.add(d.pickrunNumber);
+
 }
 
    if(!d.archived && !d.completed){
@@ -4777,8 +4781,8 @@ const discrepancyRate =
    : '0.00';
 
 const avgDiscrepancies =
-   discrepancyPickruns > 0
-   ? (discrepancies / discrepancyPickruns).toFixed(1)
+   discrepancyPickruns.size > 0
+   ? (discrepancies / discrepancyPickruns.size).toFixed(1)
    : '0.0';
    update(['retailMetricAvgDiscrepancies'], avgDiscrepancies + ' Avg');
    update(['retailMetricDiscrepancyRate'], discrepancyRate + '%');
