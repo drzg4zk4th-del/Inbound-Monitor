@@ -321,13 +321,52 @@ alert("Label ready. Click 'Print Carton Labels'.");
 
 function printLabels(){
 
-document.getElementById("pFrom").textContent=document.getElementById("fromStore").value;
-document.getElementById("pTo").textContent=document.getElementById("toStore").value;
-document.getElementById("pTransfer").textContent=document.getElementById("transferNumber").value;
-document.getElementById("pContents").textContent=document.getElementById("contents").value;
+const transfer=document.getElementById("transferNumber").value.trim();
+const from=document.getElementById("fromStore").value;
+const to=document.getElementById("toStore").value;
 
-window.print();
+let styles=0;
+let units=0;
+let rows=[];
 
+document.querySelectorAll("#styleTable tbody tr").forEach(row=>{
+  const tick=row.querySelector(".pick");
+  if(!tick.checked) return;
+  const style=row.cells[1].innerText;
+  const colour=row.cells[2].innerText;
+  const qty=Number(row.querySelector(".qty").value);
+  styles++;
+  units+=qty;
+  rows.push(`<div>${style} ${colour} × ${qty}</div>`);
+});
+
+const p=window.open("","_blank");
+p.document.open();
+p.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<title>Transfer Label</title>
+<style>
+@page{size:150mm 100mm;margin:0}
+body{margin:0;padding:8mm;font-family:Arial}
+h4{margin:0;font-size:11pt}
+.big{font-size:20pt;font-weight:bold;margin-bottom:3mm}
+.list{border-top:2px solid #000;border-bottom:2px solid #000;padding:3mm 0;margin:3mm 0;font-size:11pt}
+.total{font-size:12pt;font-weight:bold}
+</style>
+</head>
+<body>
+<h4>FROM</h4><div class="big">${from}</div>
+<h4>TO</h4><div class="big">${to}</div>
+<h4>TRANSFER NO</h4><div class="big">${transfer}</div>
+<div class="list">${rows.join("")}</div>
+<div class="total">${styles} Styles • ${units} Units</div>
+</body>
+</html>`);
+p.document.close();
+p.focus();
+p.print();
+setTimeout(()=>p.close(),500);
 }
 
 function printPackingList(){
@@ -418,19 +457,6 @@ onkeyup="filterStyles()">
 
 <div class="section">
 
-<h3>Label Details</h3>
-
-<label>Contents</label>
-<textarea id="contents" rows="5" style="width:100%;padding:10px;border-radius:8px;background:#111827;color:white;border:1px solid #374151;box-sizing:border-box;" placeholder="Example:
-8 Styles
-34 Units"></textarea>
-
-<p>This tool prints a standard 150 x 100 mm Zebra carton label.</p>
-
-</div>
-
-<div class="section">
-
 <button onclick="generateTransfer()">
 
 Generate Transfer
@@ -453,27 +479,6 @@ Print Packing List
 
 </div>
 
-
-<div id="printLabel" style="display:none;">
-<div class="heading">FROM</div>
-<div id="pFrom" class="value"></div>
-
-<div class="heading">TO</div>
-<div id="pTo" class="value"></div>
-
-<div class="heading">TRANSFER NO</div>
-<div id="pTransfer" class="value"></div>
-
-<div class="contents">
-<b>CONTENTS</b><br>
-<div id="pContents"></div>
-</div>
-</div>
-
-<script>
-window.addEventListener("beforeprint",()=>{document.getElementById("printLabel").style.display="block";});
-window.addEventListener("afterprint",()=>{document.getElementById("printLabel").style.display="none";});
-</script>
 
 </body>
   
