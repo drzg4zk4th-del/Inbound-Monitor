@@ -385,11 +385,16 @@ let items=[];
 document.querySelectorAll("#styleTable tbody tr").forEach(row=>{
  const tick=row.querySelector(".pick");
  if(!tick.checked) return;
- const style=row.cells[1].innerText;
- const colour=row.cells[2].innerText;
+ const style=row.cells[2].innerText;
+ const colour=row.cells[3].innerText;
  const qty=row.querySelector(".qty").value;
  items.push(`${style} ${colour}<span>× ${qty}</span>`);
+ const idx=[...row.parentNode.children].indexOf(row);
+ if(returnsData[idx]){
+   returnsData[idx].transferNumber=transfer;
+ }
 });
+saveReturnsConsole();
 
 let font=40;
 if(items.length>1) font=34;
@@ -441,7 +446,15 @@ JsBarcode(p.document.getElementById("barcode"),transfer,{
 
 p.focus();
 p.print();
-setTimeout(()=>p.close(),500);
+setTimeout(()=>{
+p.close();
+document.getElementById("transferNumber").value="";
+document.getElementById("searchStyle").value="";
+document.getElementById("fromStore").selectedIndex=0;
+document.getElementById("toStore").selectedIndex=0;
+document.querySelector("#styleTable tbody").innerHTML="";
+document.getElementById("summary").innerHTML="0 Styles<br>0 Units";
+},500);
 
 }
 
@@ -492,6 +505,8 @@ onkeyup="filterStyles()">
 <thead>
 
 <tr>
+
+<th>Transfer</th>
 
 <th></th>
 
