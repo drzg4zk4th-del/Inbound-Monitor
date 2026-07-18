@@ -295,7 +295,10 @@ let importedCount=0;
    s9:Number(r['9']||0),
    s10:Number(r['10']||0),
    s11:Number(r['11']||0),
-   os:Number(r['OS']||0)
+   os:Number(
+    r['OS'] ??
+    r['O/S'] ??
+)
   });
  });
 
