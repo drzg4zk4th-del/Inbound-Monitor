@@ -359,9 +359,10 @@ function refreshData(){
  document.getElementById('transitUnits').innerText=transitData.reduce((a,b)=>a+b.qty,0).toLocaleString();
 
  
- returnsData.forEach(r=>{
+returnsData.forEach(r=>{
 
-if(!styleSummary[r.style]){
+    // ---------- Style summary ----------
+    if(!styleSummary[r.style]){
         styleSummary[r.style]={
             totalUnits:0,
             colours:{},
@@ -370,43 +371,48 @@ if(!styleSummary[r.style]){
         };
     }
 
-storeSummary[r.store].totalRows++;
+    styleSummary[r.style].totalUnits += r.qty;
+    styleSummary[r.style].stores.add(r.store);
+    styleSummary[r.style].colours[r.colour] =
+        (styleSummary[r.style].colours[r.colour] || 0) + r.qty;
 
-if(r.transferNumber && String(r.transferNumber).trim()!==""){
-    storeSummary[r.store].completedRows++;
-}
+    // ---------- Store summary ----------
+    if(!storeSummary[r.store]){
+        storeSummary[r.store]={
+            units:0,
+            styles:new Set(),
+            totalRows:0,
+            completedRows:0
+        };
+    }
 
-   styleSummary[r.style].totalUnits+=r.qty;
-   styleSummary[r.style].stores.add(r.store);
+    storeSummary[r.store].units += r.qty;
+    storeSummary[r.store].styles.add(r.style);
+    storeSummary[r.store].totalRows++;
 
-   styleSummary[r.style].colours[r.colour]=
-      (styleSummary[r.style].colours[r.colour]||0)+r.qty;
+    if(r.transferNumber && String(r.transferNumber).trim() !== ""){
+        storeSummary[r.store].completedRows++;
+    }
 
-   if(!storeSummary[r.store]){
-    storeSummary[r.store]={
-        units:0,
-        styles:new Set(),
-        totalRows:0,
-        completedRows:0
-    };
-}
+    // ---------- Other summaries ----------
+    colourSummary[r.colour] =
+        (colourSummary[r.colour] || 0) + r.qty;
 
-storeSummary[r.store].units+=r.qty;
-storeSummary[r.store].styles.add(r.style);
+    categorySummary[r.category] =
+        (categorySummary[r.category] || 0) + r.qty;
 
-storeSummary[r.store].totalRows++;
+    sizeTotals['4'] += (r.s4 || 0);
+    sizeTotals['5'] += (r.s5 || 0);
+    sizeTotals['6'] += (r.s6 || 0);
+    sizeTotals['7'] += (r.s7 || 0);
+    sizeTotals['8'] += (r.s8 || 0);
+    sizeTotals['9'] += (r.s9 || 0);
+    sizeTotals['10'] += (r.s10 || 0);
+    sizeTotals['11'] += (r.s11 || 0);
+    sizeTotals['OS'] += (r.os || 0);
 
-if(r.transferNumber && String(r.transferNumber).trim()!==""){
-    storeSummary[r.store].completedRows++;
-}
-   colourSummary[r.colour]=(colourSummary[r.colour]||0)+r.qty;
-   categorySummary[r.category]=(categorySummary[r.category]||0)+r.qty;
-
-   sizeTotals['4']+=(r.s4||0); sizeTotals['5']+=(r.s5||0); sizeTotals['6']+=(r.s6||0);
-   sizeTotals['7']+=(r.s7||0); sizeTotals['8']+=(r.s8||0); sizeTotals['9']+=(r.s9||0);
-   sizeTotals['10']+=(r.s10||0); sizeTotals['11']+=(r.s11||0); sizeTotals['OS']+=(r.os||0);
- });
-
+});
+    
  transitData.forEach(t=>{
    if(styleSummary[t.style]) styleSummary[t.style].transit+=t.qty;
  });
