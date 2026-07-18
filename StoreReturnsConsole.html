@@ -361,14 +361,14 @@ function refreshData(){
  
  returnsData.forEach(r=>{
 
-  if(!storeSummary[r.store]){
-    storeSummary[r.store]={
-        units:0,
-        styles:new Set(),
-        totalRows:0,
-        completedRows:0
-    };
-}
+if(!styleSummary[r.style]){
+        styleSummary[r.style]={
+            totalUnits:0,
+            colours:{},
+            stores:new Set(),
+            transit:0
+        };
+    }
 
 storeSummary[r.store].totalRows++;
 
