@@ -413,7 +413,11 @@ if(progress < 33){
     bar.style.background = "#22c55e";      // Green
 }
  document.getElementById('remainingUnits').innerText=remaining.toLocaleString();
- document.getElementById('returnProgress').innerText=(units?((transitTotal/units)*100).toFixed(1):0)+'%';
+ const returnProgress = document.getElementById("returnProgress");
+if (returnProgress) {
+    returnProgress.innerText =
+        (units ? ((transitTotal / units) * 100).toFixed(1) : 0) + "%";
+}
  document.getElementById('avgUnits').innerText=(styles.size?Math.round(units/styles.size):0);
  
  let ls='-',lsv=0; Object.entries(styleSummary).forEach(([k,v])=>{if(v.totalUnits>lsv){lsv=v.totalUnits;ls=k}});
