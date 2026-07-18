@@ -55,6 +55,28 @@ color:white;
 
 }
 
+
+@media print{
+body *{visibility:hidden!important;}
+#printLabel,#printLabel *{visibility:visible!important;}
+#printLabel{
+position:absolute;
+left:0;
+top:0;
+width:150mm;
+height:100mm;
+background:white;
+color:black;
+padding:8mm;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+#printLabel .heading{font-size:11pt;font-weight:bold;margin-top:3mm;}
+#printLabel .value{font-size:22pt;font-weight:bold;margin-bottom:4mm;}
+#printLabel .contents{border-top:2px solid #000;padding-top:4mm;white-space:pre-wrap;font-size:14pt;}
+@page{size:150mm 100mm;margin:0;}
+}
+
 </style>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'></script>
 
@@ -299,54 +321,14 @@ alert("Label ready. Click 'Print Carton Labels'.");
 
 function printLabels(){
 
-const transfer=document.getElementById("transferNumber").value;
-const from=document.getElementById("fromStore").value;
-const to=document.getElementById("toStore").value;
-const contents=document.getElementById("contents").value;
+document.getElementById("pFrom").textContent=document.getElementById("fromStore").value;
+document.getElementById("pTo").textContent=document.getElementById("toStore").value;
+document.getElementById("pTransfer").textContent=document.getElementById("transferNumber").value;
+document.getElementById("pContents").textContent=document.getElementById("contents").value;
 
-const label=window.open("","_blank","width=700,height=500");
+window.print();
 
-label.document.write(`<!DOCTYPE html>
-<html>
-<head>
-<title>Transfer Label</title>
-<style>
-@page{size:150mm 100mm;margin:0;}
-html,body{margin:0;padding:0;width:150mm;height:100mm;font-family:Arial;}
-body{display:flex;justify-content:center;align-items:center;}
-.label{width:150mm;height:100mm;box-sizing:border-box;padding:8mm;border:2px solid #000;}
-.heading{font-size:11pt;font-weight:bold;}
-.value{font-size:22pt;font-weight:bold;margin:2mm 0 5mm;}
-.contents{font-size:14pt;white-space:pre-wrap;border-top:2px solid #000;padding-top:4mm;}
-</style>
-</head>
-<body>
-<div class="label">
-<div class="heading">FROM</div>
-<div class="value">${from}</div>
-
-<div class="heading">TO</div>
-<div class="value">${to}</div>
-
-<div class="heading">TRANSFER NO</div>
-<div class="value">${transfer}</div>
-
-<div class="contents"><b>CONTENTS</b><br>${contents.replace(/
-/g,"<br>")}</div>
-</div>
-<script>
-window.onload=function(){
- setTimeout(function(){
-   window.print();
-   window.close();
- },300);
 }
-</script>
-</body>
-</html>`);
-label.document.close();
-}
-
 
 function printPackingList(){
     alert("Coming Soon");
@@ -470,6 +452,28 @@ Print Packing List
 </div>
 
 </div>
+
+
+<div id="printLabel" style="display:none;">
+<div class="heading">FROM</div>
+<div id="pFrom" class="value"></div>
+
+<div class="heading">TO</div>
+<div id="pTo" class="value"></div>
+
+<div class="heading">TRANSFER NO</div>
+<div id="pTransfer" class="value"></div>
+
+<div class="contents">
+<b>CONTENTS</b><br>
+<div id="pContents"></div>
+</div>
+</div>
+
+<script>
+window.addEventListener("beforeprint",()=>{document.getElementById("printLabel").style.display="block";});
+window.addEventListener("afterprint",()=>{document.getElementById("printLabel").style.display="none";});
+</script>
 
 </body>
   
