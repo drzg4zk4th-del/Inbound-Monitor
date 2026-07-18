@@ -34,6 +34,21 @@ th{
 .metrics{grid-template-columns:repeat(3,1fr)}
 }
 
+.storeBar{
+    width:100%;
+    height:8px;
+    background:#111827;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:4px;
+}
+
+.storeBarFill{
+    height:100%;
+    background:#22c55e;
+    border-radius:999px;
+}
+
 </style>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'></script>
 
@@ -375,9 +390,21 @@ function refreshData(){
    styleSummary[r.style].colours[r.colour]=
       (styleSummary[r.style].colours[r.colour]||0)+r.qty;
 
-   if(!storeSummary[r.store]) storeSummary[r.store]={units:0,styles:new Set()};
-   storeSummary[r.store].units+=r.qty;
-   storeSummary[r.store].styles.add(r.style);
+   if(!storeSummary[r.store]){
+    storeSummary[r.store]={
+        units:0,
+        packed:0,
+        styles:new Set()
+    };
+}
+
+storeSummary[r.store].units += r.qty;
+
+if(r.transferNumber){
+    storeSummary[r.store].packed += r.qty;
+}
+
+storeSummary[r.store].styles.add(r.style);
 
    colourSummary[r.colour]=(colourSummary[r.colour]||0)+r.qty;
    categorySummary[r.category]=(categorySummary[r.category]||0)+r.qty;
@@ -426,8 +453,48 @@ if(progress < 33){
  document.getElementById('largestStyle').innerText=ls;
  document.getElementById('largestStore').innerText=lstore;
 
- const sb=document.querySelector('#storeSummaryTable tbody'); if(sb){sb.innerHTML='';Object.entries(storeSummary).sort((a,b)=>b[1].units-a[1].units).forEach(([k,v])=>sb.innerHTML+=`<tr><td>${k}</td><td>${v.units}</td><td>${v.styles.size}</td></tr>`);}
- 
+const sb = document.querySelector("#storeSummaryTable tbody");
+
+if(sb){
+
+    sb.innerHTML="";
+
+    Object.entries(storeSummary)
+    .sort((a,b)=>b[1].units-a[1].units)
+    .forEach(([store,data])=>{
+
+        const pct = data.units
+            ? (data.packed / data.units) * 100
+            : 0;
+
+        let colour="#ef4444";
+
+        if(pct>=50) colour="#f59e0b";
+        if(pct>=100) colour="#22c55e";
+
+        sb.innerHTML += `
+        <tr>
+
+            <td>
+                <b>${store}</b>
+
+                <div class="storeBar">
+                    <div class="storeBarFill"
+                        style="width:${pct}%;background:${colour};">
+                    </div>
+                </div>
+
+                <small>${pct.toFixed(0)}%</small>
+            </td>
+
+            <td>${data.units.toLocaleString()}</td>
+
+            <td>${data.styles.size}</td>
+
+        </tr>`;
+    });
+
+} 
 const stb=document.querySelector('#styleSummaryTable tbody');
 
 if(stb){
