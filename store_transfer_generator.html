@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Store Returns Console V3.1</title>
+<title>Store Transfer Label Generator</title>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#0b1220;color:#fff}
 .header{display:flex;justify-content:space-between;align-items:center;padding:20px;background:#111827;border-bottom:1px solid #374151}
@@ -178,7 +178,9 @@ stores.forEach(store=>{
 
 from.innerHTML+=`<option>${store}</option>`;
 
-to.innerHTML+=`<option>${store}</option>`;
+if(store!=="Virtual Warehouse"){
+    to.innerHTML+=`<option>${store}</option>`;
+}
 
 });
 
@@ -292,49 +294,43 @@ style.includes(search) ? "" : "none";
 }
 
 function generateTransfer(){
+alert("Label ready. Click 'Print Carton Labels'.");
+}
 
-    const transfer = document.getElementById("transferNumber").value.trim();
+function printLabels(){
 
-    const from = document.getElementById("fromStore").value;
+const transfer=document.getElementById("transferNumber").value;
+const from=document.getElementById("fromStore").value;
+const to=document.getElementById("toStore").value;
+const contents=document.getElementById("contents").value;
 
-    const to = document.getElementById("toStore").value;
+const w=window.open("","","width=900,height=700");
 
-    if(transfer===""){
-        alert("Enter a Transfer Number");
-        return;
-    }
-
-    if(from===""){
-        alert("Select the From Store");
-        return;
-    }
-
-    if(to===""){
-        alert("Select the To Store");
-        return;
-    }
-
-    // Must be exactly 13 digits for now
-    if(!/^\d{13}$/.test(transfer)){
-        alert("Transfer Number must be a 13 digit EAN.");
-        return;
-    }
-
-    JsBarcode("#barcode", transfer,{
-        format:"EAN13",
-        width:2,
-        height:80,
-        displayValue:true
-    });
-
-    document.getElementById("barcodeText").innerHTML=
-        "<b>"+transfer+"</b>";
-
-    document.getElementById("labelDetails").innerHTML=
-        `
-        <b>FROM:</b> ${from}<br>
-        <b>TO:</b> ${to}
-        `;
+w.document.write(`
+<html>
+<head>
+<title>Print Label</title>
+<style>
+@page{size:150mm 100mm;margin:5mm;}
+body{font-family:Arial;margin:0;padding:0;}
+.label{width:140mm;height:90mm;border:2px solid #000;padding:8mm;box-sizing:border-box;}
+h1{font-size:18pt;margin:0 0 8mm 0;}
+.big{font-size:22pt;font-weight:bold;margin-bottom:6mm;}
+.section{font-size:13pt;margin-bottom:6mm;}
+.contents{white-space:pre-wrap;font-size:13pt;border-top:1px solid #000;padding-top:5mm;}
+</style>
+</head>
+<body onload="window.print();window.close();">
+<div class="label">
+<h1>STORE TRANSFER</h1>
+<div class="section"><b>FROM</b><br><div class="big">${from}</div></div>
+<div class="section"><b>TO</b><br><div class="big">${to}</div></div>
+<div class="section"><b>TRANSFER NO</b><br><div class="big">${transfer}</div></div>
+<div class="contents"><b>CONTENTS</b><br>${contents.replace(/\n/g,"<br>")}</div>
+</div>
+</body>
+</html>`);
+w.document.close();
 
 }
 function printLabels(){
@@ -369,7 +365,7 @@ function printPackingList(){
 
 <label>To Store</label>
 <select id="toStore">
-    <option value="">Select Store</option>
+    <option value="Virtual Warehouse" selected>Virtual Warehouse</option>
 </select>
 
 </div>
@@ -429,13 +425,14 @@ onkeyup="filterStyles()">
 
 <div class="section">
 
-<h3>Transfer Label Preview</h3>
+<h3>Label Details</h3>
 
-<svg id="barcode"></svg>
+<label>Contents</label>
+<textarea id="contents" rows="5" style="width:100%;padding:10px;border-radius:8px;background:#111827;color:white;border:1px solid #374151;box-sizing:border-box;" placeholder="Example:
+8 Styles
+34 Units"></textarea>
 
-<div id="barcodeText" style="margin-top:15px;"></div>
-
-<div id="labelDetails" style="margin-top:20px;"></div>
+<p>This tool prints a standard 150 x 100 mm Zebra carton label.</p>
 
 </div>
 
