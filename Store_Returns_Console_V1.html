@@ -261,9 +261,15 @@ let importedCount=0;
  rows.forEach(r=>{
 importedCount++;
 
-  returnsData.push({
-   store:r['From Store']||'',
-   category:r['CATEGORY']||'',
+returnsData.push({
+    store:r['From Store']||'',
+    toStore:String(
+        r['To Store']||
+        r['TO STORE']||
+        r['To store']||
+        ''
+    ).trim(),
+    category:r['CATEGORY']||'',
    style:String(r['STYLE']||'').trim(),
    colour:String(r['COLOUR']||'').trim(),
    qty:Number(r['QTY']||0),
@@ -304,8 +310,14 @@ let importedCount=0;
 importedCount++;
 
   transitData.push({
-   store:r['From Store']||'',
-   category:r['CATEGORY']||'',
+       store:r['From Store']||'',
+    toStore:String(
+        r['To Store']||
+        r['TO STORE']||
+        r['To store']||
+        ''
+    ).trim(),
+    category:r['CATEGORY']||'',
    style:String(r['STYLE']||'').trim(),
    colour:String(r['COLOUR']||'').trim(),
    qty:Number(r['QTY']||0),
@@ -333,7 +345,9 @@ importedCount++;
 }
 
 function refreshData(){
-  const virtualReturns=virtualReturns.filter(r=>((r.toStore||'VIRTUAL WAREHOUSE').toUpperCase()==='VIRTUAL WAREHOUSE'));
+const virtualReturns = returnsData.filter(r =>
+    (r.toStore || 'VIRTUAL WAREHOUSE').toUpperCase() === 'VIRTUAL WAREHOUSE'
+);((r.toStore||'VIRTUAL WAREHOUSE').toUpperCase()==='VIRTUAL WAREHOUSE'));
   const virtualTransit=transitData.filter(r=>((r.toStore||'VIRTUAL WAREHOUSE').toUpperCase()==='VIRTUAL WAREHOUSE'));
 
  let styleSummary={},storeSummary={},colourSummary={},categorySummary={};
