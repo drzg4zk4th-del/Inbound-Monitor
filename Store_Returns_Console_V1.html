@@ -246,14 +246,6 @@ window.addEventListener('load',async()=>{
 
 </div>
 
-<div class="section">
-<h3>Raw Imported Data</h3>
-<button onclick="clearConsole()">Clear Console</button> <button onclick="archiveCampaign()">📦 Archive Campaign</button>
-<table id="rawTable"><thead><tr>
-<th>Store</th><th>Category</th><th>Style</th><th>Colour</th><th>Qty</th>
-</tr></thead><tbody></tbody></table>
-</div>
-
 </div>
 
 <script>
@@ -267,19 +259,7 @@ async function importReturns(){
 let importedCount=0;
 
  rows.forEach(r=>{
-
-  const toStore=String(
-    r['To Store']||
-    r['TO STORE']||
-    r['To store']||
-    ''
-  ).trim().toUpperCase();
-
-  if(toStore && toStore!=='VIRTUAL WAREHOUSE'){
-    return;
-  }
-
-  importedCount++;
+importedCount++;
 
   returnsData.push({
    store:r['From Store']||'',
@@ -321,19 +301,7 @@ async function importTransit(){
 let importedCount=0;
 
  rows.forEach(r=>{
-
-  const toStore=String(
-    r['To Store']||
-    r['TO STORE']||
-    r['To store']||
-    ''
-  ).trim().toUpperCase();
-
-  if(toStore && toStore!=='VIRTUAL WAREHOUSE'){
-    return;
-  }
-
-  importedCount++;
+importedCount++;
 
   transitData.push({
    store:r['From Store']||'',
@@ -365,13 +333,16 @@ let importedCount=0;
 }
 
 function refreshData(){
+  const virtualReturns=virtualReturns.filter(r=>((r.toStore||'VIRTUAL WAREHOUSE').toUpperCase()==='VIRTUAL WAREHOUSE'));
+  const virtualTransit=transitData.filter(r=>((r.toStore||'VIRTUAL WAREHOUSE').toUpperCase()==='VIRTUAL WAREHOUSE'));
+
  let styleSummary={},storeSummary={},colourSummary={},categorySummary={};
  let sizeTotals={'4':0,'5':0,'6':0,'7':0,'8':0,'9':0,'10':0,'11':0,'OS':0};
 
  let units=0;
  const styles=new Set(), stores=new Set();
 
- returnsData.forEach(r=>{
+ virtualReturns.forEach(r=>{
    units+=r.qty;
    styles.add(r.style);
    stores.add(r.store);
@@ -380,10 +351,10 @@ function refreshData(){
  document.getElementById('returnedUnits').innerText=units.toLocaleString();
  document.getElementById('uniqueStyles').innerText=styles.size;
  document.getElementById('storeCount').innerText=stores.size;
- document.getElementById('transitUnits').innerText=transitData.reduce((a,b)=>a+b.qty,0).toLocaleString();
+ document.getElementById('transitUnits').innerText=virtualTransit.reduce((a,b)=>a+b.qty,0).toLocaleString();
 
  
- returnsData.forEach(r=>{
+ virtualReturns.forEach(r=>{
 
    if(!styleSummary[r.style]){
       styleSummary[r.style]={
@@ -424,13 +395,13 @@ storeSummary[r.store].styles.add(r.style);
    sizeTotals['10']+=(r.s10||0); sizeTotals['11']+=(r.s11||0); sizeTotals['OS']+=(r.os||0);
  });
 
- transitData.forEach(t=>{
+ virtualTransit.forEach(t=>{
    if(styleSummary[t.style]) styleSummary[t.style].transit+=t.qty;
  });
 
  document.getElementById('categoryCount').innerText=Object.keys(categorySummary).length;
 
- const transitTotal=transitData.reduce((a,b)=>a+b.qty,0);
+ const transitTotal=virtualTransit.reduce((a,b)=>a+b.qty,0);
  const remaining=Math.max(units-transitTotal,0);
  const progress = units ? (transitTotal / units) * 100 : 0;
 
@@ -451,11 +422,11 @@ if(progress < 33){
  document.getElementById('remainingUnits').innerText=remaining.toLocaleString();
   document.getElementById('avgUnits').innerText=(styles.size?(units/styles.size).toFixed(1):0);
 
-  const packedUnits=returnsData.filter(r=>r.transferNumber).reduce((a,r)=>a+Number(r.qty||0),0);
+  const packedUnits=virtualReturns.filter(r=>r.transferNumber).reduce((a,r)=>a+Number(r.qty||0),0);
   const packPct=units?((packedUnits/units)*100):0;
   document.getElementById('packingProgress').innerText=packPct.toFixed(1)+'%';
   document.getElementById('transferCount').innerText=
-    new Set(returnsData.filter(r=>r.transferNumber).map(r=>r.transferNumber)).size;
+    new Set(virtualReturns.filter(r=>r.transferNumber).map(r=>r.transferNumber)).size;
 
  
  let ls='-',lsv=0; Object.entries(styleSummary).forEach(([k,v])=>{if(v.totalUnits>lsv){lsv=v.totalUnits;ls=k}});
@@ -545,15 +516,6 @@ const colourList = Object.entries(v.colours)
  const cb=document.querySelector('#colourSummaryTable tbody'); if(cb){cb.innerHTML='';Object.entries(colourSummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>cb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
  const catb=document.querySelector('#categorySummaryTable tbody'); if(catb){catb.innerHTML='';Object.entries(categorySummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>catb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
  const sizeb=document.querySelector('#sizeTable tbody'); if(sizeb){sizeb.innerHTML='';Object.entries(sizeTotals).forEach(([k,v])=>sizeb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
-
- const body=document.querySelector('#rawTable tbody');
- if(body){
-   body.innerHTML='';
-   returnsData.slice(0,1000).forEach(r=>{
-      body.innerHTML+=`<tr><td>${r.store}</td><td>${r.category}</td><td>${r.style}</td><td>${r.colour}</td><td>${r.qty}</td></tr>`;
-   });
- }
-}
 
 async function clearConsole(){
  if(!confirm('Clear all data?')) return;
