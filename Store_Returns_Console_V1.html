@@ -69,8 +69,12 @@ appId: "1:1016653351453:web:a2a1f597844adf51ba54f4"
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let returnsData=[];
-let transitData=[];
+let returnsData = [];
+let transitData = [];
+
+// Everything imported
+let allReturnsData = [];
+let allTransitData = [];
 
 async function saveReturnsConsole(){
 
@@ -108,9 +112,6 @@ async function saveReturnsConsole(){
 }
 
 async function loadReturnsConsole(){
-
- returnsData=[];
- transitData=[];
 
  const meta =
  await db.collection('storeReturnsConsole')
@@ -261,7 +262,7 @@ let importedCount=0;
  rows.forEach(r=>{
 importedCount++;
 
-returnsData.push({
+const row = {
     store:r['From Store']||'',
     toStore:String(
         r['To Store']||
@@ -270,25 +271,22 @@ returnsData.push({
         ''
     ).trim(),
     category:r['CATEGORY']||'',
-   style:String(r['STYLE']||'').trim(),
-   colour:String(r['COLOUR']||'').trim(),
-   qty:Number(r['QTY']||0),
-   s4:Number(r['4']||0),
-   s5:Number(r['5']||0),
-   s6:Number(r['6']||0),
-   s7:Number(r['7']||0),
-   s8:Number(r['8']||0),
-   s9:Number(r['9']||0),
-   s10:Number(r['10']||0),
-   s11:Number(r['11']||0),
-   s12:Number(r['12']||0),
-   os:Number(
-    r['OS'] ??
-    r['O/S'] ??
-    0
-)
-  });
- });
+    style:String(r['STYLE']||'').trim(),
+    colour:String(r['COLOUR']||'').trim(),
+    qty:Number(r['QTY']||0),
+    s4:Number(r['4']||0),
+    s5:Number(r['5']||0),
+    s6:Number(r['6']||0),
+    s7:Number(r['7']||0),
+    s8:Number(r['8']||0),
+    s9:Number(r['9']||0),
+    s10:Number(r['10']||0),
+    s11:Number(r['11']||0),
+    s12:Number(r['12']||0),
+    os:Number(r['OS'] ?? r['O/S'] ?? 0)
+};
+
+returnsData.push(row);
 
  alert(importedCount+' rows imported');
 
@@ -309,8 +307,8 @@ let importedCount=0;
  rows.forEach(r=>{
 importedCount++;
 
-  transitData.push({
-       store:r['From Store']||'',
+const row = {
+    store:r['From Store']||'',
     toStore:String(
         r['To Store']||
         r['TO STORE']||
@@ -318,25 +316,22 @@ importedCount++;
         ''
     ).trim(),
     category:r['CATEGORY']||'',
-   style:String(r['STYLE']||'').trim(),
-   colour:String(r['COLOUR']||'').trim(),
-   qty:Number(r['QTY']||0),
-   s4:Number(r['4']||0),
-   s5:Number(r['5']||0),
-   s6:Number(r['6']||0),
-   s7:Number(r['7']||0),
-   s8:Number(r['8']||0),
-   s9:Number(r['9']||0),
-   s10:Number(r['10']||0),
-   s11:Number(r['11']||0),
-   s12:Number(r['12']||0),
-   os:Number(
-      r['OS'] ??
-      r['O/S'] ??
-      0
-   )
-  });
- });
+    style:String(r['STYLE']||'').trim(),
+    colour:String(r['COLOUR']||'').trim(),
+    qty:Number(r['QTY']||0),
+    s4:Number(r['4']||0),
+    s5:Number(r['5']||0),
+    s6:Number(r['6']||0),
+    s7:Number(r['7']||0),
+    s8:Number(r['8']||0),
+    s9:Number(r['9']||0),
+    s10:Number(r['10']||0),
+    s11:Number(r['11']||0),
+    s12:Number(r['12']||0),
+    os:Number(r['OS'] ?? r['O/S'] ?? 0)
+};
+
+transitData.push(row);
 
  alert(importedCount+' rows imported');
 
@@ -346,9 +341,12 @@ importedCount++;
 
 function refreshData(){
 const virtualReturns = returnsData.filter(r =>
-    (r.toStore || 'VIRTUAL WAREHOUSE').toUpperCase() === 'VIRTUAL WAREHOUSE'
-);((r.toStore||'VIRTUAL WAREHOUSE').toUpperCase()==='VIRTUAL WAREHOUSE'));
-  const virtualTransit=transitData.filter(r=>((r.toStore||'VIRTUAL WAREHOUSE').toUpperCase()==='VIRTUAL WAREHOUSE'));
+    (r.toStore || "").toUpperCase() === "VIRTUAL WAREHOUSE"
+);
+
+const virtualTransit = transitData.filter(r =>
+    (r.toStore || "").toUpperCase() === "VIRTUAL WAREHOUSE"
+);
 
  let styleSummary={},storeSummary={},colourSummary={},categorySummary={};
  let sizeTotals={'4':0,'5':0,'6':0,'7':0,'8':0,'9':0,'10':0,'11':0,'OS':0};
@@ -533,8 +531,6 @@ const colourList = Object.entries(v.colours)
 
 async function clearConsole(){
  if(!confirm('Clear all data?')) return;
- returnsData=[];
- transitData=[];
  await saveReturnsConsole();
  refreshData();
 }
