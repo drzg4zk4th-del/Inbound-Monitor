@@ -359,11 +359,28 @@ h4{margin:0;font-size:11pt}
 <h4>FROM</h4><div class="big">${from}</div>
 <h4>TO</h4><div class="big">${to}</div>
 <h4>TRANSFER NO</h4><div class="big">${transfer}</div>
+<div style="text-align:center;margin:6mm 0;">
+    <svg id="barcode"></svg>
+</div>
 <div class="list">${rows.join("")}</div>
 <div class="total">${styles} Styles • ${units} Units</div>
 </body>
 </html>`);
 p.document.close();
+
+JsBarcode(
+    p.document.getElementById("barcode"),
+    transfer,
+    {
+        format: "CODE128",
+        width: 3,
+        height: 70,
+        displayValue: true,
+        fontSize: 20,
+        margin: 0
+    }
+);
+
 p.focus();
 p.print();
 setTimeout(()=>p.close(),500);
