@@ -413,8 +413,7 @@ if(progress < 33){
     bar.style.background = "#22c55e";      // Green
 }
  document.getElementById('remainingUnits').innerText=remaining.toLocaleString();
- document.getElementById('returnProgress').innerText=(units?((transitTotal/units)*100).toFixed(1):0)+'%';
- document.getElementById('avgUnits').innerText=(styles.size?Math.round(units/styles.size):0);
+  document.getElementById('avgUnits').innerText=(styles.size?(units/styles.size).toFixed(1):0);
 
   const packedUnits=returnsData.filter(r=>r.transferNumber).reduce((a,r)=>a+Number(r.qty||0),0);
   const packPct=units?((packedUnits/units)*100):0;
