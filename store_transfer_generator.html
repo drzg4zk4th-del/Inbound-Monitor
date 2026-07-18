@@ -276,36 +276,14 @@ returnsData
 .forEach((r,index)=>{
 
 body.innerHTML+=`
-
-<tr>
-
-<td>
-
-<input
-type="checkbox"
-class="pick">
-
-</td>
-
+<tr data-index="${index}" ${r.transferNumber?'style="background:#1f3b2d"':''}>
+<td>${r.transferNumber||""}</td>
+<td><input type="checkbox" class="pick" ${r.transferNumber?"disabled":""}></td>
 <td>${r.style}</td>
-
 <td>${r.colour}</td>
-
 <td>${r.qty}</td>
-
-<td>
-
-<input
-type="number"
-value="${r.qty}"
-min="0"
-max="${r.qty}"
-class="qty">
-
-</td>
-
+<td><input type="number" value="${r.qty}" min="0" max="${r.qty}" class="qty"></td>
 </tr>
-
 `;
 
 });
@@ -361,7 +339,7 @@ const search=document.getElementById("searchStyle").value.toUpperCase();
 
 document.querySelectorAll("#styleTable tbody tr").forEach(row=>{
 
-const style=row.cells[1].innerText.toUpperCase();
+const style=row.cells[2].innerText.toUpperCase();
 
 row.style.display=
 style.includes(search) ? "" : "none";
@@ -379,83 +357,46 @@ function printLabels(){
 const transfer=document.getElementById("transferNumber").value.trim();
 const from=document.getElementById("fromStore").value;
 const to=document.getElementById("toStore").value;
-
 let items=[];
 
 document.querySelectorAll("#styleTable tbody tr").forEach(row=>{
  const tick=row.querySelector(".pick");
  if(!tick.checked) return;
+ const idx=Number(row.dataset.index);
  const style=row.cells[2].innerText;
  const colour=row.cells[3].innerText;
  const qty=row.querySelector(".qty").value;
  items.push(`${style} ${colour}<span>× ${qty}</span>`);
- const idx=[...row.parentNode.children].indexOf(row);
- if(returnsData[idx]){
-   returnsData[idx].transferNumber=transfer;
- }
+ returnsData.filter(r=>r.store===from)[idx].transferNumber=transfer;
 });
+
 saveReturnsConsole();
 
-let font=40;
-if(items.length>1) font=34;
-if(items.length>2) font=30;
-if(items.length>4) font=24;
-if(items.length>6) font=20;
-if(items.length>10) font=17;
-if(items.length>14) font=15;
+let font=Math.max(15,40-items.length*2);
 
-const p=window.open("","_blank");
-p.document.write(`<!DOCTYPE html><html><head><title>Labels</title>
-<style>
+const w=window.open("","_blank");
+w.document.write(`<!doctype html><html><head><style>
 @page{size:150mm 100mm;margin:0}
 body{margin:0;font-family:Arial}
-.page{width:150mm;height:100mm;box-sizing:border-box;padding:8mm;page-break-after:always;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.page{width:150mm;height:100mm;display:flex;flex-direction:column;justify-content:center;align-items:center;page-break-after:always;padding:8mm;box-sizing:border-box}
 .page:last-child{page-break-after:auto}
-.heading{font-size:12pt;font-weight:bold}
-.store{font-size:24pt;font-weight:bold;margin-bottom:8mm;text-align:center}
-#barcode{width:100%}
-.item{display:flex;justify-content:space-between;border-bottom:2px solid #000;padding:3mm 0;font-size:${font}pt;font-weight:bold}
-span{margin-left:8mm}
+.store{font-size:24pt;font-weight:bold;text-align:center}
+.item{display:flex;justify-content:space-between;font-size:${font}pt;font-weight:bold;border-bottom:2px solid #000;padding:3mm 0}
 </style></head><body>
-
-<div class="page">
-<div style="width:100%;text-align:center">
-<div class="heading">FROM</div>
-<div class="store">${from}</div>
-<div class="heading">TO</div>
-<div class="store">${to}</div>
-<svg id="barcode"></svg>
-</div>
-</div>
-
-<div class="page">
-${items.map(i=>`<div class="item">${i}</div>`).join("")}
-</div>
-
+<div class='page'><div>FROM</div><div class='store'>${from}</div><div>TO</div><div class='store'>${to}</div><svg id='b'></svg></div>
+<div class='page'>${items.map(i=>`<div class='item'>${i}</div>`).join("")}</div>
 </body></html>`);
-p.document.close();
-
-JsBarcode(p.document.getElementById("barcode"),transfer,{
- format:"CODE128",
- width:3,
- height:70,
- displayValue:true,
- fontSize:20,
- margin:0
-});
-
-p.focus();
-p.print();
-setTimeout(()=>{
-p.close();
-document.getElementById("transferNumber").value="";
-document.getElementById("searchStyle").value="";
-document.getElementById("fromStore").selectedIndex=0;
-document.getElementById("toStore").selectedIndex=0;
-document.querySelector("#styleTable tbody").innerHTML="";
-document.getElementById("summary").innerHTML="0 Styles<br>0 Units";
+w.document.close();
+JsBarcode(w.document.getElementById("b"),transfer,{format:"CODE128",width:3,height:70,displayValue:true,fontSize:20});
+w.print();
+setTimeout(async()=>{
+ w.close();
+ await loadReturnsConsole();
+ loadStoreReturns();
+ document.getElementById("transferNumber").value="";
+ document.getElementById("searchStyle").value="";
+ document.getElementById("summary").innerHTML="<b>0</b> Styles<br><b>0</b> Units";
 },500);
-
 }
 
 function printPackingList(){
@@ -507,9 +448,7 @@ onkeyup="filterStyles()">
 <tr>
 
 <th>Transfer</th>
-
 <th></th>
-
 <th>Style</th>
 
 <th>Colour</th>
