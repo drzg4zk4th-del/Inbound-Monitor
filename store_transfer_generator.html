@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Store Returns Console V3.1</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#0b1220;color:#fff}
+.header{display:flex;justify-content:space-between;align-items:center;padding:20px;background:#111827;border-bottom:1px solid #374151}
+button{padding:10px 16px;border:none;border-radius:8px;background:#8b6b3f;color:white;cursor:pointer}
+.main{padding:20px}
+.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:15px;margin-bottom:20px}
+.card{background:#1f2937;border-radius:14px;padding:18px}
+.big{font-size:34px;font-weight:bold;margin-top:10px}
+.section{background:#1f2937;border-radius:14px;padding:18px;margin-top:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px}
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,
+td{
+    padding:8px;
+    border-bottom:1px solid #374151;
+    text-align:left;
+}
+
+th{
+    background:#111827;
+}
+@media(max-width:1200px){
+.metrics{grid-template-columns:repeat(3,1fr)}
+}
+
+input,
+select{
+
+width:100%;
+
+padding:10px;
+
+margin:8px 0 15px;
+
+box-sizing:border-box;
+
+border-radius:8px;
+
+border:1px solid #374151;
+
+background:#111827;
+
+color:white;
+
+}
+
+</style>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+<script>
+const firebaseConfig = {
+apiKey: "AIzaSyD9nPDHQpkPgxeQYfe-JVWemQg6CjbCBYM",
+authDomain: "seven-hills-dashboard-e973d.firebaseapp.com",
+projectId: "seven-hills-dashboard-e973d",
+storageBucket: "seven-hills-dashboard-e973d.firebasestorage.app",
+messagingSenderId: "1016653351453",
+appId: "1:1016653351453:web:a2a1f597844adf51ba54f4"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let returnsData=[];
+let transitData=[];
+
+async function saveReturnsConsole(){
+
+ const chunkSize = 500;
+
+ const returnChunks = [];
+ for(let i=0;i<returnsData.length;i+=chunkSize){
+   returnChunks.push(returnsData.slice(i,i+chunkSize));
+ }
+
+ const transitChunks = [];
+ for(let i=0;i<transitData.length;i+=chunkSize){
+   transitChunks.push(transitData.slice(i,i+chunkSize));
+ }
+
+ await db.collection('storeReturnsConsole').doc('metadata').set({
+   returnChunks:returnChunks.length,
+   transitChunks:transitChunks.length,
+   lastUpdated:new Date().toISOString()
+ });
+
+ for(let i=0;i<returnChunks.length;i++){
+   await db.collection('storeReturnsConsole')
+     .doc('returns_'+i)
+     .set({rows:returnChunks[i]});
+ }
+
+ for(let i=0;i<transitChunks.length;i++){
+   await db.collection('storeReturnsConsole')
+     .doc('transit_'+i)
+     .set({rows:transitChunks[i]});
+ }
+
+ console.log('Firebase chunked save successful');
+}
+
+async function loadReturnsConsole(){
+
+ returnsData=[];
+ transitData=[];
+
+ const meta =
+ await db.collection('storeReturnsConsole')
+ .doc('metadata')
+ .get();
+
+ if(!meta.exists) return;
+
+ const m = meta.data();
+
+ const returnChunks = m.returnChunks || 0;
+ const transitChunks = m.transitChunks || 0;
+
+ for(let i=0;i<returnChunks;i++){
+   const snap = await db.collection('storeReturnsConsole')
+   .doc('returns_'+i)
+   .get();
+
+   if(snap.exists){
+      returnsData.push(...(snap.data().rows||[]));
+   }
+ }
+
+ for(let i=0;i<transitChunks;i++){
+   const snap = await db.collection('storeReturnsConsole')
+   .doc('transit_'+i)
+   .get();
+
+   if(snap.exists){
+      transitData.push(...(snap.data().rows||[]));
+   }
+ }
+
+ console.log('Chunked data loaded',
+ returnsData.length,
+ transitData.length);
+}
+
+window.addEventListener("load",async()=>{
+
+await loadReturnsConsole();
+
+populateStores();
+
+});;
+
+function populateStores(){
+
+const stores=[...new Set(
+returnsData.map(r=>r.store)
+)].sort();
+
+const from=document.getElementById("fromStore");
+const to=document.getElementById("toStore");
+
+stores.forEach(store=>{
+
+from.innerHTML+=`<option>${store}</option>`;
+
+to.innerHTML+=`<option>${store}</option>`;
+
+});
+
+}
+
+function loadStoreReturns(){
+
+const store=document.getElementById("fromStore").value;
+
+const body=document.querySelector("#styleTable tbody");
+
+body.innerHTML="";
+
+returnsData
+.filter(r=>r.store===store)
+.forEach((r,index)=>{
+
+body.innerHTML+=`
+
+<tr>
+
+<td>
+
+<input
+type="checkbox"
+class="pick">
+
+</td>
+
+<td>${r.style}</td>
+
+<td>${r.colour}</td>
+
+<td>${r.qty}</td>
+
+<td>
+
+<input
+type="number"
+value="${r.qty}"
+min="0"
+max="${r.qty}"
+class="qty">
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.querySelectorAll(".pick,.qty").forEach(el=>{
+    el.addEventListener("change",updateSummary);
+    el.addEventListener("input",updateSummary);
+});
+
+updateSummary();
+
+}
+
+function updateSummary(){
+
+let styles=0;
+
+let units=0;
+
+document
+.querySelectorAll("#styleTable tbody tr")
+.forEach(row=>{
+
+const tick=row.querySelector(".pick");
+
+const qty=row.querySelector(".qty");
+
+if(tick.checked){
+
+styles++;
+
+units+=Number(qty.value);
+
+}
+
+});
+
+document.getElementById("summary").innerHTML=`
+
+<b>${styles}</b> Styles
+
+<br>
+
+<b>${units}</b> Units
+
+`;
+
+}
+
+function filterStyles(){
+
+const search=document.getElementById("searchStyle").value.toUpperCase();
+
+document.querySelectorAll("#styleTable tbody tr").forEach(row=>{
+
+const style=row.cells[1].innerText.toUpperCase();
+
+row.style.display=
+style.includes(search) ? "" : "none";
+
+});
+
+}
+
+function generateTransfer(){
+
+    const transfer = document.getElementById("transferNumber").value.trim();
+
+    const from = document.getElementById("fromStore").value;
+
+    const to = document.getElementById("toStore").value;
+
+    if(transfer===""){
+        alert("Enter a Transfer Number");
+        return;
+    }
+
+    if(from===""){
+        alert("Select the From Store");
+        return;
+    }
+
+    if(to===""){
+        alert("Select the To Store");
+        return;
+    }
+
+    // Must be exactly 13 digits for now
+    if(!/^\d{13}$/.test(transfer)){
+        alert("Transfer Number must be a 13 digit EAN.");
+        return;
+    }
+
+    JsBarcode("#barcode", transfer,{
+        format:"EAN13",
+        width:2,
+        height:80,
+        displayValue:true
+    });
+
+    document.getElementById("barcodeText").innerHTML=
+        "<b>"+transfer+"</b>";
+
+    document.getElementById("labelDetails").innerHTML=
+        `
+        <b>FROM:</b> ${from}<br>
+        <b>TO:</b> ${to}
+        `;
+
+}
+function printLabels(){
+    window.print();
+}
+
+function printPackingList(){
+    alert("Coming Soon");
+}
+</script>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>📦 Store Transfer Generator</h1>
+</div>
+
+<div class="main">
+
+<div class="section">
+
+<h3>Transfer Details</h3>
+
+<label>Transfer Number</label>
+<input id="transferNumber">
+
+<label>From Store</label>
+<select id="fromStore" onchange="loadStoreReturns()">
+    <option value="">Select Store</option>
+</select>
+
+<label>To Store</label>
+<select id="toStore">
+    <option value="">Select Store</option>
+</select>
+
+</div>
+
+<div class="section">
+
+<h3>Available Returns</h3>
+
+<input
+id="searchStyle"
+placeholder="Search Style..."
+onkeyup="filterStyles()">
+
+<table id="styleTable">
+
+<thead>
+
+<tr>
+
+<th></th>
+
+<th>Style</th>
+
+<th>Colour</th>
+
+<th>Qty</th>
+
+<th>Transfer Qty</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+</tbody>
+
+</table>
+
+</div>
+
+<div class="section">
+
+<h3>Summary</h3>
+
+<div id="summary">
+
+0 Styles
+
+<br>
+
+0 Units
+
+</div>
+
+</div>
+
+<div class="section">
+
+<h3>Transfer Label Preview</h3>
+
+<svg id="barcode"></svg>
+
+<div id="barcodeText" style="margin-top:15px;"></div>
+
+<div id="labelDetails" style="margin-top:20px;"></div>
+
+</div>
+
+<div class="section">
+
+<button onclick="generateTransfer()">
+
+Generate Transfer
+
+</button>
+
+<button onclick="printLabels()">
+
+Print Carton Labels
+
+</button>
+
+<button onclick="printPackingList()">
+
+Print Packing List
+
+</button>
+
+</div>
+
+</div>
+
+</body>
+  
+</html>
