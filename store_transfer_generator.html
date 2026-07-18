@@ -263,6 +263,18 @@ if(store!=="Virtual Warehouse"){
 
 }
 
+
+function buildPackString(r){
+ const out=[];
+ for(let i=4;i<=11;i++){
+   const q=Number(r["s"+i]||0);
+   if(q>0) out.push(`${i}×${q}`);
+ }
+ if(Number(r.os||0)>0) out.push(`OS×${r.os}`);
+ return out.join(" ");
+}
+
+
 function loadStoreReturns(){
 
 const store=document.getElementById("fromStore").value;
@@ -281,16 +293,15 @@ body.innerHTML+=`
 <td><input type="checkbox" class="pick" ${r.transferNumber?"disabled":""}></td>
 <td>${r.style}</td>
 <td>${r.colour}</td>
-<td>${r.qty}</td>
-<td><input type="number" value="${r.qty}" min="0" max="${r.qty}" class="qty"></td>
+<td>${buildPackString(r)}</td>
 </tr>
 `;
 
 });
 
-document.querySelectorAll(".pick,.qty").forEach(el=>{
+document.querySelectorAll(".pick").forEach(el=>{
     el.addEventListener("change",updateSummary);
-    el.addEventListener("input",updateSummary);
+
 });
 
 updateSummary();
@@ -309,13 +320,13 @@ document
 
 const tick=row.querySelector(".pick");
 
-const qty=row.querySelector(".qty");
+
 
 if(tick.checked){
 
 styles++;
 
-units+=Number(qty.value);
+const idx=Number(row.dataset.index); const rec=returnsData.filter(r=>r.store===document.getElementById("fromStore").value)[idx]; units+=Number(rec.qty||0);
 
 }
 
@@ -365,8 +376,7 @@ document.querySelectorAll("#styleTable tbody tr").forEach(row=>{
  const idx=Number(row.dataset.index);
  const style=row.cells[2].innerText;
  const colour=row.cells[3].innerText;
- const qty=row.querySelector(".qty").value;
- items.push(`${style} ${colour}<span>× ${qty}</span>`);
+ const rec=returnsData.filter(r=>r.store===from)[idx]; const pack=buildPackString(rec); items.push(`<div><b>${style} ${colour}</b><br>${pack}</div>`);
  returnsData.filter(r=>r.store===from)[idx].transferNumber=transfer;
 });
 
@@ -381,7 +391,7 @@ body{margin:0;font-family:Arial}
 .page{width:150mm;height:100mm;display:flex;flex-direction:column;justify-content:center;align-items:center;page-break-after:always;padding:8mm;box-sizing:border-box}
 .page:last-child{page-break-after:auto}
 .store{font-size:24pt;font-weight:bold;text-align:center}
-.item{display:flex;justify-content:space-between;font-size:${font}pt;font-weight:bold;border-bottom:2px solid #000;padding:3mm 0}
+.item{font-size:${font}pt;font-weight:bold;border-bottom:2px solid #000;padding:3mm 0;line-height:1.5}
 </style></head><body>
 <div class='page'><div>FROM</div><div class='store'>${from}</div><div>TO</div><div class='store'>${to}</div><svg id='b'></svg></div>
 <div class='page'>${items.map(i=>`<div class='item'>${i}</div>`).join("")}</div>
@@ -453,9 +463,7 @@ onkeyup="filterStyles()">
 
 <th>Colour</th>
 
-<th>Qty</th>
-
-<th>Transfer Qty</th>
+<th>Pack</th>
 
 </tr>
 
