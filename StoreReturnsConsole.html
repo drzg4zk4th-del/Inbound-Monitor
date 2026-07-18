@@ -164,6 +164,7 @@ window.addEventListener('load',async()=>{
 <div class="card"><div>Expected Units</div><div class="big" id="returnedUnits">0</div></div>
 <div class="card"><div>Transit Units</div><div class="big" id="transitUnits">0</div></div>
 <div class="card"><div>Remaining Units</div><div class="big" id="remainingUnits">0</div></div>
+
 <div class="card">
     <div>Console Progress</div>
 
@@ -416,7 +417,11 @@ if(progress < 33){
  document.getElementById('avgUnits').innerText=(styles.size?Math.round(units/styles.size):0);
  
  let ls='-',lsv=0; Object.entries(styleSummary).forEach(([k,v])=>{if(v.totalUnits>lsv){lsv=v.totalUnits;ls=k}});
- let lstore='-',stv=0; Object.entries(storeSummary)
+ let lstore='-',stv=0; Object.entries(storeSummary).forEach(([k,v])=>{if(v.units>stv){stv=v.units;lstore=k}});
+ document.getElementById('largestStyle').innerText=ls;
+ document.getElementById('largestStore').innerText=lstore;
+
+ const sb=document.querySelector('#storeSummaryTable tbody'); if(sb){sb.innerHTML='';Object.entries(storeSummary)
 .sort((a,b)=>b[1].units-a[1].units)
 .forEach(([k,v])=>{
 const pct=0;
@@ -426,7 +431,7 @@ sb.innerHTML+=`<tr>
 <div style="margin-top:6px;background:#111827;border-radius:999px;height:8px;overflow:hidden">
 <div style="width:${pct}%;height:100%;background:#22c55e"></div>
 </div>
-<div style="font-size:11px;opacity:.8">${pct.toFixed(0)}%</div>
+<div style="font-size:11px;margin-top:4px">${pct.toFixed(0)}%</div>
 </td>
 <td>${v.units}</td>
 <td>${v.styles.size}</td>
