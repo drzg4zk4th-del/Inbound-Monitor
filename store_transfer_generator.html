@@ -380,73 +380,54 @@ const transfer=document.getElementById("transferNumber").value.trim();
 const from=document.getElementById("fromStore").value;
 const to=document.getElementById("toStore").value;
 
-let styles=0;
-let units=0;
 let rows=[];
-
 document.querySelectorAll("#styleTable tbody tr").forEach(row=>{
-  const tick=row.querySelector(".pick");
-  if(!tick.checked) return;
-  const style=row.cells[1].innerText;
-  const colour=row.cells[2].innerText;
-  const qty=Number(row.querySelector(".qty").value);
-  styles++;
-  units+=qty;
-  rows.push(`<div>${style} ${colour} × ${qty}</div>`);
+ const tick=row.querySelector(".pick");
+ if(!tick.checked) return;
+ const style=row.cells[1].innerText;
+ const colour=row.cells[2].innerText;
+ const qty=row.querySelector(".qty").value;
+ rows.push({text:`${style} ${colour}`,qty});
 });
 
 const p=window.open("","_blank");
-p.document.open();
-p.document.write(`<!DOCTYPE html>
-<html>
-<head>
-<title>Transfer Label</title>
+p.document.write(`<!DOCTYPE html><html><head><title>Labels</title>
 <style>
 @page{size:150mm 100mm;margin:0}
-body{margin:0;padding:8mm;font-family:Arial}
-h4{margin:0;font-size:11pt}
-.big{font-size:20pt;font-weight:bold;margin-bottom:3mm}
-.list{border-top:2px solid #000;border-bottom:2px solid #000;padding:3mm 0;margin:3mm 0;font-size:11pt}
-.total{font-size:12pt;font-weight:bold}
-</style>
-</head>
-<body>
+body{margin:0;font-family:Arial}
+.page{width:150mm;height:100mm;box-sizing:border-box;padding:8mm;page-break-after:always;}
+.page:last-child{page-break-after:auto;}
+.row{display:flex;justify-content:space-between;gap:8mm}
+.col{flex:1}
+.heading{font-size:9pt;font-weight:bold}
+.store{font-size:16pt;font-weight:bold}
+.bar{text-align:center;margin:5mm 0}
+.item{display:flex;justify-content:space-between;font-size:24pt;font-weight:bold;padding:3mm 0;border-bottom:2px solid #000;}
+</style></head><body>
+
+<div class="page">
+<div class="bar"><svg id="barcode"></svg></div>
 <div class="row">
-
-    <div class="col">
-        <div class="heading">FROM</div>
-        <div class="store">${from}</div>
-    </div>
-
-    <div class="col">
-        <div class="heading">TO</div>
-        <div class="store">${to}</div>
-    </div>
-
+<div class="col"><div class="heading">FROM</div><div class="store">${from}</div></div>
+<div class="col"><div class="heading">TO</div><div class="store">${to}</div></div>
 </div>
-<div class="heading">TRANSFER</div>
-<div class="transfer">${transfer}</div>
-<div style="text-align:center;margin:6mm 0;">
-    <svg id="barcode"></svg>
 </div>
-<div class="list">${rows.join("")}</div>
-<div class="total">${styles} Styles • ${units} Units</div>
-</body>
-</html>`);
+
+<div class="page">
+${rows.map(r=>`<div class="item"><span>${r.text}</span><span>× ${r.qty}</span></div>`).join("")}
+</div>
+
+</body></html>`);
 p.document.close();
 
-JsBarcode(
-    p.document.getElementById("barcode"),
-    transfer,
-    {
-        format: "CODE128",
-        width: 2,
-        height: 45,
-        displayValue: true,
-        fontSize: 14,
-        margin: 0
-    }
-);
+JsBarcode(p.document.getElementById("barcode"),transfer,{
+ format:"CODE128",
+ width:2,
+ height:55,
+ displayValue:true,
+ fontSize:16,
+ margin:0
+});
 
 p.focus();
 p.print();
