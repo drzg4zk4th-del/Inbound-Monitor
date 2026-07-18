@@ -183,7 +183,8 @@ window.addEventListener('load',async()=>{
 <div class="card"><div>Avg Units / Style</div><div class="big" id="avgUnits">0</div></div>
 <div class="card"><div>Largest Style</div><div class="big" id="largestStyle">-</div></div>
 <div class="card"><div>Largest Store</div><div class="big" id="largestStore">-</div></div>
-<div class="card"><div>Virtual Return %</div><div class="big">0%</div></div>
+<div class="card"><div>Packing Units</div><div class="big" id="packingUnits">0</div></div>
+<div class="card"><div>Packing Progress</div><div class="big" id="packingProgress">0%</div></div>
 
 </div>
 
@@ -209,7 +210,12 @@ window.addEventListener('load',async()=>{
 
 <div class="section">
 <h3>Returning Stores Summary</h3>
-<table id="storeSummaryTable"><thead><tr><th>Store</th><th>Units</th><th>Styles</th></tr></thead><tbody></tbody></table>
+<table id="storeSummaryTable">
+<thead>
+<tr><th>Store</th><th>Units</th><th>Styles</th><th>Packing</th></tr>
+</thead>
+<tbody></tbody>
+</table>
 </div>
 
 <div class="section">
@@ -421,7 +427,22 @@ if(progress < 33){
  document.getElementById('largestStyle').innerText=ls;
  document.getElementById('largestStore').innerText=lstore;
 
- const sb=document.querySelector('#storeSummaryTable tbody'); if(sb){sb.innerHTML='';Object.entries(storeSummary).sort((a,b)=>b[1].units-a[1].units).forEach(([k,v])=>sb.innerHTML+=`<tr><td>${k}</td><td>${v.units}</td><td>${v.styles.size}</td></tr>`);}
+ const sb=document.querySelector('#storeSummaryTable tbody'); if(sb){sb.innerHTML='';Object.entries(storeSummary)
+.sort((a,b)=>b[1].units-a[1].units)
+.forEach(([k,v])=>{
+const pct=0;
+sb.innerHTML+=`<tr>
+<td>${k}</td>
+<td>${v.units}</td>
+<td>${v.styles.size}</td>
+<td style="min-width:160px">
+<div style="background:#111827;border-radius:999px;height:10px;overflow:hidden">
+<div style="width:${pct}%;height:100%;background:#22c55e"></div>
+</div>
+<div style="font-size:11px;margin-top:4px">${pct.toFixed(0)}%</div>
+</td>
+</tr>`;
+});}
  
 const stb=document.querySelector('#styleSummaryTable tbody');
 
