@@ -164,7 +164,7 @@ window.addEventListener('load',async()=>{
 <div class="card"><div>Expected Units</div><div class="big" id="returnedUnits">0</div></div>
 <div class="card"><div>Transit Units</div><div class="big" id="transitUnits">0</div></div>
 <div class="card"><div>Remaining Units</div><div class="big" id="remainingUnits">0</div></div>
-<div class="card"><div>Return Progress</div><div class="big" id="returnProgress">0%</div></div>
+<div class="card"><div>Packing Progress</div><div class="big" id="packingProgress">0%</div></div>
 
 <div class="card">
     <div>Console Progress</div>
@@ -183,7 +183,7 @@ window.addEventListener('load',async()=>{
 <div class="card"><div>Avg Units / Style</div><div class="big" id="avgUnits">0</div></div>
 <div class="card"><div>Largest Style</div><div class="big" id="largestStyle">-</div></div>
 <div class="card"><div>Largest Store</div><div class="big" id="largestStore">-</div></div>
-<div class="card"><div>Virtual Return %</div><div class="big">0%</div></div>
+<div class="card"><div>Total Transfers Packed</div><div class="big" id="transferCount">0</div></div>
 
 </div>
 
@@ -316,7 +316,7 @@ let importedCount=0;
 
   importedCount++;
 
-  returnsData.push({
+  transitData.push({
    store:r['From Store']||'',
    category:r['CATEGORY']||'',
    style:String(r['STYLE']||'').trim(),
@@ -415,6 +415,13 @@ if(progress < 33){
  document.getElementById('remainingUnits').innerText=remaining.toLocaleString();
  document.getElementById('returnProgress').innerText=(units?((transitTotal/units)*100).toFixed(1):0)+'%';
  document.getElementById('avgUnits').innerText=(styles.size?Math.round(units/styles.size):0);
+
+  const packedUnits=returnsData.filter(r=>r.transferNumber).reduce((a,r)=>a+Number(r.qty||0),0);
+  const packPct=units?((packedUnits/units)*100):0;
+  document.getElementById('packingProgress').innerText=packPct.toFixed(1)+'%';
+  document.getElementById('transferCount').innerText=
+    new Set(returnsData.filter(r=>r.transferNumber).map(r=>r.transferNumber)).size;
+
  
  let ls='-',lsv=0; Object.entries(styleSummary).forEach(([k,v])=>{if(v.totalUnits>lsv){lsv=v.totalUnits;ls=k}});
  let lstore='-',stv=0; Object.entries(storeSummary).forEach(([k,v])=>{if(v.units>stv){stv=v.units;lstore=k}});
