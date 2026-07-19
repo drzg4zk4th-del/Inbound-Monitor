@@ -455,11 +455,11 @@ if (returnProgress) {
 document.getElementById("packingUnits").innerText =
     uniqueTransfers.size;
 document.getElementById("packingProgress").innerText =
-    (
-        returnsData.length
-            ? (completedTransfers / returnsData.length) * 100
-            : 0
-    ).toFixed(1) + "%";
+(
+    returnsData.length
+        ? (uniqueTransfers.size / returnsData.length) * 100
+        : 0
+).toFixed(1) + "%";
     
     document.getElementById('avgUnits').innerText=(styles.size?Math.round(units/styles.size):0);
  
