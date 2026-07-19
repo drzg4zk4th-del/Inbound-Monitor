@@ -336,6 +336,10 @@ function refreshData(){
  let units=0;
  const styles=new Set(), stores=new Set();
 
+const virtualReturns = returnsData.filter(r =>
+    String(r.to || "").trim().toUpperCase() === "VIRTUAL WAREHOUSE"
+);
+
  virtualReturns.forEach(r=>{
    units+=r.qty;
    styles.add(r.style);
