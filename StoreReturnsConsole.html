@@ -446,14 +446,14 @@ if (returnProgress) {
         (units ? ((transitTotal / units) * 100).toFixed(1) : 0) + "%";
 }
 
-    const completedTransfers = virtualReturns.filter(r =>
-    r.transferNumber &&
-    String(r.transferNumber).trim() !== ""
-).length;
+    const uniqueTransfers = new Set(
+    virtualReturns
+        .filter(r => r.transferNumber && String(r.transferNumber).trim() !== "")
+        .map(r => String(r.transferNumber).trim())
+);
 
 document.getElementById("packingUnits").innerText =
-    completedTransfers;
-
+    uniqueTransfers.size;
 document.getElementById("packingProgress").innerText =
     (
         returnsData.length
