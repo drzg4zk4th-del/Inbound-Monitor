@@ -250,6 +250,8 @@ async function importReturns(){
  const wb=XLSX.read(await file.arrayBuffer());
  const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
+console.log(rows[0]);
+
  
 let importedCount=0;
 
