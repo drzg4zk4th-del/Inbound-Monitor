@@ -279,7 +279,11 @@ importedCount++;
    s9:Number(r['9']||0),
    s10:Number(r['10']||0),
    s11:Number(r['11']||0),
-   os:Number(r['OS']||0)
+   s12:Number(r['12']||0),
+os:Number(r['OS']||r['O/S']||0),
+sm:Number(r['SMALL/MEDIUM']||r['S/M']||0),
+ml:Number(r['MEDIUM/LARGE']||r['M/L']||0),
+lxl:Number(r['LARGE/XLARGE']||r['L/XL']||0),
   });
  });
 
@@ -328,7 +332,11 @@ let importedCount=0;
    s9:Number(r['9']||0),
    s10:Number(r['10']||0),
    s11:Number(r['11']||0),
-   os:Number(r['OS']||0)
+   s12:Number(r['12']||0),
+os:Number(r['OS']||r['O/S']||0),
+sm:Number(r['SMALL/MEDIUM']||r['S/M']||0),
+ml:Number(r['MEDIUM/LARGE']||r['M/L']||0),
+lxl:Number(r['LARGE/XLARGE']||r['L/XL']||0),
   });
  });
 
@@ -340,7 +348,21 @@ let importedCount=0;
 
 function refreshData(){
  let styleSummary={},storeSummary={},colourSummary={},categorySummary={};
- let sizeTotals={'4':0,'5':0,'6':0,'7':0,'8':0,'9':0,'10':0,'11':0,'OS':0};
+ let sizeTotals={
+    '4':0,
+    '5':0,
+    '6':0,
+    '7':0,
+    '8':0,
+    '9':0,
+    '10':0,
+    '11':0,
+    '12':0,
+    'OS':0,
+    'S/M':0,
+    'M/L':0,
+    'L/XL':0
+};
 
  let units=0;
  const styles=new Set(), stores=new Set();
@@ -411,7 +433,11 @@ virtualReturns.forEach(r=>{
     sizeTotals['9'] += (r.s9 || 0);
     sizeTotals['10'] += (r.s10 || 0);
     sizeTotals['11'] += (r.s11 || 0);
-    sizeTotals['OS'] += (r.os || 0);
+    sizeTotals['12'] += (r.s12 || 0);
+sizeTotals['OS'] += (r.os || r.o_s || 0);
+sizeTotals['S/M'] += (r.sm || r.s_m || 0);
+sizeTotals['M/L'] += (r.ml || r.m_l || 0);
+sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
 
 });
     
