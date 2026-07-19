@@ -130,10 +130,9 @@ async function loadReturnsConsole(){
    }
  }
 
- console.log('Chunked data loaded',
- virtualReturns.length,
+console.log('Chunked data loaded',
+ returnsData.length,
  transitData.length);
-}
 
 window.addEventListener('load',async()=>{
  try{await loadReturnsConsole();}catch(e){console.error(e);}
