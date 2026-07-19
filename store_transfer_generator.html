@@ -277,15 +277,19 @@ function buildPackString(r){
 
 function loadStoreReturns(){
 
-const store=document.getElementById("fromStore").value;
+const fromStore=document.getElementById("fromStore").value;
+const toStore=document.getElementById("toStore").value;
 
 const body=document.querySelector("#styleTable tbody");
 
 body.innerHTML="";
 
-returnsData
-.filter(r=>r.store===store)
-.forEach((r,index)=>{
+const filteredReturns=returnsData.filter(r=>
+    r.store===fromStore &&
+    r.to===toStore
+);
+
+filteredReturns.forEach((r,index)=>{
 
 body.innerHTML+=`
 <tr data-index="${index}" ${r.transferNumber?'style="background:#1f3b2d"':''}>
@@ -301,7 +305,6 @@ body.innerHTML+=`
 
 document.querySelectorAll(".pick").forEach(el=>{
     el.addEventListener("change",updateSummary);
-
 });
 
 updateSummary();
@@ -326,7 +329,13 @@ if(tick.checked){
 
 styles++;
 
-const idx=Number(row.dataset.index); const rec=returnsData.filter(r=>r.store===document.getElementById("fromStore").value)[idx]; units+=Number(rec.qty||0);
+const idx=Number(row.dataset.index);
+const filteredReturns=returnsData.filter(r=>
+    r.store===document.getElementById("fromStore").value &&
+    r.to===document.getElementById("toStore").value
+);
+const rec=filteredReturns[idx];
+units+=Number(rec.qty||0);
 
 }
 
@@ -376,8 +385,14 @@ document.querySelectorAll("#styleTable tbody tr").forEach(row=>{
  const idx=Number(row.dataset.index);
  const style=row.cells[2].innerText;
  const colour=row.cells[3].innerText;
- const rec=returnsData.filter(r=>r.store===from)[idx]; const pack=buildPackString(rec); items.push(`<div><b>${style} ${colour}</b><br>${pack}</div>`);
- returnsData.filter(r=>r.store===from)[idx].transferNumber=transfer;
+ const filteredReturns=returnsData.filter(r=>
+    r.store===from &&
+    r.to===to
+);
+const rec=filteredReturns[idx];
+const pack=buildPackString(rec);
+items.push(`<div><b>${style} ${colour}</b><br>${pack}</div>`);
+filteredReturns[idx].transferNumber=transfer;
 });
 
 saveReturnsConsole();
@@ -440,7 +455,7 @@ function printPackingList(){
 </select>
 
 <label>To Store</label>
-<select id="toStore">
+<select id="toStore" onchange="loadStoreReturns()">
     <option value="Virtual Warehouse" selected>Virtual Warehouse</option>
 </select>
 
