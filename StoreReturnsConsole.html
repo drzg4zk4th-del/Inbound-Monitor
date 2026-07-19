@@ -235,8 +235,22 @@ window.addEventListener('load',async()=>{
 
 <div class="section">
 <h3>Raw Imported Data</h3>
-<button onclick="clearConsole()">Clear Console</button> <button onclick="archiveCampaign()">📦 Archive Campaign</button>
-<table id="rawTable"><thead><tr>
+
+<button onclick="clearConsole()">Clear Console</button>
+<button onclick="archiveCampaign()">📦 Archive Campaign</button>
+
+<br><br>
+
+<label>Store</label>
+
+<select id="rawStoreFilter" onchange="refreshData()">
+    <option value="">All Stores</option>
+</select>
+
+<br><br>
+
+<table id="rawTable">
+<thead><tr>
 <th>From</th><th>To</th><th>Category</th><th>Style</th><th>Colour</th><th>Qty</th>
 </tr></thead><tbody></tbody></table>
 </div>
@@ -308,7 +322,7 @@ let importedCount=0;
 
   importedCount++;
 
-  returnsData.push({
+ transitData.push({
    store:r['From Store']||'',
    category:r['CATEGORY']||'',
    style:String(r['STYLE']||'').trim(),
@@ -342,6 +356,32 @@ function refreshData(){
 const virtualReturns = returnsData.filter(r =>
     String(r.to || "").trim().toUpperCase() === "VIRTUAL WAREHOUSE"
 );
+
+const rawStoreFilter = document.getElementById("rawStoreFilter");
+
+if(
+    rawStoreFilter &&
+    rawStoreFilter.options.length !== new Set(returnsData.map(r=>r.store)).size + 1
+){
+
+    const current = rawStoreFilter.value;
+
+    rawStoreFilter.innerHTML =
+        '<option value="">All Stores</option>';
+
+    [...new Set(returnsData.map(r=>r.store))]
+        .sort()
+        .forEach(store=>{
+
+            const count =
+                returnsData.filter(r=>r.store===store).length;
+
+            rawStoreFilter.innerHTML +=
+                `<option value="${store}">${store} (${count})</option>`;
+        });
+
+    rawStoreFilter.value = current;
+}
 
  virtualReturns.forEach(r=>{
    units+=r.qty;
@@ -530,12 +570,32 @@ const colourList = Object.entries(v.colours)
  const sizeb=document.querySelector('#sizeTable tbody'); if(sizeb){sizeb.innerHTML='';Object.entries(sizeTotals).forEach(([k,v])=>sizeb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
 
  const body=document.querySelector('#rawTable tbody');
- if(body){
-   body.innerHTML='';
-   returnsData.slice(0,1000).forEach(r=>{
-      body.innerHTML+=`<tr><td>${r.store}</td><td>${r.to||''}</td><td>${r.category}</td><td>${r.style}</td><td>${r.colour}</td><td>${r.qty}</td></tr>`;
-   });
- }
+
+if(body){
+
+    body.innerHTML='';
+
+    const selectedStore =
+        document.getElementById("rawStoreFilter").value;
+
+    const rows = selectedStore
+        ? returnsData.filter(r=>r.store===selectedStore)
+        : returnsData;
+
+    rows.forEach(r=>{
+
+        body.innerHTML += `
+        <tr>
+            <td>${r.store}</td>
+            <td>${r.to || ""}</td>
+            <td>${r.category}</td>
+            <td>${r.style}</td>
+            <td>${r.colour}</td>
+            <td>${r.qty}</td>
+        </tr>`;
+    });
+
+}
 }
 
 async function clearConsole(){
