@@ -4563,7 +4563,7 @@ function exportShipmentWorkbook(){
             totalPallets += pallets;
 
             sheetData.push([
-                r.cells[1].innerText,
+                r.cells[1].querySelector("span")?.textContent.trim() || "",
                 r.cells[2].innerText,
                 r.cells[3].innerText,
                 r.cells[4].innerText,
