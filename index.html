@@ -4489,12 +4489,23 @@ function exportUnallocatedRows(){
 
 function exportShipmentWorkbook(){
 
-    const shipment = prompt("Enter Shipment Number");
+    const input = prompt(
+    "Enter Shipment Numbers\n\nSeparate multiple shipments with commas."
+);
 
-    if(!shipment) return;
+if(!input) return;
+
+const shipments = input
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean);
 
     const rows = Array.from(shipmentTable.rows).slice(1)
-        .filter(r => r.cells[0].innerText.trim() === shipment.trim());
+    .filter(r =>
+        shipments.includes(
+            r.cells[0].innerText.trim()
+        )
+    );
 
     if(rows.length === 0){
         alert("Shipment not found.");
@@ -4652,9 +4663,11 @@ XLSX.utils.aoa_to_sheet([
     );
 
     XLSX.writeFile(
-        workbook,
-        shipment + ".xlsx"
-    );
+    workbook,
+    shipments.length === 1
+        ? shipments[0] + ".xlsx"
+        : "Selected Shipments.xlsx"
+);
 
 }
  
