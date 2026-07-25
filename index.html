@@ -3565,7 +3565,37 @@ function updateExceptions(){
 
     const groups={};
 
+ let shipmentHtml = "";
+let locationHtml = "";
+let dispatchWeekHtml = "";
+
+let shipmentCount = 0;
+let locationCount = 0;
+let dispatchWeekCount = 0;
+
     rows.forEach(row=>{
+
+     const warehouse =
+    row.cells[13].querySelector("select").value;
+
+const dispatchWeek =
+    row.cells[6].querySelector("select").value;
+
+if (
+    warehouse === "Virtual Warehouse" &&
+    dispatchWeek === "Week Not Assigned"
+) {
+
+    dispatchWeekCount++;
+
+    dispatchWeekHtml += `
+    <div class="exception-card">
+        <strong>PO:</strong> ${row.cells[1].innerText}<br>
+        <strong>Style:</strong> ${row.cells[3].innerText}<br>
+        <strong>Colour:</strong> ${row.cells[4].innerText}<br>
+        <strong>Qty:</strong> ${row.cells[11].innerText}
+    </div>`;
+}
 
         const po=row.cells[1].innerText.trim();
 
@@ -3596,10 +3626,6 @@ function updateExceptions(){
 
     });
 
-    let shipmentHtml="";
-    let locationHtml="";
-    let count=0;
-
     Object.keys(groups).forEach(po=>{
 
         const g=groups[po];
@@ -3613,9 +3639,9 @@ function updateExceptions(){
 
         if(g.shipment===""){
 
-            count++;
+    shipmentCount++;
 
-            shipmentHtml+=`
+    shipmentHtml+=`
             <div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
                 <h3>🚢 Shipment Required</h3>
 
@@ -3638,10 +3664,9 @@ function updateExceptions(){
 
         if(g.location===""){
 
-            count++;
+    locationCount++;
 
-            locationHtml+=`
-            
+    locationHtml+=`
             <div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
                 <h3>📍 Storage Location Required</h3>
 
@@ -3664,7 +3689,8 @@ function updateExceptions(){
 
     });
 
-    document.getElementById("missingLocationCount").innerText=count;
+    document.getElementById("missingLocationCount").innerText =
+    shipmentCount + locationCount + dispatchWeekCount;
 
     container.innerHTML=`
 
@@ -3679,7 +3705,7 @@ function updateExceptions(){
 
 <div style="
 display:grid;
-grid-template-columns:1fr 1fr;
+grid-template-columns:1fr 1fr 1fr;
 gap:20px;
 align-items:start;
 ">
@@ -3692,6 +3718,11 @@ ${shipmentHtml || "<div style='color:#22c55e'>None</div>"}
 <div>
 <h3>📍 Storage Locations Required</h3>
 ${locationHtml || "<div style='color:#22c55e'>None</div>"}
+</div>
+
+<div>
+<h3>📅 Dispatch Week Required</h3>
+${dispatchWeekHtml || "<div style='color:#22c55e'>None</div>"}
 </div>
 
 </div>
