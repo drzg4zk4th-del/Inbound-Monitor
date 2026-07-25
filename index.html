@@ -3659,7 +3659,14 @@ dispatchWeekHtml += `
     shipmentCount++;
 
     shipmentHtml+=`
-            <div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #3b82f6;">
+            <div class="card exception-card" style="
+margin-bottom:15px;
+border-left:5px solid #f59e0b;
+min-height:185px;
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+">
                 <h3>🚢 Shipment Required</h3>
 
                 <b>PO:</b> ${po}<br>
@@ -3684,7 +3691,14 @@ dispatchWeekHtml += `
     locationCount++;
 
     locationHtml+=`
-            <div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
+            <div class="card exception-card" style="
+margin-bottom:15px;
+border-left:5px solid #f59e0b;
+min-height:185px;
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+">
                 <h3>📍 Storage Location Required</h3>
 
                 <b>PO:</b> ${po}<br>
