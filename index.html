@@ -4765,8 +4765,7 @@ function openDispatchExport(){
 
     });
 
-    document.getElementById("dispatchExportModal").style.display = "block";
-
+document.getElementById("dispatchExportModal").style.display = "flex";
 }
 
 function closeDispatchExport(){
@@ -4833,9 +4832,9 @@ function exportDispatchWeekWorkbook(selectedWeeks){
 
     const sheetData = [
 
-        [selectedWeek],
+    [selectedWeeks.join(", ")],
 
-        [
+    [
             "Shipment",
             "PO",
             "SKU",
