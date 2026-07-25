@@ -3571,6 +3571,41 @@ function updateExceptions(){
 
         if(!po) return;
 
+     const dispatchWeek =
+    row.cells[6].querySelector("select").value;
+
+const warehouse =
+    row.cells[13].querySelector("select").value;
+
+if(
+    warehouse === "Virtual Warehouse" &&
+    dispatchWeek === "Week Not Assigned"
+){
+
+    count++;
+
+    locationHtml += `
+    <div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #f59e0b;">
+        <h3>📅 Dispatch Week Required</h3>
+
+        <b>PO:</b> ${po}<br>
+        <b>Style:</b> ${row.cells[3].innerText}<br>
+        <b>Colour:</b> ${row.cells[4].innerText}<br>
+        <b>Qty:</b> ${row.cells[11].innerText}<br><br>
+
+        <button onclick="
+            document.querySelectorAll('#shipmentTable tr').forEach(r=>{
+                if(r.cells[1] && r.cells[1].innerText.trim()==='${po}'){
+                    r.scrollIntoView({behavior:'smooth',block:'center'});
+                }
+            });
+        ">
+            Locate Row
+        </button>
+
+    </div>`;
+}
+
         if(!groups[po]){
             groups[po]={
                 shipment:row.cells[0].innerText.trim(),
@@ -3641,6 +3676,7 @@ function updateExceptions(){
             count++;
 
             locationHtml+=`
+            
             <div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #ef4444;">
                 <h3>📍 Storage Location Required</h3>
 
