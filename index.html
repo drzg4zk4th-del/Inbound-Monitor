@@ -4539,21 +4539,30 @@ const shipments = input
         let totalPacks=0;
         let totalPallets=0;
 
-        const sheetData = [[
-    "PO",
-    "SKU",
-    "Style",
-    "Colour",
-    "Loose Qty",
-    "Total Cartons",
-    "Total Packs",
-    "Loose Pallets",
-    "Packs Pallets",
-    "Total Pallets"
-]];
+const sheetData = [
+    [shipments.join(", ")],
+    [
+        "PO",
+        "SKU",
+        "Style",
+        "Colour",
+        "Loose Qty",
+        "Total Cartons",
+        "Total Packs",
+        "Loose Pallets",
+        "Packs Pallets",
+        "Total Pallets"
+    ]
+];
 
-     const merges = [];
-let excelRow = 1; // Row 0 is the column headings
+const merges = [
+    {
+        s: { r: 0, c: 0 },
+        e: { r: 0, c: 9 }
+    }
+];
+
+let excelRow = 2;
 
        const shipmentGroups = {};
 
@@ -4568,14 +4577,6 @@ warehouseRows.forEach(r => {
 });
 
 Object.keys(shipmentGroups).forEach(shipment => {
-
-    // Shipment title row
-    sheetData.push([shipment]);
-    merges.push({
-        s:{r:excelRow,c:0},
-        e:{r:excelRow,c:9}
-    });
-    excelRow++;
 
     shipmentGroups[shipment].forEach(r=>{
 
@@ -4646,6 +4647,33 @@ excelRow++;
             XLSX.utils.aoa_to_sheet(sheetData);
 
  sheet["!merges"] = merges;
+
+     Object.keys(sheet).forEach(cell => {
+
+    if (cell.startsWith("!")) return;
+
+    const value = sheet[cell].v;
+
+    if (shipments.includes(String(value).trim())) {
+
+        sheet[cell].s = {
+            font: {
+                bold: true,
+                sz: 14,
+                color: { rgb: "FFFFFF" }
+            },
+            fill: {
+                fgColor: { rgb: "4472C4" }   // Blue
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center"
+            }
+        };
+
+    }
+
+});
 
         sheet["!cols"] = [
     {wch:12},
