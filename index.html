@@ -3866,9 +3866,6 @@ if(!snapshot.exists)return;
 
 const data = snapshot.data();
 
- console.log(snapshot.exists);
-console.log(data);
-
 virtualTaken.value =
 data.virtualTaken || 0;
 
@@ -4834,19 +4831,20 @@ function exportDispatchWeekWorkbook(selectedWeeks){
 
     [selectedWeeks.join(", ")],
 
-    [
-            "Shipment",
-            "PO",
-            "SKU",
-            "Style",
-            "Colour",
-            "Loose Qty",
-            "Total Cartons",
-            "Total Packs",
-            "Loose Pallets",
-            "Packs Pallets",
-            "Total Pallets"
-        ]
+   [
+    "Dispatch Week",
+    "Shipment",
+    "PO",
+    "SKU",
+    "Style",
+    "Colour",
+    "Loose Qty",
+    "Total Cartons",
+    "Total Packs",
+    "Loose Pallets",
+    "Packs Pallets",
+    "Total Pallets"
+]
 
     ];
 
@@ -4882,20 +4880,20 @@ function exportDispatchWeekWorkbook(selectedWeeks){
 
         sheetData.push([
 
-            r.cells[0].innerText,
-            r.cells[1].querySelector("span")?.textContent.trim() || "",
-            r.cells[2].innerText,
-            r.cells[3].innerText,
-            r.cells[4].innerText,
-            looseQty,
-            cartons,
-            packs,
-            loosePallets,
-            packsPallets,
-            pallets
+    r.cells[6].querySelector("select").value,
+    r.cells[0].innerText,
+    r.cells[1].querySelector("span")?.textContent.trim() || "",
+    r.cells[2].innerText,
+    r.cells[3].innerText,
+    r.cells[4].innerText,
+    looseQty,
+    cartons,
+    packs,
+    loosePallets,
+    packsPallets,
+    pallets
 
-        ]);
-
+]);
     });
 
     sheetData.push([]);
