@@ -4529,15 +4529,17 @@ function exportShipmentWorkbook(){
         let totalPallets=0;
 
         const sheetData = [[
-            "PO",
-            "SKU",
-            "Style",
-            "Colour",
-            "Loose Qty",
-             "Total Cartons",
-            "Total Packs",
-            "Total Pallets"
-        ]];
+    "PO",
+    "SKU",
+    "Style",
+    "Colour",
+    "Loose Qty",
+    "Total Cartons",
+    "Total Packs",
+    "Loose Pallets",
+    "Packs Pallets",
+    "Total Pallets"
+]];
 
         warehouseRows.forEach(r=>{
 
@@ -4553,9 +4555,14 @@ function exportShipmentWorkbook(){
          const cartons =
     Number(r.cells[10].innerText || 0);
 
-            const pallets =
-                Number(r.cells[7].innerText||0) +
-                Number(r.cells[8].innerText||0);
+            const loosePallets =
+    Number(r.cells[7].innerText || 0);
+
+const packsPallets =
+    Number(r.cells[8].innerText || 0);
+
+const pallets =
+    loosePallets + packsPallets;
 
             totalLoose += looseQty;
          totalCartons += cartons;
@@ -4563,15 +4570,17 @@ function exportShipmentWorkbook(){
             totalPallets += pallets;
 
             sheetData.push([
-                r.cells[1].querySelector("span")?.textContent.trim() || "",
-                r.cells[2].innerText,
-                r.cells[3].innerText,
-                r.cells[4].innerText,
-                looseQty,
-             cartons,
-                packs,
-                pallets
-            ]);
+    r.cells[1].querySelector("span")?.textContent.trim() || "",
+    r.cells[2].innerText,
+    r.cells[3].innerText,
+    r.cells[4].innerText,
+    looseQty,
+    cartons,
+    packs,
+    loosePallets,
+    packsPallets,
+    pallets
+]);
 
         });
 
@@ -4594,15 +4603,17 @@ function exportShipmentWorkbook(){
             XLSX.utils.aoa_to_sheet(sheetData);
 
         sheet["!cols"] = [
-            {wch:12},
-            {wch:18},
-            {wch:25},
-            {wch:18},
-            {wch:12},
-            {wch:12},
-            {wch:12},
-            {wch:14}
-        ];
+    {wch:12},
+    {wch:18},
+    {wch:25},
+    {wch:18},
+    {wch:12},
+    {wch:12},
+    {wch:12},
+    {wch:14},
+    {wch:14},
+    {wch:14}
+];
 
         XLSX.utils.book_append_sheet(
             workbook,
