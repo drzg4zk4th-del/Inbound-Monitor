@@ -3588,13 +3588,30 @@ if (
 
     dispatchWeekCount++;
 
-    dispatchWeekHtml += `
-    <div class="exception-card">
-        <strong>PO:</strong> ${row.cells[1].innerText}<br>
-        <strong>Style:</strong> ${row.cells[3].innerText}<br>
-        <strong>Colour:</strong> ${row.cells[4].innerText}<br>
-        <strong>Qty:</strong> ${row.cells[11].innerText}
-    </div>`;
+    const po = row.cells[1].innerText.trim();
+
+dispatchWeekHtml += `
+<div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #f59e0b;">
+
+    <h3>📅 Dispatch Week Required</h3>
+
+    <b>PO:</b> ${po}<br>
+    <b>Style:</b> ${row.cells[3].innerText}<br>
+    <b>Colour:</b> ${row.cells[4].innerText}<br>
+    <b>Qty:</b> ${row.cells[11].innerText}<br><br>
+
+    <select id="week-${po}">
+        ${row.cells[6].querySelector("select").innerHTML}
+    </select>
+
+    <button onclick="
+        updateDispatchWeekFromException(
+            '${po}',
+            document.getElementById('week-${po}').value
+        )
+    ">Update</button>
+
+</div>`;
 }
 
         const po=row.cells[1].innerText.trim();
@@ -3776,6 +3793,25 @@ function updateShipmentFromException(po,shipment){
         if(row.cells[1].innerText.trim()===po){
 
             row.cells[0].innerText=shipment;
+
+        }
+
+    });
+
+    saveAll();
+    refreshDashboard();
+
+}
+
+function updateDispatchWeekFromException(po, week){
+
+    const rows = Array.from(shipmentTable.rows).slice(1);
+
+    rows.forEach(row=>{
+
+        if(row.cells[1].innerText.trim() === po){
+
+            row.cells[6].querySelector("select").value = week;
 
         }
 
