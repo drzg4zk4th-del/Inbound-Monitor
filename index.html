@@ -1127,6 +1127,12 @@ margin-bottom:0;
 
 <h2>Dispatch Week Overview</h2>
 
+<button
+class="add-btn"
+onclick="exportDispatchWeekWorkbook()">
+📦 Export Dispatch Week
+</button>
+
 <div id="dispatchProjectionContainer"></div>
 
 </div>
@@ -4730,6 +4736,173 @@ XLSX.utils.aoa_to_sheet([
         ? shipments[0] + ".xlsx"
         : "Selected Shipments.xlsx"
 );
+
+}
+
+function exportDispatchWeekWorkbook(){
+
+    // Get all active dispatch weeks
+    const weeks = [...new Set(
+
+        Array.from(shipmentTable.rows)
+        .slice(1)
+        .map(r => r.cells[6].querySelector("select").value)
+        .filter(w => w && w !== "Week Not Assigned")
+
+    )].sort();
+
+    if(weeks.length === 0){
+        alert("No dispatch weeks found.");
+        return;
+    }
+
+    const input = prompt(
+        "Select Dispatch Week\n\n" +
+        weeks.join("\n")
+    );
+
+    if(!input) return;
+
+    const selectedWeek = input.trim();
+
+    const rows = Array.from(shipmentTable.rows)
+    .slice(1)
+    .filter(r=>{
+
+        const week =
+            r.cells[6].querySelector("select").value;
+
+        const warehouse =
+            r.cells[13].querySelector("select").value;
+
+        return week === selectedWeek &&
+               warehouse === "Virtual Warehouse";
+
+    });
+
+    if(rows.length===0){
+        alert("No Virtual Warehouse rows found.");
+        return;
+    }
+
+    const workbook = XLSX.utils.book_new();
+
+    const sheetData = [
+
+        [selectedWeek],
+
+        [
+            "Shipment",
+            "PO",
+            "SKU",
+            "Style",
+            "Colour",
+            "Loose Qty",
+            "Total Cartons",
+            "Total Packs",
+            "Loose Pallets",
+            "Packs Pallets",
+            "Total Pallets"
+        ]
+
+    ];
+
+    let totalLoose = 0;
+    let totalCartons = 0;
+    let totalPacks = 0;
+    let totalPallets = 0;
+
+    rows.forEach(r=>{
+
+        const looseQty =
+            Number(r.cells[11].innerText || 0);
+
+        const cartons =
+            Number(r.cells[10].innerText || 0);
+
+        const packs =
+            Number(r.cells[12].innerText || 0);
+
+        const loosePallets =
+            Number(r.cells[7].innerText || 0);
+
+        const packsPallets =
+            Number(r.cells[8].innerText || 0);
+
+        const pallets =
+            loosePallets + packsPallets;
+
+        totalLoose += looseQty;
+        totalCartons += cartons;
+        totalPacks += packs;
+        totalPallets += pallets;
+
+        sheetData.push([
+
+            r.cells[0].innerText,
+            r.cells[1].querySelector("span")?.textContent.trim() || "",
+            r.cells[2].innerText,
+            r.cells[3].innerText,
+            r.cells[4].innerText,
+            looseQty,
+            cartons,
+            packs,
+            loosePallets,
+            packsPallets,
+            pallets
+
+        ]);
+
+    });
+
+    sheetData.push([]);
+
+    sheetData.push([
+        "",
+        "",
+        "",
+        "TOTAL",
+        "",
+        totalLoose,
+        totalCartons,
+        totalPacks,
+        "",
+        "",
+        totalPallets
+    ]);
+
+    const sheet =
+        XLSX.utils.aoa_to_sheet(sheetData);
+
+    sheet["!merges"] = [{
+        s:{r:0,c:0},
+        e:{r:0,c:10}
+    }];
+
+    sheet["!cols"] = [
+        {wch:15},
+        {wch:12},
+        {wch:18},
+        {wch:25},
+        {wch:18},
+        {wch:12},
+        {wch:12},
+        {wch:12},
+        {wch:14},
+        {wch:14},
+        {wch:14}
+    ];
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        sheet,
+        "Virtual"
+    );
+
+    XLSX.writeFile(
+        workbook,
+        selectedWeek + " Virtual.xlsx"
+    );
 
 }
  
