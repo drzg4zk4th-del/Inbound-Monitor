@@ -3591,7 +3591,15 @@ if (
     const po = row.cells[1].innerText.trim();
 
 dispatchWeekHtml += `
-<div class="card exception-card" style="margin-bottom:15px;border-left:5px solid #f59e0b;">
+<div class="card exception-card" style="
+margin-bottom:15px;
+border-left:5px solid #f59e0b;
+height:255px;
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+box-sizing:border-box;
+">
 
     <h3>📅 Dispatch Week Required</h3>
 
@@ -3662,10 +3670,11 @@ dispatchWeekHtml += `
             <div class="card exception-card" style="
 margin-bottom:15px;
 border-left:5px solid #f59e0b;
-min-height:185px;
+height:255px;
 display:flex;
 flex-direction:column;
 justify-content:space-between;
+box-sizing:border-box;
 ">
                 <h3>🚢 Shipment Required</h3>
 
@@ -3694,10 +3703,11 @@ justify-content:space-between;
             <div class="card exception-card" style="
 margin-bottom:15px;
 border-left:5px solid #f59e0b;
-min-height:185px;
+height:255px;
 display:flex;
 flex-direction:column;
 justify-content:space-between;
+box-sizing:border-box;
 ">
                 <h3>📍 Storage Location Required</h3>
 
@@ -3819,6 +3829,11 @@ function updateShipmentFromException(po,shipment){
 
 function updateDispatchWeekFromException(po, week){
 
+    // If still "Week Not Assigned", default to the current dispatch week
+    if(week === "Week Not Assigned"){
+        week = getCurrentDispatchWeek();
+    }
+
     const rows = Array.from(shipmentTable.rows).slice(1);
 
     rows.forEach(row=>{
@@ -3834,6 +3849,19 @@ function updateDispatchWeekFromException(po, week){
     saveAll();
     refreshDashboard();
 
+}
+
+function getCurrentDispatchWeek(){
+
+    const now = new Date();
+
+    const start = new Date(now.getFullYear(), 0, 1);
+
+    const days = Math.floor((now - start) / 86400000);
+
+    const week = Math.ceil((days + start.getDay() + 1) / 7);
+
+    return "W" + String(week).padStart(2, "0") + " FY26";
 }
 
 async function saveAll(){
