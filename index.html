@@ -4552,7 +4552,32 @@ const shipments = input
     "Total Pallets"
 ]];
 
-        warehouseRows.forEach(r=>{
+     const merges = [];
+let excelRow = 1; // Row 0 is the column headings
+
+       const shipmentGroups = {};
+
+warehouseRows.forEach(r => {
+    const shipment = r.cells[0].innerText.trim();
+
+    if (!shipmentGroups[shipment]) {
+        shipmentGroups[shipment] = [];
+    }
+
+    shipmentGroups[shipment].push(r);
+});
+
+Object.keys(shipmentGroups).forEach(shipment => {
+
+    // Shipment title row
+    sheetData.push([shipment]);
+    merges.push({
+        s:{r:excelRow,c:0},
+        e:{r:excelRow,c:9}
+    });
+    excelRow++;
+
+    shipmentGroups[shipment].forEach(r=>{
 
             const qty =
                 Number(r.cells[11].innerText||0);
@@ -4593,25 +4618,34 @@ const pallets =
     pallets
 ]);
 
+      excelRow++;
+
         });
+
+ sheetData.push([]);
+excelRow++;
 
         // totals row
 
-        sheetData.push([]);
+ }); 
 
-        sheetData.push([
-            "",
-            "",
-            "",
-            "TOTAL",
-            totalLoose,
-         totalCartons,
-            totalPacks,
-            totalPallets
-        ]);
+     sheetData.push([
+    "",
+    "",
+    "",
+    "TOTAL",
+    totalLoose,
+    totalCartons,
+    totalPacks,
+    "",
+    "",
+    totalPallets
+]);
 
         const sheet =
             XLSX.utils.aoa_to_sheet(sheetData);
+
+ sheet["!merges"] = merges;
 
         sheet["!cols"] = [
     {wch:12},
