@@ -1129,7 +1129,7 @@ margin-bottom:0;
 
 <button
 class="add-btn"
-onclick="exportDispatchWeekWorkbook()">
+onclick="openDispatchExport()">
 📦 Export Dispatch Week
 </button>
 
@@ -4739,7 +4739,60 @@ XLSX.utils.aoa_to_sheet([
 
 }
 
-function exportDispatchWeekWorkbook(){
+function openDispatchExport(){
+
+    const weeks = [...new Set(
+        Array.from(shipmentTable.rows)
+        .slice(1)
+        .map(r => r.cells[6].querySelector("select").value)
+        .filter(w => w && w !== "Week Not Assigned")
+    )].sort();
+
+    const list = document.getElementById("dispatchWeekList");
+
+    list.innerHTML = "";
+
+    weeks.forEach(week => {
+
+        list.innerHTML += `
+        <label style="display:block;margin-bottom:8px;">
+            <input
+                type="checkbox"
+                class="dispatchWeekExport"
+                value="${week}">
+            ${week}
+        </label>`;
+
+    });
+
+    document.getElementById("dispatchExportModal").style.display = "block";
+
+}
+
+function closeDispatchExport(){
+
+    document.getElementById("dispatchExportModal").style.display = "none";
+
+}
+
+function confirmDispatchExport(){
+
+    const selectedWeeks =
+        Array.from(document.querySelectorAll(".dispatchWeekExport:checked"))
+        .map(cb => cb.value);
+
+    if(selectedWeeks.length===0){
+        alert("Please select at least one week.");
+        return;
+    }
+
+    closeDispatchExport();
+
+    exportDispatchWeekWorkbook(selectedWeeks);
+
+}
+
+function exportDispatchWeekWorkbook(selectedWeeks){
 
     // Get all active dispatch weeks
     const weeks = [...new Set(
@@ -4756,15 +4809,6 @@ function exportDispatchWeekWorkbook(){
         return;
     }
 
-    const input = prompt(
-        "Select Dispatch Week\n\n" +
-        weeks.join("\n")
-    );
-
-    if(!input) return;
-
-    const selectedWeek = input.trim();
-
     const rows = Array.from(shipmentTable.rows)
     .slice(1)
     .filter(r=>{
@@ -4775,8 +4819,8 @@ function exportDispatchWeekWorkbook(){
         const warehouse =
             r.cells[13].querySelector("select").value;
 
-        return week === selectedWeek &&
-               warehouse === "Virtual Warehouse";
+        return selectedWeeks.includes(week) &&
+       warehouse === "Virtual Warehouse";
 
     });
 
@@ -4901,7 +4945,7 @@ function exportDispatchWeekWorkbook(){
 
     XLSX.writeFile(
         workbook,
-        selectedWeek + " Virtual.xlsx"
+        "Dispatch Weeks.xlsx"
     );
 
 }
@@ -6136,6 +6180,24 @@ Cancel
 
 </div>
 
+</div>
+
+ <div id="dispatchExportModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h2>Select Dispatch Weeks</h2>
+
+        <div id="dispatchWeekList"></div>
+
+        <br>
+
+        <button class="add-btn" onclick="confirmDispatchExport()">
+            Export
+        </button>
+
+        <button onclick="closeDispatchExport()">
+            Cancel
+        </button>
+    </div>
 </div>
 
 </body>
