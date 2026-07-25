@@ -4899,18 +4899,19 @@ function exportDispatchWeekWorkbook(selectedWeeks){
     sheetData.push([]);
 
     sheetData.push([
-        "",
-        "",
-        "",
-        "TOTAL",
-        "",
-        totalLoose,
-        totalCartons,
-        totalPacks,
-        "",
-        "",
-        totalPallets
-    ]);
+    "",
+    "",
+    "",
+    "",
+    "TOTAL",
+    "",
+    totalLoose,
+    totalCartons,
+    totalPacks,
+    "",
+    "",
+    totalPallets
+]);
 
     const sheet =
         XLSX.utils.aoa_to_sheet(sheetData);
