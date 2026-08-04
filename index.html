@@ -3913,50 +3913,69 @@ document.querySelectorAll('#notesArchiveContainer .card').forEach(card=>{
 weeklyArchive.push(card.outerHTML);
 });
 
-await Promise.all([
+try{
+    await db.collection("planner").doc("active").set({ active });
+    console.log("✓ active saved");
+}catch(e){
+    console.error("✗ active failed", e);
+}
 
-db.collection("planner").doc("active").set({
-    active
-}),
+try{
+    await db.collection("planner").doc("archive").set({ archive });
+    console.log("✓ archive saved");
+}catch(e){
+    console.error("✗ archive failed", e);
+}
 
-db.collection("planner").doc("archive").set({
-    archive
-}),
+try{
+    await db.collection("planner").doc("qcRejected").set({ qcRejected });
+    console.log("✓ qcRejected saved");
+}catch(e){
+    console.error("✗ qcRejected failed", e);
+}
 
-db.collection("planner").doc("qcRejected").set({
-    qcRejected
-}),
+try{
+    await db.collection("planner").doc("notes").set({
 
-db.collection("planner").doc("notes").set({
+        weeklyArchive,
 
-    weeklyArchive,
+        dailyNotes:{
+            sun:sunNote?.value||"",
+            mon:monNote?.value||"",
+            tue:tueNote?.value||"",
+            wed:wedNote?.value||"",
+            thu:thuNote?.value||"",
+            fri:friNote?.value||"",
+            sat:satNote?.value||""
+        }
 
-    dailyNotes:{
-        sun:sunNote?.value||"",
-        mon:monNote?.value||"",
-        tue:tueNote?.value||"",
-        wed:wedNote?.value||"",
-        thu:thuNote?.value||"",
-        fri:friNote?.value||"",
-        sat:satNote?.value||""
-    }
+    });
 
-}),
+    console.log("✓ notes saved");
 
-db.collection("planner").doc("settings").set({
+}catch(e){
+    console.error("✗ notes failed", e);
+}
 
-    virtualTaken:virtualTaken.value,
-    virtualCapacity:virtualCapacity.value,
+try{
+    await db.collection("planner").doc("settings").set({
 
-    sevenTaken:sevenHillsTaken.value,
-    sevenCapacity:sevenHillsCapacity.value,
+        virtualTaken:virtualTaken.value,
+        virtualCapacity:virtualCapacity.value,
 
-    mainTaken:mainWarehouseTaken.value,
-    mainCapacity:mainWarehouseCapacity.value
+        sevenTaken:sevenHillsTaken.value,
+        sevenCapacity:sevenHillsCapacity.value,
 
-})
+        mainTaken:mainWarehouseTaken.value,
+        mainCapacity:mainWarehouseCapacity.value
 
-]);
+    });
+
+    console.log("✓ settings saved");
+
+}catch(e){
+    console.error("✗ settings failed", e);
+}
  
 }
 
@@ -3972,29 +3991,47 @@ shipmentTable.innerHTML = shipmentTable.rows[0].outerHTML;
 archiveTable.innerHTML = archiveTable.rows[0].outerHTML;
 qcRejectedTable.innerHTML = qcRejectedTable.rows[0].outerHTML;
  
-const [
-    activeSnap,
-    archiveSnap,
-    qcSnap,
-    notesSnap,
-    settingsSnap
-] = await Promise.all([
+const plannerRef = db.collection("planner");
 
-    db.collection("planner").doc("active").get(),
-    db.collection("planner").doc("archive").get(),
-    db.collection("planner").doc("qcRejected").get(),
-    db.collection("planner").doc("notes").get(),
-    db.collection("planner").doc("settings").get()
+// Check if the new split documents exist
+const activeSnap = await plannerRef.doc("active").get();
 
-]);
+let data;
 
-const data = {
-    ...(activeSnap.exists ? activeSnap.data() : {}),
-    ...(archiveSnap.exists ? archiveSnap.data() : {}),
-    ...(qcSnap.exists ? qcSnap.data() : {}),
-    ...(notesSnap.exists ? notesSnap.data() : {}),
-    ...(settingsSnap.exists ? settingsSnap.data() : {})
-};
+if (activeSnap.exists) {
+
+    const [
+        archiveSnap,
+        qcSnap,
+        notesSnap,
+        settingsSnap
+    ] = await Promise.all([
+
+        plannerRef.doc("archive").get(),
+        plannerRef.doc("qcRejected").get(),
+        plannerRef.doc("notes").get(),
+        plannerRef.doc("settings").get()
+
+    ]);
+
+    data = {
+        ...activeSnap.data(),
+        ...(archiveSnap.exists ? archiveSnap.data() : {}),
+        ...(qcSnap.exists ? qcSnap.data() : {}),
+        ...(notesSnap.exists ? notesSnap.data() : {}),
+        ...(settingsSnap.exists ? settingsSnap.data() : {})
+    };
+
+} else {
+
+    // Fallback to the old planner/main document
+    const mainSnap = await plannerRef.doc("main").get();
+
+    if (!mainSnap.exists) return;
+
+    data = mainSnap.data();
+
+}
 
 virtualTaken.value =
 data.virtualTaken || 0;
