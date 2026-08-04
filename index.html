@@ -1772,45 +1772,6 @@ ${row.cells[18].querySelector('select').value}
 ${row.cells[19].innerHTML}
 </p>
 
-<h3 style="margin-top:20px;">Storage Allocation</h3>
-
-<table style="width:300px;border-collapse:collapse;">
-
-<tr>
-    <th style="text-align:left;">Location</th>
-    <th style="text-align:left;">Qty</th>
-</tr>
-
-${[
-"6A",
-"8A",
-"10A",
-"12A",
-"12C",
-"12B",
-"9E",
-"9B",
-"9A"
-].map(location=>`
-
-<tr>
-    <td style="padding:6px 0;">${location}</td>
-    <td>
-        <input
-    type="number"
-    class="allocationInput"
-    data-po="${row.cells[1].innerText.trim()}"
-    data-location="${location}"
-    value=""
-    placeholder="0"
-    style="width:80px;">
-    </td>
-</tr>
-
-`).join("")}
-
-</table>
-
 </div>
 
 `;
@@ -1819,55 +1780,6 @@ ${[
 
 results.innerHTML=html;
 
- document.querySelectorAll(".allocationInput").forEach(input => {
-
-    input.addEventListener("change", function () {
-
-    console.log("Before");
-
-    console.log(typeof saveAllocation);
-
-    saveAllocation(
-        this.dataset.po,
-        this.dataset.location,
-        this.value
-    );
-
-    console.log("After");
-
-});
-
-});
-
- console.log(
-    "Allocation inputs found:",
-    document.querySelectorAll(".allocationInput").length
-);
-
-}
-
-async function saveAllocation(po, location, qty) {
-
-    console.log("Saving", po, location, qty);
-
-    try {
-
-        await db.collection("poAllocations")
-            .doc(po)
-            .set({
-                [location]: Number(qty || 0)
-            }, { merge: true });
-
-        console.log("SUCCESS");
-
-    } catch (err) {
-
-        console.error("FIRESTORE ERROR:", err);
-        alert(err.message);
-
-    }
-
-}
 let shipmentTableVisible = false;
 
 function toggleShipmentTable(){
