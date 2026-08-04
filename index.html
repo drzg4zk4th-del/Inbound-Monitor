@@ -1798,11 +1798,12 @@ ${[
     <td>
         <input
     type="number"
-    id="alloc-${row.cells[1].innerText.trim()}-${location}"
+    class="allocationInput"
+    data-po="${row.cells[1].innerText.trim()}"
+    data-location="${location}"
     value=""
     placeholder="0"
-    style="width:80px;"
-    onchange="alert('changed'); saveAllocation('${row.cells[1].innerText.trim()}','${location}',this.value)">
+    style="width:80px;">
     </td>
 </tr>
 
@@ -1817,6 +1818,20 @@ ${[
 });
 
 results.innerHTML=html;
+
+ document.querySelectorAll(".allocationInput").forEach(input => {
+
+    input.addEventListener("change", function () {
+
+        saveAllocation(
+            this.dataset.po,
+            this.dataset.location,
+            this.value
+        );
+
+    });
+
+});
 
 }
 
