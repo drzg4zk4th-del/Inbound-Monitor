@@ -1797,10 +1797,12 @@ ${[
     <td style="padding:6px 0;">${location}</td>
     <td>
         <input
-            type="number"
-            value=""
-            placeholder="0"
-            style="width:80px;">
+    type="number"
+    id="alloc-${row.cells[1].innerText.trim()}-${location}"
+    value=""
+    placeholder="0"
+    style="width:80px;"
+    onchange="saveAllocation('${row.cells[1].innerText.trim()}','${location}',this.value)">
     </td>
 </tr>
 
@@ -1815,6 +1817,16 @@ ${[
 });
 
 results.innerHTML=html;
+
+}
+
+ async function saveAllocation(po, location, qty) {
+
+    await db.collection("poAllocations")
+        .doc(po)
+        .set({
+            [location]: Number(qty || 0)
+        }, { merge: true });
 
 }
 
