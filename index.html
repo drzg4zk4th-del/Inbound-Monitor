@@ -1823,19 +1823,17 @@ results.innerHTML=html;
 
     input.addEventListener("change", function () {
 
-    alert("Event fired");
+    console.log("Before");
 
-    console.log(
-        this.dataset.po,
-        this.dataset.location,
-        this.value
-    );
+    console.log(typeof saveAllocation);
 
     saveAllocation(
         this.dataset.po,
         this.dataset.location,
         this.value
     );
+
+    console.log("After");
 
 });
 
