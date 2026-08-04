@@ -1823,13 +1823,21 @@ results.innerHTML=html;
 
     input.addEventListener("change", function () {
 
-        saveAllocation(
-            this.dataset.po,
-            this.dataset.location,
-            this.value
-        );
+    alert("Event fired");
 
-    });
+    console.log(
+        this.dataset.po,
+        this.dataset.location,
+        this.value
+    );
+
+    saveAllocation(
+        this.dataset.po,
+        this.dataset.location,
+        this.value
+    );
+
+});
 
 });
 
