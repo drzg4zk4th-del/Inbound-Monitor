@@ -743,6 +743,21 @@ Sign In
 Sign Out
 </button>
 
+<button onclick="backupFirestore()">
+    💾 Backup Database
+</button>
+
+<button onclick="document.getElementById('restoreInput').click()">
+    📂 Restore Database
+</button>
+
+<input
+    type="file"
+    id="restoreInput"
+    accept=".json"
+    style="display:none"
+    onchange="restoreFirestore(event)">
+
 <div class="header-title">
 
     <h1>Billini Warehouse Inbound / Retail Despatch Forecast</h1>
@@ -5341,6 +5356,89 @@ window.addEventListener("load", () => {
     };
 
 });
+
+async function backupFirestore(){
+
+    const collections = [
+        "planner",
+        "dashboard",
+        "dispatch_pickruns",
+        "storeReturnsConsole"
+        // Add future collections here
+    ];
+
+    const backup = {
+        exported: new Date().toISOString(),
+        version: 1,
+        collections: {}
+    };
+
+    for (const collectionName of collections){
+
+        const snapshot = await db.collection(collectionName).get();
+
+        backup.collections[collectionName] = {};
+
+        snapshot.forEach(doc => {
+            backup.collections[collectionName][doc.id] = doc.data();
+        });
+
+    }
+
+    const blob = new Blob(
+        [JSON.stringify(backup, null, 2)],
+        { type: "application/json" }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+        `Billini_Backup_${new Date().toISOString().substring(0,10)}.json`;
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+    alert("Database backup completed successfully.");
+
+}
+
+async function restoreFirestore(event){
+
+    const file = event.target.files[0];
+
+    if(!file) return;
+
+    if(!confirm(
+        "This will overwrite existing Firestore documents.\n\nContinue?"
+    )) return;
+
+    const backup = JSON.parse(await file.text());
+
+    for(const collectionName in backup.collections){
+
+        const docs = backup.collections[collectionName];
+
+        for(const docId in docs){
+
+            await db
+                .collection(collectionName)
+                .doc(docId)
+                .set(docs[docId]);
+
+        }
+
+    }
+
+    alert("Restore complete.");
+
+    location.reload();
+
+}
 
 async function fixCompletedDates(){
 
