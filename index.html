@@ -1822,9 +1822,11 @@ results.innerHTML=html;
 
 async function saveAllocation(po, location, qty) {
 
-    alert(`Saving ${po} ${location} ${qty}`);
+    console.log("Function started");
 
     try {
+
+        console.log("About to save");
 
         await db.collection("poAllocations")
             .doc(po)
@@ -1832,11 +1834,10 @@ async function saveAllocation(po, location, qty) {
                 [location]: Number(qty || 0)
             }, { merge: true });
 
-        alert("Saved!");
+        console.log("Saved");
 
     } catch (err) {
 
-        alert("Error: " + err.message);
         console.error(err);
 
     }
