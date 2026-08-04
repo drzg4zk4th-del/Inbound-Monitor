@@ -1850,9 +1850,7 @@ results.innerHTML=html;
 
 async function saveAllocation(po, location, qty) {
 
-    alert("saveAllocation called");
-
-    console.log("Function started", po, location, qty);
+    console.log("Saving", po, location, qty);
 
     try {
 
@@ -1862,12 +1860,12 @@ async function saveAllocation(po, location, qty) {
                 [location]: Number(qty || 0)
             }, { merge: true });
 
-        alert("Saved!");
+        console.log("SUCCESS");
 
     } catch (err) {
 
-        alert("ERROR: " + err.message);
-        console.error(err);
+        console.error("FIRESTORE ERROR:", err);
+        alert(err.message);
 
     }
 
