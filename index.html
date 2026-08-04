@@ -1837,11 +1837,11 @@ results.innerHTML=html;
 
 async function saveAllocation(po, location, qty) {
 
-    console.log("Function started");
+    alert("saveAllocation called");
+
+    console.log("Function started", po, location, qty);
 
     try {
-
-        console.log("About to save");
 
         await db.collection("poAllocations")
             .doc(po)
@@ -1849,16 +1849,16 @@ async function saveAllocation(po, location, qty) {
                 [location]: Number(qty || 0)
             }, { merge: true });
 
-        console.log("Saved");
+        alert("Saved!");
 
     } catch (err) {
 
+        alert("ERROR: " + err.message);
         console.error(err);
 
     }
 
 }
-
 let shipmentTableVisible = false;
 
 function toggleShipmentTable(){
