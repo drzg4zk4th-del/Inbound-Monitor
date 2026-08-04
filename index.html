@@ -1822,7 +1822,7 @@ results.innerHTML=html;
 
 async function saveAllocation(po, location, qty) {
 
-    console.log("Saving:", po, location, qty);
+    alert(`Saving ${po} ${location} ${qty}`);
 
     try {
 
@@ -1832,12 +1832,12 @@ async function saveAllocation(po, location, qty) {
                 [location]: Number(qty || 0)
             }, { merge: true });
 
-        console.log("Saved successfully");
+        alert("Saved!");
 
     } catch (err) {
 
-        console.error("Save failed:", err);
-        alert(err.message);
+        alert("Error: " + err.message);
+        console.error(err);
 
     }
 
