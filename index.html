@@ -1820,13 +1820,26 @@ results.innerHTML=html;
 
 }
 
- async function saveAllocation(po, location, qty) {
+async function saveAllocation(po, location, qty) {
 
-    await db.collection("poAllocations")
-        .doc(po)
-        .set({
-            [location]: Number(qty || 0)
-        }, { merge: true });
+    console.log("Saving:", po, location, qty);
+
+    try {
+
+        await db.collection("poAllocations")
+            .doc(po)
+            .set({
+                [location]: Number(qty || 0)
+            }, { merge: true });
+
+        console.log("Saved successfully");
+
+    } catch (err) {
+
+        console.error("Save failed:", err);
+        alert(err.message);
+
+    }
 
 }
 
