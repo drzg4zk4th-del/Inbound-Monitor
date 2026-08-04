@@ -1716,6 +1716,7 @@ Total Cartons
 </div>
 
 `;
+ 
 
 matches.forEach(row=>{
 
@@ -1770,6 +1771,42 @@ ${row.cells[18].querySelector('select').value}
 <p><b>Notes:</b><br>
 ${row.cells[19].innerHTML}
 </p>
+
+<h3 style="margin-top:20px;">Storage Allocation</h3>
+
+<table style="width:300px;border-collapse:collapse;">
+
+<tr>
+    <th style="text-align:left;">Location</th>
+    <th style="text-align:left;">Qty</th>
+</tr>
+
+${[
+"6A",
+"8A",
+"10A",
+"12A",
+"12C",
+"12B",
+"9E",
+"9B",
+"9A"
+].map(location=>`
+
+<tr>
+    <td style="padding:6px 0;">${location}</td>
+    <td>
+        <input
+            type="number"
+            value=""
+            placeholder="0"
+            style="width:80px;">
+    </td>
+</tr>
+
+`).join("")}
+
+</table>
 
 </div>
 
