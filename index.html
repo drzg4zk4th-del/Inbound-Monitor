@@ -3913,25 +3913,51 @@ document.querySelectorAll('#notesArchiveContainer .card').forEach(card=>{
 weeklyArchive.push(card.outerHTML);
 });
 
-await db.collection('planner').doc('main').set({
+await Promise.all([
 
-active,
-archive,
-qcRejected,
-weeklyArchive,
-dailyNotes:{sun:sunNote?.value||'',mon:monNote?.value||'',tue:tueNote?.value||'',wed:wedNote?.value||'',thu:thuNote?.value||'',fri:friNote?.value||'',sat:satNote?.value||''},
+db.collection("planner").doc("active").set({
+    active
+}),
 
-virtualTaken: virtualTaken.value,
-virtualCapacity: virtualCapacity.value,
+db.collection("planner").doc("archive").set({
+    archive
+}),
 
-sevenTaken: sevenHillsTaken.value,
-sevenCapacity: sevenHillsCapacity.value,
+db.collection("planner").doc("qcRejected").set({
+    qcRejected
+}),
 
-mainTaken: mainWarehouseTaken.value,
-mainCapacity: mainWarehouseCapacity.value
+db.collection("planner").doc("notes").set({
 
-});
+    weeklyArchive,
 
+    dailyNotes:{
+        sun:sunNote?.value||"",
+        mon:monNote?.value||"",
+        tue:tueNote?.value||"",
+        wed:wedNote?.value||"",
+        thu:thuNote?.value||"",
+        fri:friNote?.value||"",
+        sat:satNote?.value||""
+    }
+
+}),
+
+db.collection("planner").doc("settings").set({
+
+    virtualTaken:virtualTaken.value,
+    virtualCapacity:virtualCapacity.value,
+
+    sevenTaken:sevenHillsTaken.value,
+    sevenCapacity:sevenHillsCapacity.value,
+
+    mainTaken:mainWarehouseTaken.value,
+    mainCapacity:mainWarehouseCapacity.value
+
+})
+
+]);
+ 
 }
 
 let dataLoaded = false;
@@ -3946,12 +3972,29 @@ shipmentTable.innerHTML = shipmentTable.rows[0].outerHTML;
 archiveTable.innerHTML = archiveTable.rows[0].outerHTML;
 qcRejectedTable.innerHTML = qcRejectedTable.rows[0].outerHTML;
  
-const snapshot =
-await db.collection('planner').doc('main').get();
+const [
+    activeSnap,
+    archiveSnap,
+    qcSnap,
+    notesSnap,
+    settingsSnap
+] = await Promise.all([
 
-if(!snapshot.exists)return;
+    db.collection("planner").doc("active").get(),
+    db.collection("planner").doc("archive").get(),
+    db.collection("planner").doc("qcRejected").get(),
+    db.collection("planner").doc("notes").get(),
+    db.collection("planner").doc("settings").get()
 
-const data = snapshot.data();
+]);
+
+const data = {
+    ...(activeSnap.exists ? activeSnap.data() : {}),
+    ...(archiveSnap.exists ? archiveSnap.data() : {}),
+    ...(qcSnap.exists ? qcSnap.data() : {}),
+    ...(notesSnap.exists ? notesSnap.data() : {}),
+    ...(settingsSnap.exists ? settingsSnap.data() : {})
+};
 
 virtualTaken.value =
 data.virtualTaken || 0;
