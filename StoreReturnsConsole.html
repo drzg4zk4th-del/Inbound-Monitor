@@ -164,7 +164,41 @@ window.addEventListener('load',async()=>{
 
 <div class="main">
 
-<div class="metrics">
+<div class="section">
+
+<h3>Destination Filters</h3>
+
+<label><input type="checkbox" id="showVirtual" checked onchange="refreshData()"> Virtual Warehouse</label>
+
+<label style="margin-left:20px;">
+<input type="checkbox" id="showSevenHills" onchange="refreshData()">
+Seven Hills
+</label>
+
+<label style="margin-left:20px;">
+<input type="checkbox" id="showHarbourTown" onchange="refreshData()">
+Harbour Town
+</label>
+
+<label style="margin-left:20px;">
+<input type="checkbox" id="showEssendon" onchange="refreshData()">
+Essendon
+</label>
+
+<label style="margin-left:20px;">
+<input type="checkbox" id="showEasternCreek" onchange="refreshData()">
+Eastern Creek
+</label>
+
+<br><br>
+
+<button onclick="selectAllDestinations()">Select All</button>
+
+<button onclick="clearAllDestinations()">Clear All</button>
+
+</div>
+    
+    <div class="metrics">
 
 <div class="card"><div>Stores Returning</div><div class="big" id="storeCount">0</div></div>
 <div class="card"><div>Styles Returning</div><div class="big" id="uniqueStyles">0</div></div>
@@ -304,17 +338,6 @@ async function importTransit(){
 let importedCount=0;
 
  rows.forEach(r=>{
-     
-  const toStore=String(
-    r['To Store']||
-    r['TO STORE']||
-    r['To store']||
-    ''
-  ).trim().toUpperCase();
-
-  if(toStore && toStore!=='VIRTUAL WAREHOUSE'){
-    return;
-  }
 
   importedCount++;
 
@@ -346,6 +369,30 @@ lxl:Number(r['LARGE/XLARGE']||r['L/XL']||0),
  refreshData();
 }
 
+function selectAllDestinations(){
+
+document.getElementById("showVirtual").checked=true;
+document.getElementById("showSevenHills").checked=true;
+document.getElementById("showHarbourTown").checked=true;
+document.getElementById("showEssendon").checked=true;
+document.getElementById("showEasternCreek").checked=true;
+
+refreshData();
+
+}
+
+function clearAllDestinations(){
+
+document.getElementById("showVirtual").checked=false;
+document.getElementById("showSevenHills").checked=false;
+document.getElementById("showHarbourTown").checked=false;
+document.getElementById("showEssendon").checked=false;
+document.getElementById("showEasternCreek").checked=false;
+
+refreshData();
+
+}
+    
 function refreshData(){
  let styleSummary={},storeSummary={},colourSummary={},categorySummary={};
  let sizeTotals={
@@ -367,11 +414,29 @@ function refreshData(){
  let units=0;
  const styles=new Set(), stores=new Set();
 
-const virtualReturns = returnsData.filter(r =>
-    String(r.to || "").trim().toUpperCase() === "VIRTUAL WAREHOUSE"
-);
+const selectedDestinations=[];
 
- virtualReturns.forEach(r=>{
+if(document.getElementById("showVirtual").checked)
+selectedDestinations.push("VIRTUAL WAREHOUSE");
+
+if(document.getElementById("showSevenHills").checked)
+selectedDestinations.push("SEVEN HILLS");
+
+if(document.getElementById("showHarbourTown").checked)
+selectedDestinations.push("HARBOUR TOWN");
+
+if(document.getElementById("showEssendon").checked)
+selectedDestinations.push("ESSENDON");
+
+if(document.getElementById("showEasternCreek").checked)
+selectedDestinations.push("EASTERN CREEK");
+
+const filteredReturns = returnsData.filter(r =>
+selectedDestinations.includes(
+String(r.to||"").trim().toUpperCase()
+));
+
+ filteredReturns.forEach(r=>{
    units+=r.qty;
    styles.add(r.style);
    stores.add(r.store);
@@ -383,7 +448,7 @@ const virtualReturns = returnsData.filter(r =>
  document.getElementById('transitUnits').innerText=transitData.reduce((a,b)=>a+b.qty,0).toLocaleString();
 
  
-virtualReturns.forEach(r=>{
+filteredReturns.forEach(r=>{
 
     // ---------- Style summary ----------
     if(!styleSummary[r.style]){
@@ -473,7 +538,7 @@ if (returnProgress) {
 }
 
     const uniqueTransfers = new Set(
-    virtualReturns
+    filteredReturns
         .filter(r => r.transferNumber && String(r.transferNumber).trim() !== "")
         .map(r => String(r.transferNumber).trim())
 );
@@ -482,7 +547,7 @@ document.getElementById("packingUnits").innerText =
     uniqueTransfers.size;
 document.getElementById("packingProgress").innerText =
 (
-    returnsData.length
+    filteredReturns.length
         ? (uniqueTransfers.size / returnsData.length) * 100
         : 0
 ).toFixed(1) + "%";
@@ -564,7 +629,7 @@ const colourList = Object.entries(v.colours)
  const body=document.querySelector('#rawTable tbody');
  if(body){
    body.innerHTML='';
-   returnsData.slice(0,1000).forEach(r=>{
+   filteredReturns.slice(0,1000).forEach(r=>{
       body.innerHTML+=`<tr><td>${r.store}</td><td>${r.to||''}</td><td>${r.category}</td><td>${r.style}</td><td>${r.colour}</td><td>${r.qty}</td></tr>`;
    });
  }
