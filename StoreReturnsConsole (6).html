@@ -1,0 +1,638 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Store Returns Console V3.1</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#0b1220;color:#fff}
+.header{display:flex;justify-content:space-between;align-items:center;padding:20px;background:#111827;border-bottom:1px solid #374151}
+button{padding:10px 16px;border:none;border-radius:8px;background:#8b6b3f;color:white;cursor:pointer}
+.main{padding:20px}
+.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:15px;margin-bottom:20px}
+.card{background:#1f2937;border-radius:14px;padding:18px}
+.big{font-size:34px;font-weight:bold;margin-top:10px}
+.section{background:#1f2937;border-radius:14px;padding:18px;margin-top:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px}
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,
+td{
+    padding:8px;
+    border-bottom:1px solid #374151;
+    text-align:left;
+}
+
+th{
+    background:#111827;
+}
+@media(max-width:1200px){
+.metrics{grid-template-columns:repeat(3,1fr)}
+}
+
+</style>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+apiKey: "AIzaSyD9nPDHQpkPgxeQYfe-JVWemQg6CjbCBYM",
+authDomain: "seven-hills-dashboard-e973d.firebaseapp.com",
+projectId: "seven-hills-dashboard-e973d",
+storageBucket: "seven-hills-dashboard-e973d.firebasestorage.app",
+messagingSenderId: "1016653351453",
+appId: "1:1016653351453:web:a2a1f597844adf51ba54f4"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let returnsData=[];
+let transitData=[];
+
+async function saveReturnsConsole(){
+
+ const chunkSize = 500;
+
+ const returnChunks = [];
+ for(let i=0;i<returnsData.length;i+=chunkSize){
+   returnChunks.push(returnsData.slice(i,i+chunkSize));
+ }
+
+ const transitChunks = [];
+ for(let i=0;i<transitData.length;i+=chunkSize){
+   transitChunks.push(transitData.slice(i,i+chunkSize));
+ }
+
+ await db.collection('storeReturnsConsole').doc('metadata').set({
+   returnChunks:returnChunks.length,
+   transitChunks:transitChunks.length,
+   lastUpdated:new Date().toISOString()
+ });
+
+ for(let i=0;i<returnChunks.length;i++){
+   await db.collection('storeReturnsConsole')
+     .doc('returns_'+i)
+     .set({rows:returnChunks[i]});
+ }
+
+ for(let i=0;i<transitChunks.length;i++){
+   await db.collection('storeReturnsConsole')
+     .doc('transit_'+i)
+     .set({rows:transitChunks[i]});
+ }
+
+ console.log('Firebase chunked save successful');
+}
+
+async function loadReturnsConsole(){
+
+ returnsData=[];
+ transitData=[];
+
+ const meta =
+ await db.collection('storeReturnsConsole')
+ .doc('metadata')
+ .get();
+
+ if(!meta.exists) return;
+
+ const m = meta.data();
+
+ const returnChunks = m.returnChunks || 0;
+ const transitChunks = m.transitChunks || 0;
+
+ for(let i=0;i<returnChunks;i++){
+   const snap = await db.collection('storeReturnsConsole')
+   .doc('returns_'+i)
+   .get();
+
+   if(snap.exists){
+      returnsData.push(...(snap.data().rows||[]));
+   }
+ }
+
+ for(let i=0;i<transitChunks;i++){
+   const snap = await db.collection('storeReturnsConsole')
+   .doc('transit_'+i)
+   .get();
+
+   if(snap.exists){
+      transitData.push(...(snap.data().rows||[]));
+   }
+ }
+
+console.log('Chunked data loaded',
+ returnsData.length,
+ transitData.length);
+
+}
+
+window.addEventListener('load',async()=>{
+ try{await loadReturnsConsole();}catch(e){console.error(e);}
+ refreshData();
+});
+</script>
+</head>
+
+<body>
+
+<div class="header">
+    <div>
+        <h1 style="margin:0;">📦 Store Returns Console</h1>
+        <div style="opacity:.7;">Campaign Analysis & Return Tracking</div>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+        <button onclick="window.location.href='store_transfer_generator.html'">
+            🧪 Testing Stage
+        </button>
+
+        <button onclick="window.location.href='index.html'">
+            ← Return To WOC
+        </button>
+    </div>
+</div>
+
+<div class="main">
+
+<div class="metrics">
+
+<div class="card"><div>Stores Returning</div><div class="big" id="storeCount">0</div></div>
+<div class="card"><div>Styles Returning</div><div class="big" id="uniqueStyles">0</div></div>
+<div class="card"><div>Expected Units</div><div class="big" id="returnedUnits">0</div></div>
+<div class="card"><div>Transit Units</div><div class="big" id="transitUnits">0</div></div>
+<div class="card"><div>Remaining Units</div><div class="big" id="remainingUnits">0</div></div>
+
+<div class="card">
+    <div>Console Progress</div>
+
+    <div style="font-size:28px;font-weight:bold;margin:10px 0;" id="consoleProgressText">
+        0%
+    </div>
+
+    <div style="width:100%;height:12px;background:#111827;border-radius:999px;overflow:hidden;">
+        <div id="consoleProgressBar"
+             style="height:100%;width:0%;background:#22c55e;transition:width .3s ease;">
+        </div>
+    </div>
+</div>
+<div class="card"><div>Categories</div><div class="big" id="categoryCount">0</div></div>
+<div class="card"><div>Avg Units / Style</div><div class="big" id="avgUnits">0</div></div>
+<div class="card"><div>Largest Style</div><div class="big" id="largestStyle">-</div></div>
+<div class="card"><div>Largest Store</div><div class="big" id="largestStore">-</div></div>
+<div class="card"><div>Total Packed Transfers</div><div class="big" id="packingUnits">0</div></div>
+<div class="card"><div>Packing Progress</div><div class="big" id="packingProgress">0%</div></div>
+
+</div>
+
+<div class="grid2">
+
+<div class="section">
+<h3>Import Store Returns Detail</h3>
+<input type="file" id="returnsFile"><br><br>
+<button onclick="importReturns()">Import Merch File</button>
+<p>Imports Virtual Warehouse returns only</p>
+</div>
+
+<div class="section">
+<h3>Import Transit Summary</h3>
+<input type="file" id="transitFile"><br><br>
+<button onclick="importTransit()">Import Transit File</button>
+<p>Tracks return progress by style</p>
+</div>
+
+</div>
+
+<div class="grid3">
+
+<div class="section">
+<h3>Returning Stores Summary</h3>
+<table id="storeSummaryTable"><thead><tr><th>Store</th><th>Units</th><th>Styles</th></tr></thead><tbody></tbody></table>
+</div>
+
+<div class="section">
+<h3>Biggest Return Styles</h3>
+<table id="styleSummaryTable"><thead><tr><th>Style</th><th>Top Colour</th><th>Total / Top Colour</th><th>Other Colours</th></tr></thead><tbody></tbody></table>
+</div>
+
+<div class="section">
+<h3>Style Progress</h3>
+<table id="progressTable"><thead><tr><th>Style</th><th>Colour</th><th>Expected</th><th>Transit</th><th>Remaining</th><th>%</th></tr></thead><tbody></tbody></table>
+</div>
+
+</div>
+
+<div class="grid3">
+
+<div class="section"><h3>Colour Analysis</h3><table id="colourSummaryTable"><tbody></tbody></table></div>
+<div class="section"><h3>Category Analysis</h3><table id="categorySummaryTable"><tbody></tbody></table></div>
+<div class="section"><h3>Size Analysis</h3><table id="sizeTable"><tbody></tbody></table></div>
+
+</div>
+
+<div class="section">
+<h3>Raw Imported Data</h3>
+<button onclick="clearConsole()">Clear Console</button> <button onclick="archiveCampaign()">📦 Archive Campaign</button>
+<table id="rawTable"><thead><tr>
+<th>From</th><th>To</th><th>Category</th><th>Style</th><th>Colour</th><th>Qty</th>
+</tr></thead><tbody></tbody></table>
+</div>
+
+</div>
+
+<script>
+async function importReturns(){
+ const file=document.getElementById('returnsFile').files[0];
+ if(!file){alert('Select file');return;}
+ const wb=XLSX.read(await file.arrayBuffer());
+ const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+console.log(rows[0]);
+
+ 
+let importedCount=0;
+
+ rows.forEach(r=>{
+importedCount++;
+
+  returnsData.push({
+   store:r['From Store']||'',
+    to:r['To Store']||r['TO STORE']||r['To store']||'',
+   category:r['CATEGORY']||'',
+   style:String(r['STYLE']||'').trim(),
+   colour:String(r['COLOUR']||'').trim(),
+   qty:Number(r['QTY']||0),
+   s4:Number(r['4']||0),
+   s5:Number(r['5']||0),
+   s6:Number(r['6']||0),
+   s7:Number(r['7']||0),
+   s8:Number(r['8']||0),
+   s9:Number(r['9']||0),
+   s10:Number(r['10']||0),
+   s11:Number(r['11']||0),
+   s12:Number(r['12']||0),
+os:Number(r['OS']||r['O/S']||0),
+sm:Number(r['SMALL/MEDIUM']||r['S/M']||0),
+ml:Number(r['MEDIUM/LARGE']||r['M/L']||0),
+lxl:Number(r['LARGE/XLARGE']||r['L/XL']||0),
+  });
+ });
+
+ alert(importedCount+' rows imported');
+
+ await saveReturnsConsole();
+ refreshData();
+ alert('Imported '+rows.length+' rows');
+}
+
+async function importTransit(){
+ const file=document.getElementById('transitFile').files[0];
+ if(!file){alert('Select file');return;}
+ const wb=XLSX.read(await file.arrayBuffer());
+ const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+ 
+let importedCount=0;
+
+ rows.forEach(r=>{
+     
+  const toStore=String(
+    r['To Store']||
+    r['TO STORE']||
+    r['To store']||
+    ''
+  ).trim().toUpperCase();
+
+  if(toStore && toStore!=='VIRTUAL WAREHOUSE'){
+    return;
+  }
+
+  importedCount++;
+
+  returnsData.push({
+   store:r['From Store']||'',
+   category:r['CATEGORY']||'',
+   style:String(r['STYLE']||'').trim(),
+   colour:String(r['COLOUR']||'').trim(),
+   qty:Number(r['QTY']||0),
+   s4:Number(r['4']||0),
+   s5:Number(r['5']||0),
+   s6:Number(r['6']||0),
+   s7:Number(r['7']||0),
+   s8:Number(r['8']||0),
+   s9:Number(r['9']||0),
+   s10:Number(r['10']||0),
+   s11:Number(r['11']||0),
+   s12:Number(r['12']||0),
+os:Number(r['OS']||r['O/S']||0),
+sm:Number(r['SMALL/MEDIUM']||r['S/M']||0),
+ml:Number(r['MEDIUM/LARGE']||r['M/L']||0),
+lxl:Number(r['LARGE/XLARGE']||r['L/XL']||0),
+  });
+ });
+
+ alert(importedCount+' rows imported');
+
+ await saveReturnsConsole();
+ refreshData();
+}
+
+function refreshData(){
+ let styleSummary={},storeSummary={},colourSummary={},categorySummary={};
+ let sizeTotals={
+    '4':0,
+    '5':0,
+    '6':0,
+    '7':0,
+    '8':0,
+    '9':0,
+    '10':0,
+    '11':0,
+    '12':0,
+    'OS':0,
+    'S/M':0,
+    'M/L':0,
+    'L/XL':0
+};
+
+ let units=0;
+ const styles=new Set(), stores=new Set();
+
+const virtualReturns = returnsData.filter(r =>
+    String(r.to || "").trim().toUpperCase() === "VIRTUAL WAREHOUSE"
+);
+
+ virtualReturns.forEach(r=>{
+   units+=r.qty;
+   styles.add(r.style);
+   stores.add(r.store);
+ });
+
+ document.getElementById('returnedUnits').innerText=units.toLocaleString();
+ document.getElementById('uniqueStyles').innerText=styles.size;
+ document.getElementById('storeCount').innerText=stores.size;
+ document.getElementById('transitUnits').innerText=transitData.reduce((a,b)=>a+b.qty,0).toLocaleString();
+
+ 
+virtualReturns.forEach(r=>{
+
+    // ---------- Style summary ----------
+    if(!styleSummary[r.style]){
+        styleSummary[r.style]={
+            totalUnits:0,
+            colours:{},
+            stores:new Set(),
+            transit:0
+        };
+    }
+
+    styleSummary[r.style].totalUnits += r.qty;
+    styleSummary[r.style].stores.add(r.store);
+    styleSummary[r.style].colours[r.colour] =
+        (styleSummary[r.style].colours[r.colour] || 0) + r.qty;
+
+    // ---------- Store summary ----------
+    if(!storeSummary[r.store]){
+        storeSummary[r.store]={
+            units:0,
+            styles:new Set(),
+            totalRows:0,
+            completedRows:0
+        };
+    }
+
+    storeSummary[r.store].units += r.qty;
+    storeSummary[r.store].styles.add(r.style);
+    storeSummary[r.store].totalRows++;
+
+    if(r.transferNumber && String(r.transferNumber).trim() !== ""){
+        storeSummary[r.store].completedRows++;
+    }
+
+    // ---------- Other summaries ----------
+    colourSummary[r.colour] =
+        (colourSummary[r.colour] || 0) + r.qty;
+
+    categorySummary[r.category] =
+        (categorySummary[r.category] || 0) + r.qty;
+
+    sizeTotals['4'] += (r.s4 || 0);
+    sizeTotals['5'] += (r.s5 || 0);
+    sizeTotals['6'] += (r.s6 || 0);
+    sizeTotals['7'] += (r.s7 || 0);
+    sizeTotals['8'] += (r.s8 || 0);
+    sizeTotals['9'] += (r.s9 || 0);
+    sizeTotals['10'] += (r.s10 || 0);
+    sizeTotals['11'] += (r.s11 || 0);
+    sizeTotals['12'] += (r.s12 || 0);
+sizeTotals['OS'] += (r.os || r.o_s || 0);
+sizeTotals['S/M'] += (r.sm || r.s_m || 0);
+sizeTotals['M/L'] += (r.ml || r.m_l || 0);
+sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
+
+});
+    
+ transitData.forEach(t=>{
+   if(styleSummary[t.style]) styleSummary[t.style].transit+=t.qty;
+ });
+
+ document.getElementById('categoryCount').innerText=Object.keys(categorySummary).length;
+
+ const transitTotal=transitData.reduce((a,b)=>a+b.qty,0);
+ const remaining=Math.max(units-transitTotal,0);
+ const progress = units ? (transitTotal / units) * 100 : 0;
+
+document.getElementById("consoleProgressText").innerText =
+    progress.toFixed(1) + "%";
+
+const bar = document.getElementById("consoleProgressBar");
+bar.style.width = progress + "%";
+
+// Change colour based on progress
+if(progress < 33){
+    bar.style.background = "#ef4444";      // Red
+}else if(progress < 66){
+    bar.style.background = "#f59e0b";      // Amber
+}else{
+    bar.style.background = "#22c55e";      // Green
+}
+ document.getElementById('remainingUnits').innerText=remaining.toLocaleString();
+ const returnProgress = document.getElementById("returnProgress");
+if (returnProgress) {
+    returnProgress.innerText =
+        (units ? ((transitTotal / units) * 100).toFixed(1) : 0) + "%";
+}
+
+    const uniqueTransfers = new Set(
+    virtualReturns
+        .filter(r => r.transferNumber && String(r.transferNumber).trim() !== "")
+        .map(r => String(r.transferNumber).trim())
+);
+
+document.getElementById("packingUnits").innerText =
+    uniqueTransfers.size;
+document.getElementById("packingProgress").innerText =
+(
+    returnsData.length
+        ? (uniqueTransfers.size / returnsData.length) * 100
+        : 0
+).toFixed(1) + "%";
+    
+    document.getElementById('avgUnits').innerText=(styles.size?Math.round(units/styles.size):0);
+ 
+ let ls='-',lsv=0; Object.entries(styleSummary).forEach(([k,v])=>{if(v.totalUnits>lsv){lsv=v.totalUnits;ls=k}});
+ let lstore='-',stv=0; Object.entries(storeSummary).forEach(([k,v])=>{if(v.units>stv){stv=v.units;lstore=k}});
+ document.getElementById('largestStyle').innerText=ls;
+ document.getElementById('largestStore').innerText=lstore;
+
+ const sb=document.querySelector('#storeSummaryTable tbody'); if(sb){sb.innerHTML='';Object.entries(storeSummary)
+.sort((a,b)=>b[1].units-a[1].units)
+.forEach(([k,v])=>{
+const pct =
+    v.totalRows
+        ? (v.completedRows / v.totalRows) * 100
+        : 0;
+
+const colour =
+    pct < 33 ? "#ef4444" :
+    pct < 66 ? "#f59e0b" :
+               "#22c55e";
+sb.innerHTML+=`<tr>
+<td>
+<div>${k}</div>
+<div style="margin-top:6px;background:#111827;border-radius:999px;height:8px;overflow:hidden">
+<div style="width:${pct}%;height:100%;background:${colour}"></div></div>
+<div style="font-size:11px;margin-top:4px">
+    ${v.completedRows} / ${v.totalRows} Styles (${pct.toFixed(1)}%)
+</div>
+</td>
+<td>${v.units}</td>
+<td>${v.styles.size}</td>
+</tr>`;
+});}
+ 
+const stb=document.querySelector('#styleSummaryTable tbody');
+
+if(stb){
+stb.innerHTML='';
+
+Object.entries(styleSummary)
+.sort((a,b)=>b[1].totalUnits-a[1].totalUnits)
+.forEach(([style,data])=>{
+
+ const colours=Object.entries(data.colours)
+ .sort((a,b)=>b[1]-a[1]);
+
+const topColour=colours[0]?.[0]||'-';
+const topColourUnits=colours[0]?.[1]||0;
+
+const others=colours
+ .slice(1)
+ .map(c=>`${c[0]} (${c[1]})`)
+ .join(', ');
+
+stb.innerHTML+=`
+<tr>
+   <td>${style}</td>
+   <td>${topColour}</td>
+   <td>${data.totalUnits} / ${topColourUnits}</td>
+   <td>${others}</td>
+</tr>`;
+
+});
+}
+
+const pb=document.querySelector('#progressTable tbody'); if(pb){pb.innerHTML='';Object.entries(styleSummary).forEach(([k,v])=>{let rem=Math.max(v.totalUnits-v.transit,0);let pct=v.totalUnits?((v.transit/v.totalUnits)*100).toFixed(1):0;
+const colourList = Object.entries(v.colours)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([colour,qty]) => `${colour} (${qty})`)
+    .join(", ");
+    pb.innerHTML+=`<tr><td>${k}</td><td>${colourList}</td><td>${v.totalUnits}</td><td>${v.transit}</td><td>${rem}</td><td>${pct}%</td></tr>`;});}
+ const cb=document.querySelector('#colourSummaryTable tbody'); if(cb){cb.innerHTML='';Object.entries(colourSummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>cb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
+ const catb=document.querySelector('#categorySummaryTable tbody'); if(catb){catb.innerHTML='';Object.entries(categorySummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>catb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
+ const sizeb=document.querySelector('#sizeTable tbody'); if(sizeb){sizeb.innerHTML='';Object.entries(sizeTotals).forEach(([k,v])=>sizeb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
+
+ const body=document.querySelector('#rawTable tbody');
+ if(body){
+   body.innerHTML='';
+   returnsData.slice(0,1000).forEach(r=>{
+      body.innerHTML+=`<tr><td>${r.store}</td><td>${r.to||''}</td><td>${r.category}</td><td>${r.style}</td><td>${r.colour}</td><td>${r.qty}</td></tr>`;
+   });
+ }
+}
+
+async function clearConsole(){
+ if(!confirm('Clear all data?')) return;
+ returnsData=[];
+ transitData=[];
+ await saveReturnsConsole();
+ refreshData();
+}
+
+const originalLoad=loadReturnsConsole;
+loadReturnsConsole=async function(){
+ await originalLoad();
+ refreshData();
+}
+
+async function archiveCampaign(){
+
+ const campaignName = prompt('Campaign Name','March MD 2026');
+ if(!campaignName) return;
+
+ let totalUnits=0;
+ const styles=new Set();
+ const stores=new Set();
+ const colours=new Set();
+ const categories=new Set();
+
+ const styleSummary={};
+ let largestStyle='';
+ let largestStyleUnits=0;
+
+ returnsData.forEach(r=>{
+   totalUnits+=r.qty;
+   styles.add(r.style);
+   stores.add(r.store);
+   colours.add(r.colour);
+   categories.add(r.category);
+
+   styleSummary[r.style]=(styleSummary[r.style]||0)+r.qty;
+ });
+
+ Object.entries(styleSummary).forEach(([style,units])=>{
+   if(units>largestStyleUnits){
+      largestStyle=style;
+      largestStyleUnits=units;
+   }
+ });
+
+ await db.collection('storeReturnsArchive')
+   .doc(campaignName.replaceAll(' ','_'))
+   .set({
+      campaignName,
+      archivedDate:new Date().toISOString(),
+      totalUnits,
+      uniqueStyles:styles.size,
+      uniqueStores:stores.size,
+      uniqueColours:colours.size,
+      uniqueCategories:categories.size,
+      largestStyle,
+      largestStyleUnits
+   });
+
+ alert('Campaign archived successfully');
+}
+
+</script>
+</body>
+</html>
