@@ -484,24 +484,38 @@ sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
    .trim()
    .toUpperCase();
 
+ // Build a style-level transit index.
  const transitByNormalisedStyle={};
+ const transitDisplayStyle={};
+
  transitData.forEach(t=>{
    const key=normaliseStyle(t.style);
    if(!key) return;
-   transitByNormalisedStyle[key]=(transitByNormalisedStyle[key]||0)+Number(t.qty||0);
+
+   transitByNormalisedStyle[key] =
+      (transitByNormalisedStyle[key] || 0) + Number(t.qty || 0);
+
+   if(!transitDisplayStyle[key]){
+      transitDisplayStyle[key]=String(t.style).trim();
+   }
  });
 
- // Build the union of ALL styles from both sources.
- // Nothing is dropped just because a style only exists in one file.
+ // Match transit onto every return style.
  Object.entries(styleSummary).forEach(([style,data])=>{
-   data.transit=transitByNormalisedStyle[normaliseStyle(style)]||0;
+   data.transit =
+      transitByNormalisedStyle[normaliseStyle(style)] || 0;
  });
 
- Object.entries(transitByNormalisedStyle).forEach(([normalisedStyle,qty])=>{
-   if(!Object.keys(styleSummary).some(style =>
-       normaliseStyle(style) === normalisedStyle
-   )){
-      styleSummary[normalisedStyle]={
+ // Add transit-only styles so BOTH tables contain every style.
+ Object.entries(transitByNormalisedStyle).forEach(([key,qty])=>{
+   const existingStyle = Object.keys(styleSummary).find(
+      style => normaliseStyle(style) === key
+   );
+
+   if(!existingStyle){
+      const displayStyle = transitDisplayStyle[key] || key;
+
+      styleSummary[displayStyle]={
          totalUnits:0,
          colours:{},
          stores:new Set(),
@@ -512,15 +526,12 @@ sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
 
  document.getElementById('categoryCount').innerText=Object.keys(categorySummary).length;
 
- // Transit is outstanding. Completed is the difference between expected
- // returns and the transit quantity. Only styles with expected returns
- // contribute to the overall console progress.
+ // Only count transit quantities that actually match a return style.
+ // The transit file is style-level and may contain unrelated warehouse stock.
  const transitTotal=Object.values(styleSummary)
-   .reduce((sum,v)=>sum + Math.min(Number(v.transit||0), Number(v.totalUnits||0)),0);
-
- const completedUnits=Math.max(units-transitTotal,0);
- const remaining=completedUnits;
- const progress = units ? (completedUnits / units) * 100 : 0;
+   .reduce((sum,v)=>sum+Math.min(Number(v.transit||0),Number(v.totalUnits||0)),0);
+ const remaining=Math.max(units-transitTotal,0);
+ const progress = units ? (transitTotal / units) * 100 : 0;
 
 document.getElementById("consoleProgressText").innerText =
     progress.toFixed(1) + "%";
@@ -611,16 +622,11 @@ const others=colours
  .map(c=>`${c[0]} (${c[1]})`)
  .join(', ') || '-';
 
-const displayTotal = data.totalUnits;
-const displayTotalAndTop = colours.length
- ? `${displayTotal} / ${topColourUnits}`
- : `${displayTotal} / -`;
-
 stb.innerHTML+=`
 <tr>
    <td>${style}</td>
    <td>${topColour}</td>
-   <td>${displayTotalAndTop}</td>
+   <td>${data.totalUnits} / ${topColourUnits}</td>
    <td>${others}</td>
 </tr>`;
 
@@ -630,13 +636,13 @@ stb.innerHTML+=`
 const pb=document.querySelector('#progressTable tbody'); if(pb){
  pb.innerHTML='';
  Object.entries(styleSummary).forEach(([k,v])=>{
-   const transit=Math.max(Number(v.transit||0),0);
-   const rem=Math.max(Number(v.totalUnits||0)-transit,0);
-   const pct=v.totalUnits?((rem/v.totalUnits)*100).toFixed(1):0;
+   const transit=Math.min(Number(v.transit||0),Number(v.totalUnits||0));
+   const rem=Math.max(v.totalUnits-transit,0);
+   const pct=v.totalUnits?((transit/v.totalUnits)*100).toFixed(1):0;
    const colourList = Object.entries(v.colours)
      .sort((a,b)=>b[1]-a[1])
      .map(([colour,qty]) => `${colour} (${qty})`)
-     .join(", ") || "-";
+     .join(", ");
    pb.innerHTML+=`<tr><td>${k}</td><td>${colourList}</td><td>${v.totalUnits}</td><td>${transit}</td><td>${rem}</td><td>${pct}%</td></tr>`;
  });
 }
