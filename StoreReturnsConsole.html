@@ -298,42 +298,54 @@ async function importTransit(){
  const file=document.getElementById('transitFile').files[0];
  if(!file){alert('Select file');return;}
 
- const wb=XLSX.read(await file.arrayBuffer());
- const rows=XLSX.utils.sheet_to_json(
-   wb.Sheets[wb.SheetNames[0]],
-   {defval:''}
- );
+ const wb=XLSX.read(await file.arrayBuffer(), {cellDates:false});
+ const sheet=wb.Sheets[wb.SheetNames[0]];
+ const rows=XLSX.utils.sheet_to_json(sheet,{defval:''});
 
- // Transit file is style-level data only.
+ // Transit file is STYLE LEVEL only:
  // Description = Style
- // In Transit = remaining quantity across ALL colours for that style
- // No colour information is imported from this file.
+ // In Transit = remaining quantity for the whole style across ALL colours
+ // Do not assign transit quantities to individual colours.
  const transitByStyle={};
 
+ const normaliseStyle = value => String(value ?? '')
+   .replace(/\s+/g,' ')
+   .trim()
+   .toUpperCase();
+
+ const parseQty = value => {
+   if(value === null || value === undefined || value === '') return 0;
+   if(typeof value === 'number') return Number.isFinite(value) ? value : 0;
+   const cleaned=String(value).replace(/,/g,'').trim();
+   const n=Number(cleaned);
+   return Number.isFinite(n) ? n : 0;
+ };
+
  rows.forEach(r=>{
-   const style=String(r['Description']||'').trim();
+   const style=normaliseStyle(r['Description']);
    if(!style) return;
 
-   const rawQty=r['In Transit'];
-   const qty=Number(rawQty);
-   if(isNaN(qty)) return;
-
-   // If a style appears more than once, combine the quantities.
+   const qty=parseQty(r['In Transit']);
    transitByStyle[style]=(transitByStyle[style]||0)+qty;
  });
 
- transitData=Object.entries(transitByStyle).map(([style,qty])=>({
-   style,
-   qty
- }));
+ // Store one row per style, with total transit across all colours.
+ transitData=Object.entries(transitByStyle).map(([style,qty])=>({style,qty}));
+
+ // Force the complete page to recalculate immediately after the import.
+ refreshData();
+ await saveReturnsConsole();
 
  const totalTransit=transitData.reduce((sum,r)=>sum+r.qty,0);
+ const matchingStyles=transitData.filter(t=>
+   returnsData.some(r=>normaliseStyle(r.style)===t.style)
+ ).length;
 
- alert(transitData.length+' transit styles imported\n'+
-       totalTransit.toLocaleString()+' total units in transit');
-
- await saveReturnsConsole();
- refreshData();
+ alert(
+   transitData.length+' transit styles imported\n'+
+   totalTransit.toLocaleString()+' total units in transit\n'+
+   matchingStyles+' styles matched to the returns data'
+ );
 }
 
 function refreshData(){
@@ -431,13 +443,28 @@ sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
 
 });
     
+ const normaliseStyle = value => String(value ?? '')
+   .replace(/\s+/g,' ')
+   .trim()
+   .toUpperCase();
+
+ const transitByNormalisedStyle={};
  transitData.forEach(t=>{
-   if(styleSummary[t.style]) styleSummary[t.style].transit+=t.qty;
+   const key=normaliseStyle(t.style);
+   if(!key) return;
+   transitByNormalisedStyle[key]=(transitByNormalisedStyle[key]||0)+Number(t.qty||0);
+ });
+
+ Object.entries(styleSummary).forEach(([style,data])=>{
+   data.transit=transitByNormalisedStyle[normaliseStyle(style)]||0;
  });
 
  document.getElementById('categoryCount').innerText=Object.keys(categorySummary).length;
 
- const transitTotal=transitData.reduce((a,b)=>a+b.qty,0);
+ // Only count transit quantities that actually match a return style.
+ // The transit file is style-level and may contain unrelated warehouse stock.
+ const transitTotal=Object.values(styleSummary)
+   .reduce((sum,v)=>sum+Math.min(Number(v.transit||0),Number(v.totalUnits||0)),0);
  const remaining=Math.max(units-transitTotal,0);
  const progress = units ? (transitTotal / units) * 100 : 0;
 
@@ -541,12 +568,19 @@ stb.innerHTML+=`
 });
 }
 
-const pb=document.querySelector('#progressTable tbody'); if(pb){pb.innerHTML='';Object.entries(styleSummary).forEach(([k,v])=>{let rem=Math.max(v.totalUnits-v.transit,0);let pct=v.totalUnits?((v.transit/v.totalUnits)*100).toFixed(1):0;
-const colourList = Object.entries(v.colours)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([colour,qty]) => `${colour} (${qty})`)
-    .join(", ");
-    pb.innerHTML+=`<tr><td>${k}</td><td>${colourList}</td><td>${v.totalUnits}</td><td>${v.transit}</td><td>${rem}</td><td>${pct}%</td></tr>`;});}
+const pb=document.querySelector('#progressTable tbody'); if(pb){
+ pb.innerHTML='';
+ Object.entries(styleSummary).forEach(([k,v])=>{
+   const transit=Math.min(Number(v.transit||0),Number(v.totalUnits||0));
+   const rem=Math.max(v.totalUnits-transit,0);
+   const pct=v.totalUnits?((transit/v.totalUnits)*100).toFixed(1):0;
+   const colourList = Object.entries(v.colours)
+     .sort((a,b)=>b[1]-a[1])
+     .map(([colour,qty]) => `${colour} (${qty})`)
+     .join(", ");
+   pb.innerHTML+=`<tr><td>${k}</td><td>${colourList}</td><td>${v.totalUnits}</td><td>${transit}</td><td>${rem}</td><td>${pct}%</td></tr>`;
+ });
+}
  const cb=document.querySelector('#colourSummaryTable tbody'); if(cb){cb.innerHTML='';Object.entries(colourSummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>cb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
  const catb=document.querySelector('#categorySummaryTable tbody'); if(catb){catb.innerHTML='';Object.entries(categorySummary).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>catb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
  const sizeb=document.querySelector('#sizeTable tbody'); if(sizeb){sizeb.innerHTML='';Object.entries(sizeTotals).forEach(([k,v])=>sizeb.innerHTML+=`<tr><td>${k}</td><td>${v}</td></tr>`);}
