@@ -297,50 +297,40 @@ lxl:Number(r['LARGE/XLARGE']||r['L/XL']||0),
 async function importTransit(){
  const file=document.getElementById('transitFile').files[0];
  if(!file){alert('Select file');return;}
- const wb=XLSX.read(await file.arrayBuffer());
- const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
- 
-let importedCount=0;
+ const wb=XLSX.read(await file.arrayBuffer());
+ const rows=XLSX.utils.sheet_to_json(
+   wb.Sheets[wb.SheetNames[0]],
+   {defval:''}
+ );
+
+ // Transit file is style-level data only.
+ // Description = Style
+ // In Transit = remaining quantity across ALL colours for that style
+ // No colour information is imported from this file.
+ const transitByStyle={};
 
  rows.forEach(r=>{
-     
-  const toStore=String(
-    r['To Store']||
-    r['TO STORE']||
-    r['To store']||
-    ''
-  ).trim().toUpperCase();
+   const style=String(r['Description']||'').trim();
+   if(!style) return;
 
-  if(toStore && toStore!=='VIRTUAL WAREHOUSE'){
-    return;
-  }
+   const rawQty=r['In Transit'];
+   const qty=Number(rawQty);
+   if(isNaN(qty)) return;
 
-  importedCount++;
-
-  returnsData.push({
-   store:r['From Store']||'',
-   category:r['CATEGORY']||'',
-   style:String(r['STYLE']||'').trim(),
-   colour:String(r['COLOUR']||'').trim(),
-   qty:Number(r['QTY']||0),
-   s4:Number(r['4']||0),
-   s5:Number(r['5']||0),
-   s6:Number(r['6']||0),
-   s7:Number(r['7']||0),
-   s8:Number(r['8']||0),
-   s9:Number(r['9']||0),
-   s10:Number(r['10']||0),
-   s11:Number(r['11']||0),
-   s12:Number(r['12']||0),
-os:Number(r['OS']||r['O/S']||0),
-sm:Number(r['SMALL/MEDIUM']||r['S/M']||0),
-ml:Number(r['MEDIUM/LARGE']||r['M/L']||0),
-lxl:Number(r['LARGE/XLARGE']||r['L/XL']||0),
-  });
+   // If a style appears more than once, combine the quantities.
+   transitByStyle[style]=(transitByStyle[style]||0)+qty;
  });
 
- alert(importedCount+' rows imported');
+ transitData=Object.entries(transitByStyle).map(([style,qty])=>({
+   style,
+   qty
+ }));
+
+ const totalTransit=transitData.reduce((sum,r)=>sum+r.qty,0);
+
+ alert(transitData.length+' transit styles imported\n'+
+       totalTransit.toLocaleString()+' total units in transit');
 
  await saveReturnsConsole();
  refreshData();
