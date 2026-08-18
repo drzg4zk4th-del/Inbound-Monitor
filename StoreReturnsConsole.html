@@ -262,7 +262,7 @@ window.addEventListener('load',async()=>{
 
 <div class="section">
 <h3>Style Progress</h3>
-<table id="progressTable"><thead><tr><th>Style</th><th>Colour</th><th>Expected</th><th>Transit</th><th>Completed</th><th>%</th></tr></thead><tbody></tbody></table>
+<table id="progressTable"><thead><tr><th>Style</th><th>Colour</th><th>Expected</th><th>Transit</th><th>Remaining</th><th>%</th></tr></thead><tbody></tbody></table>
 </div>
 
 </div>
@@ -491,19 +491,36 @@ sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
    transitByNormalisedStyle[key]=(transitByNormalisedStyle[key]||0)+Number(t.qty||0);
  });
 
+ // Build the union of ALL styles from both sources.
+ // Nothing is dropped just because a style only exists in one file.
  Object.entries(styleSummary).forEach(([style,data])=>{
    data.transit=transitByNormalisedStyle[normaliseStyle(style)]||0;
  });
 
+ Object.entries(transitByNormalisedStyle).forEach(([normalisedStyle,qty])=>{
+   if(!Object.keys(styleSummary).some(style =>
+       normaliseStyle(style) === normalisedStyle
+   )){
+      styleSummary[normalisedStyle]={
+         totalUnits:0,
+         colours:{},
+         stores:new Set(),
+         transit:qty
+      };
+   }
+ });
+
  document.getElementById('categoryCount').innerText=Object.keys(categorySummary).length;
 
- // Only count transit quantities that actually match a return style.
- // The transit file is style-level and may contain unrelated warehouse stock.
+ // Transit is outstanding. Completed is the difference between expected
+ // returns and the transit quantity. Only styles with expected returns
+ // contribute to the overall console progress.
  const transitTotal=Object.values(styleSummary)
-   .reduce((sum,v)=>sum+Math.min(Number(v.transit||0),Number(v.totalUnits||0)),0);
- const remaining = transitTotal;
-const completedUnits = Math.max(units - remaining, 0);
-const progress = units ? (completedUnits / units) * 100 : 0;
+   .reduce((sum,v)=>sum + Math.min(Number(v.transit||0), Number(v.totalUnits||0)),0);
+
+ const completedUnits=Math.max(units-transitTotal,0);
+ const remaining=completedUnits;
+ const progress = units ? (completedUnits / units) * 100 : 0;
 
 document.getElementById("consoleProgressText").innerText =
     progress.toFixed(1) + "%";
@@ -523,7 +540,7 @@ if(progress < 33){
  const returnProgress = document.getElementById("returnProgress");
 if (returnProgress) {
     returnProgress.innerText =
-        (units ? ((transitTotal / units) * 100).toFixed(1) : 0) + "%";
+        (units ? ((completedUnits / units) * 100).toFixed(1) : 0) + "%";
 }
 
     const uniqueTransfers = new Set(
@@ -592,13 +609,18 @@ const topColourUnits=colours[0]?.[1]||0;
 const others=colours
  .slice(1)
  .map(c=>`${c[0]} (${c[1]})`)
- .join(', ');
+ .join(', ') || '-';
+
+const displayTotal = data.totalUnits;
+const displayTotalAndTop = colours.length
+ ? `${displayTotal} / ${topColourUnits}`
+ : `${displayTotal} / -`;
 
 stb.innerHTML+=`
 <tr>
    <td>${style}</td>
    <td>${topColour}</td>
-   <td>${data.totalUnits} / ${topColourUnits}</td>
+   <td>${displayTotalAndTop}</td>
    <td>${others}</td>
 </tr>`;
 
@@ -608,13 +630,13 @@ stb.innerHTML+=`
 const pb=document.querySelector('#progressTable tbody'); if(pb){
  pb.innerHTML='';
  Object.entries(styleSummary).forEach(([k,v])=>{
-   const transit=Math.min(Number(v.transit||0),Number(v.totalUnits||0));
-   const rem=Math.max(v.totalUnits-transit,0);
+   const transit=Math.max(Number(v.transit||0),0);
+   const rem=Math.max(Number(v.totalUnits||0)-transit,0);
    const pct=v.totalUnits?((rem/v.totalUnits)*100).toFixed(1):0;
    const colourList = Object.entries(v.colours)
      .sort((a,b)=>b[1]-a[1])
      .map(([colour,qty]) => `${colour} (${qty})`)
-     .join(", ");
+     .join(", ") || "-";
    pb.innerHTML+=`<tr><td>${k}</td><td>${colourList}</td><td>${v.totalUnits}</td><td>${transit}</td><td>${rem}</td><td>${pct}%</td></tr>`;
  });
 }
