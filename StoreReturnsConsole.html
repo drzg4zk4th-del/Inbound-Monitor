@@ -465,8 +465,9 @@ sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
  // The transit file is style-level and may contain unrelated warehouse stock.
  const transitTotal=Object.values(styleSummary)
    .reduce((sum,v)=>sum+Math.min(Number(v.transit||0),Number(v.totalUnits||0)),0);
- const remaining=Math.max(units-transitTotal,0);
- const progress = units ? (transitTotal / units) * 100 : 0;
+const remaining = transitTotal;
+const completedUnits = Math.max(units - remaining, 0);
+const progress = units ? (completedUnits / units) * 100 : 0;
 
 document.getElementById("consoleProgressText").innerText =
     progress.toFixed(1) + "%";
