@@ -67,30 +67,52 @@ async function saveReturnsConsole(){
    returnChunks.push(returnsData.slice(i,i+chunkSize));
  }
 
- const transitChunks = [];
- for(let i=0;i<transitData.length;i+=chunkSize){
-   transitChunks.push(transitData.slice(i,i+chunkSize));
- }
-
- await db.collection('storeReturnsConsole').doc('metadata').set({
-   returnChunks:returnChunks.length,
-   transitChunks:transitChunks.length,
-   lastUpdated:new Date().toISOString()
- });
-
+ // Save the return data using the existing chunk structure.
  for(let i=0;i<returnChunks.length;i++){
    await db.collection('storeReturnsConsole')
      .doc('returns_'+i)
      .set({rows:returnChunks[i]});
  }
 
- for(let i=0;i<transitChunks.length;i++){
+ // Remove old return chunks if the new data uses fewer chunks.
+ const existingMeta =
    await db.collection('storeReturnsConsole')
-     .doc('transit_'+i)
-     .set({rows:transitChunks[i]});
+     .doc('metadata')
+     .get();
+
+ const oldReturnChunks =
+   existingMeta.exists ? (existingMeta.data().returnChunks || 0) : 0;
+
+ for(let i=returnChunks.length;i<oldReturnChunks;i++){
+   await db.collection('storeReturnsConsole')
+     .doc('returns_'+i)
+     .delete();
  }
 
- console.log('Firebase chunked save successful');
+ // Transit is a current snapshot, so store the complete snapshot
+ // in one dedicated Firestore document.
+ await db.collection('storeReturnsConsole')
+   .doc('transitData')
+   .set({
+      rows: transitData,
+      lastUpdated: new Date().toISOString()
+   });
+
+ await db.collection('storeReturnsConsole')
+   .doc('metadata')
+   .set({
+      returnChunks: returnChunks.length,
+      transitChunks: transitData.length ? 1 : 0,
+      lastUpdated: new Date().toISOString()
+   }, {merge:true});
+
+ console.log(
+   'Firebase save successful:',
+   returnsData.length,
+   'returns,',
+   transitData.length,
+   'transit styles'
+ );
 }
 
 async function loadReturnsConsole(){
@@ -106,34 +128,48 @@ async function loadReturnsConsole(){
  if(!meta.exists) return;
 
  const m = meta.data();
-
  const returnChunks = m.returnChunks || 0;
- const transitChunks = m.transitChunks || 0;
 
  for(let i=0;i<returnChunks;i++){
    const snap = await db.collection('storeReturnsConsole')
-   .doc('returns_'+i)
-   .get();
+     .doc('returns_'+i)
+     .get();
 
    if(snap.exists){
       returnsData.push(...(snap.data().rows||[]));
    }
  }
 
- for(let i=0;i<transitChunks;i++){
-   const snap = await db.collection('storeReturnsConsole')
-   .doc('transit_'+i)
-   .get();
+ // Load the current transit snapshot.
+ const transitSnap =
+   await db.collection('storeReturnsConsole')
+     .doc('transitData')
+     .get();
 
-   if(snap.exists){
-      transitData.push(...(snap.data().rows||[]));
+ if(transitSnap.exists){
+   transitData = transitSnap.data().rows || [];
+ } else {
+   // Backwards compatibility with the old transit chunk system.
+   const transitChunks = m.transitChunks || 0;
+
+   for(let i=0;i<transitChunks;i++){
+     const snap = await db.collection('storeReturnsConsole')
+       .doc('transit_'+i)
+       .get();
+
+     if(snap.exists){
+        transitData.push(...(snap.data().rows||[]));
+     }
    }
  }
 
-console.log('Chunked data loaded',
- returnsData.length,
- transitData.length);
-
+ console.log(
+   'Data loaded:',
+   returnsData.length,
+   'returns,',
+   transitData.length,
+   'transit styles'
+ );
 }
 
 window.addEventListener('load',async()=>{
@@ -332,9 +368,9 @@ async function importTransit(){
  // Store one row per style, with total transit across all colours.
  transitData=Object.entries(transitByStyle).map(([style,qty])=>({style,qty}));
 
- // Force the complete page to recalculate immediately after the import.
- refreshData();
+ // Save the new transit snapshot, then refresh the page.
  await saveReturnsConsole();
+ refreshData();
 
  const totalTransit=transitData.reduce((sum,r)=>sum+r.qty,0);
  const matchingStyles=transitData.filter(t=>
@@ -465,7 +501,7 @@ sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
  // The transit file is style-level and may contain unrelated warehouse stock.
  const transitTotal=Object.values(styleSummary)
    .reduce((sum,v)=>sum+Math.min(Number(v.transit||0),Number(v.totalUnits||0)),0);
-const remaining = transitTotal;
+ const remaining = transitTotal;
 const completedUnits = Math.max(units - remaining, 0);
 const progress = units ? (completedUnits / units) * 100 : 0;
 
@@ -600,6 +636,11 @@ async function clearConsole(){
  returnsData=[];
  transitData=[];
  await saveReturnsConsole();
+
+ await db.collection('storeReturnsConsole')
+   .doc('transitData')
+   .delete();
+
  refreshData();
 }
 
