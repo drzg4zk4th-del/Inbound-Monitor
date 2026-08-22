@@ -346,14 +346,14 @@ let importedCount=0;
     ),
 
     to: getValue(
-     'TRANSFER TO, IN THE SYSTEM',
-  'TO STORE - AP21 TRANSFER TO'
-      'To Store',
-      'TO STORE',
-      'To store',
-      'To',
-      'TO'
-    ),
+  'TRANSFER TO, IN THE SYSTEM',
+  'TO STORE - AP21 TRANSFER TO',
+  'To Store',
+  'TO STORE',
+  'To store',
+  'To',
+  'TO'
+),
 
     category: getValue(
       'CATEGORY',
@@ -362,26 +362,29 @@ let importedCount=0;
     ),
 
     style: String(getValue(
-      'STYLE',
-      'Style',
-      'SKU',
-      'Style Code',
-      'STYLE CODE'
-    )).trim(),
+  'STYLE',
+  'Style',
+  'SKU',
+  'Style Code',
+  'STYLE CODE',
+  'Prod Code'
+)).trim(),
 
-    colour: String(getValue(
-      'COLOUR',
-      'Colour',
-      'COLOR',
-      'Color'
-    )).trim(),
+colour: String(getValue(
+  'COLOUR',
+  'Colour',
+  'COLOR',
+  'Color',
+  'Clr Name'
+)).trim(),
 
-    qty: getNumber(
-      'QTY',
-      'Qty',
-      'Quantity',
-      'QUANTITY'
-    ),
+qty: getNumber(
+  'QTY',
+  'Qty',
+  'Quantity',
+  'QUANTITY',
+  'Grand Total'
+),
 
     s4: getNumber('4'),
     s5: getNumber('5'),
