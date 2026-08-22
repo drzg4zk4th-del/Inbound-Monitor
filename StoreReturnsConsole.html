@@ -297,29 +297,104 @@ console.log(rows[0]);
  
 let importedCount=0;
 
- rows.forEach(r=>{
-importedCount++;
+  rows.forEach(r=>{
+  importedCount++;
+
+  // Find a column regardless of capitalisation / spacing
+  const getValue = (...names) => {
+    const keys = Object.keys(r);
+
+    for(const name of names){
+      const match = keys.find(k =>
+        String(k).trim().toUpperCase() === String(name).trim().toUpperCase()
+      );
+
+      if(match !== undefined && r[match] !== undefined && r[match] !== ''){
+        return r[match];
+      }
+    }
+
+    return '';
+  };
+
+  const getNumber = (...names) => {
+    const value = getValue(...names);
+
+    if(value === '' || value === null || value === undefined){
+      return 0;
+    }
+
+    if(typeof value === 'number'){
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    const cleaned = String(value)
+      .replace(/,/g,'')
+      .trim();
+
+    const number = Number(cleaned);
+
+    return Number.isFinite(number) ? number : 0;
+  };
 
   returnsData.push({
-   store:r['From Store']||'',
-    to:r['To Store']||r['TO STORE']||r['To store']||'',
-   category:r['CATEGORY']||'',
-   style:String(r['STYLE']||'').trim(),
-   colour:String(r['COLOUR']||'').trim(),
-   qty:Number(r['QTY']||0),
-   s4:Number(r['4']||0),
-   s5:Number(r['5']||0),
-   s6:Number(r['6']||0),
-   s7:Number(r['7']||0),
-   s8:Number(r['8']||0),
-   s9:Number(r['9']||0),
-   s10:Number(r['10']||0),
-   s11:Number(r['11']||0),
-   s12:Number(r['12']||0),
-os:Number(r['OS']||r['O/S']||0),
-sm:Number(r['SMALL/MEDIUM']||r['S/M']||0),
-ml:Number(r['MEDIUM/LARGE']||r['M/L']||0),
-lxl:Number(r['LARGE/XLARGE']||r['L/XL']||0),
+    store: getValue(
+      'From Store',
+      'FROM STORE',
+      'From',
+      'FROM'
+    ),
+
+    to: getValue(
+      'To Store',
+      'TO STORE',
+      'To store',
+      'To',
+      'TO'
+    ),
+
+    category: getValue(
+      'CATEGORY',
+      'Category',
+      'CAT'
+    ),
+
+    style: String(getValue(
+      'STYLE',
+      'Style',
+      'SKU',
+      'Style Code',
+      'STYLE CODE'
+    )).trim(),
+
+    colour: String(getValue(
+      'COLOUR',
+      'Colour',
+      'COLOR',
+      'Color'
+    )).trim(),
+
+    qty: getNumber(
+      'QTY',
+      'Qty',
+      'Quantity',
+      'QUANTITY'
+    ),
+
+    s4: getNumber('4'),
+    s5: getNumber('5'),
+    s6: getNumber('6'),
+    s7: getNumber('7'),
+    s8: getNumber('8'),
+    s9: getNumber('9'),
+    s10: getNumber('10'),
+    s11: getNumber('11'),
+    s12: getNumber('12'),
+
+    os: getNumber('OS','O/S'),
+    sm: getNumber('SMALL/MEDIUM','S/M'),
+    ml: getNumber('MEDIUM/LARGE','M/L'),
+    lxl: getNumber('LARGE/XLARGE','L/XL')
   });
  });
 
