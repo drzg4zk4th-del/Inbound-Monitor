@@ -4998,11 +4998,6 @@ const weeks = [...new Set(
         return;
     }
 
-    const allRows = [
-    ...Array.from(shipmentTable.rows).slice(1),
-    ...Array.from(archiveTable.rows).slice(1)
-];
-
 const rows = allRows.filter(r => {
 
     const weekSelect = r.cells[6].querySelector("select");
