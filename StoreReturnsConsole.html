@@ -480,12 +480,13 @@ async function importTransit(){
 
  rows.forEach(r=>{
   const style=normaliseStyle(
-    r['SKU'] ||
-    r['STYLE'] ||
-    r['Style'] ||
-    r['Prod Code'] ||
-    r['Description']
-  );
+  r['Product'] ||
+  r['SKU'] ||
+  r['STYLE'] ||
+  r['Style'] ||
+  r['Prod Code'] ||
+  r['Description']
+);
 
   if(!style) return;
 
