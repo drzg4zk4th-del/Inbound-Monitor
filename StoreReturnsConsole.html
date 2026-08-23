@@ -495,8 +495,25 @@ async function importTransit(){
  });
 
  // Store one row per style, with total transit across all colours.
- transitData=Object.entries(transitByStyle).map(([style,qty])=>({style,qty}));
+transitData = Object.entries(transitByStyle).map(([style,qty]) => {
 
+  const row = rows.find(r =>
+    normaliseStyle(
+      r['Product'] ||
+      r['SKU'] ||
+      r['STYLE'] ||
+      r['Style'] ||
+      r['Prod Code']
+    ) === style
+  );
+
+  return {
+    style,
+    description: normaliseStyle(row?.['Description'] || ''),
+    qty
+  };
+
+});
  // Save the new transit snapshot, then refresh the page.
  await saveReturnsConsole();
  refreshData();
@@ -614,11 +631,23 @@ sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
    .toUpperCase();
 
  const transitByNormalisedStyle={};
- transitData.forEach(t=>{
-   const key=normaliseStyle(t.style);
-   if(!key) return;
-   transitByNormalisedStyle[key]=(transitByNormalisedStyle[key]||0)+Number(t.qty||0);
- });
+
+transitData.forEach(t=>{
+
+  const productKey = normaliseStyle(t.style);
+  const descriptionKey = normaliseStyle(t.description);
+
+  if(productKey){
+    transitByNormalisedStyle[productKey] =
+      (transitByNormalisedStyle[productKey] || 0) + Number(t.qty || 0);
+  }
+
+  if(descriptionKey && descriptionKey !== productKey){
+    transitByNormalisedStyle[descriptionKey] =
+      (transitByNormalisedStyle[descriptionKey] || 0) + Number(t.qty || 0);
+  }
+
+});
 
  Object.entries(styleSummary).forEach(([style,data])=>{
    data.transit=transitByNormalisedStyle[normaliseStyle(style)]||0;
