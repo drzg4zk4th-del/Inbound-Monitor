@@ -290,8 +290,59 @@ async function importReturns(){
  const file=document.getElementById('returnsFile').files[0];
  if(!file){alert('Select file');return;}
  const wb=XLSX.read(await file.arrayBuffer());
- const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
+let rows = [];
+
+for (const sheetName of wb.SheetNames) {
+
+  const sheet = wb.Sheets[sheetName];
+
+  const testRows = XLSX.utils.sheet_to_json(sheet, {
+    defval: ''
+  });
+
+  if (!testRows.length) continue;
+
+  const headers = Object.keys(testRows[0]).map(h =>
+    String(h).trim().toUpperCase()
+  );
+
+  const hasStore =
+    headers.includes('FROM STORE');
+
+  const hasStyle =
+    headers.includes('STYLE') ||
+    headers.includes('PROD CODE');
+
+  const hasQty =
+    headers.includes('QTY') ||
+    headers.includes('GRAND TOTAL');
+
+  const hasDestination =
+    headers.includes('TO STORE') ||
+    headers.includes('TRANSFER TO, IN THE SYSTEM') ||
+    headers.includes('TO STORE - AP21 TRANSFER TO');
+
+  if (hasStore && hasStyle && hasQty && hasDestination) {
+
+    rows = testRows;
+
+    console.log(
+      'RETURN DETAIL SHEET FOUND:',
+      sheetName,
+      rows.length,
+      'rows'
+    );
+
+    break;
+  }
+}
+
+if (!rows.length) {
+  alert('Could not find a Store Returns detail sheet in this file.');
+  return;
+}
+    
 console.log(rows[0]);
 
  
