@@ -623,8 +623,11 @@ sizeTotals['L/XL'] += (r.lxl || r.l_xl || 0);
 const transitTotal=Object.values(styleSummary)
   .reduce((sum,v)=>sum+Math.min(Number(v.transit||0),Number(v.totalUnits||0)),0);
 
-const completedUnits=Math.max(units-transitTotal,0);
-const remaining=completedUnits;
+const completedUnits = transitData.length
+  ? Math.max(units - transitTotal, 0)
+  : 0;
+
+const remaining = completedUnits;
 
 const progress = units ? (completedUnits / units) * 100 : 0;
 
