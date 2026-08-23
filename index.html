@@ -4915,10 +4915,19 @@ XLSX.utils.aoa_to_sheet([
 
 function openDispatchExport(){
 
+    const allRows = [
+        ...Array.from(shipmentTable.rows).slice(1),
+        ...Array.from(archiveTable.rows).slice(1)
+    ];
+
     const weeks = [...new Set(
-        Array.from(shipmentTable.rows)
-        .slice(1)
-        .map(r => r.cells[6].querySelector("select").value)
+        allRows
+        .map(r => {
+            const select = r.cells[6]?.querySelector("select");
+            return select
+                ? select.value
+                : r.cells[6]?.innerText.trim();
+        })
         .filter(w => w && w !== "Week Not Assigned")
     )].sort();
 
@@ -4939,7 +4948,7 @@ function openDispatchExport(){
 
     });
 
-document.getElementById("dispatchExportModal").style.display = "flex";
+    document.getElementById("dispatchExportModal").style.display = "flex";
 }
 
 function closeDispatchExport(){
