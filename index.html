@@ -4915,13 +4915,13 @@ XLSX.utils.aoa_to_sheet([
 
 function openDispatchExport(){
 
-    const allRows = [
-        ...Array.from(shipmentTable.rows).slice(1),
-        ...Array.from(archiveTable.rows).slice(1)
-    ];
+    const dispatchExportRows = [
+    ...Array.from(shipmentTable.rows).slice(1),
+    ...Array.from(archiveTable.rows).slice(1)
+];
 
-    const weeks = [...new Set(
-        allRows
+const weeks = [...new Set(
+    dispatchExportRows
         .map(r => {
             const select = r.cells[6]?.querySelector("select");
             return select
