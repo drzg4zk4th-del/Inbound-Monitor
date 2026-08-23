@@ -4968,34 +4968,49 @@ function confirmDispatchExport(){
 function exportDispatchWeekWorkbook(selectedWeeks){
 
     // Get all active dispatch weeks
-    const weeks = [...new Set(
+    const allRows = [
+    ...Array.from(shipmentTable.rows).slice(1),
+    ...Array.from(archiveTable.rows).slice(1)
+];
 
-        Array.from(shipmentTable.rows)
-        .slice(1)
-        .map(r => r.cells[6].querySelector("select").value)
-        .filter(w => w && w !== "Week Not Assigned")
-
-    )].sort();
+const weeks = [...new Set(
+    allRows
+    .map(r => {
+        const select = r.cells[6].querySelector("select");
+        return select
+            ? select.value
+            : r.cells[6].innerText.trim();
+    })
+    .filter(w => w && w !== "Week Not Assigned")
+)].sort();
 
     if(weeks.length === 0){
         alert("No dispatch weeks found.");
         return;
     }
 
-    const rows = Array.from(shipmentTable.rows)
-    .slice(1)
-    .filter(r=>{
+    const allRows = [
+    ...Array.from(shipmentTable.rows).slice(1),
+    ...Array.from(archiveTable.rows).slice(1)
+];
 
-        const week =
-            r.cells[6].querySelector("select").value;
+const rows = allRows.filter(r => {
 
-        const warehouse =
-            r.cells[13].querySelector("select").value;
+    const weekSelect = r.cells[6].querySelector("select");
 
-        return selectedWeeks.includes(week) &&
-       warehouse === "Virtual Warehouse";
+    const week = weekSelect
+        ? weekSelect.value
+        : r.cells[6].innerText.trim();
 
-    });
+    const warehouseSelect = r.cells[13].querySelector("select");
+
+    const warehouse = warehouseSelect
+        ? warehouseSelect.value
+        : r.cells[13].innerText.trim();
+
+    return selectedWeeks.includes(week) &&
+           warehouse === "Virtual Warehouse";
+});
 
     if(rows.length===0){
         alert("No Virtual Warehouse rows found.");
