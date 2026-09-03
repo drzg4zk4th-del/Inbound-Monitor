@@ -349,6 +349,18 @@ td[contenteditable="true"]:focus{
     outline:none;
 }
 
+#archiveTable td[contenteditable="true"]{
+    cursor:text;
+}
+
+#archiveTable td[contenteditable="true"]:hover{
+    background:#101d32;
+}
+
+#archiveTable select{
+    cursor:pointer;
+}
+
 .premium-select{
     min-width:180px;
     width:auto;
@@ -1277,7 +1289,12 @@ Export Dispatch Week
 
 <div id="archivePage" class="page">
 
-<h1 style="margin-bottom:20px;">Archive</h1><button class="add-btn" onclick="exportTableCSV('archiveTable','Archive.csv')">Export Archive</button>
+<h1 style="margin-bottom:20px;">Archive</h1>
+<div style="margin-bottom:15px;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:#94a3b8;">
+<i class="fa-solid fa-pen-to-square"></i>
+Archive is editable. Change Dispatch Week, warehouse, priority, locations, notes or other editable fields and the change will automatically save to Firebase.
+</div>
+<button class="add-btn" onclick="exportTableCSV('archiveTable','Archive.csv')">Export Archive</button>
 
 <div class="table-wrap">
 
@@ -4153,42 +4170,101 @@ async function migrateLegacyArchiveIfNeeded(){
 function setupArchiveRow(row){
     if(!row) return;
 
+    // Mark the shipment this row currently belongs to.
     row.dataset.archiveShipment = archiveShipmentFromRow(row);
+
+    let saveTimer = null;
+    let saving = false;
+    let saveAgain = false;
 
     const persist = async ()=>{
         const oldShipment = row.dataset.archiveShipment || "";
         const newShipment = archiveShipmentFromRow(row);
 
+        // Avoid hammering Firestore while typing into a cell.
+        clearTimeout(saveTimer);
+
+        if(saving){
+            saveAgain = true;
+            return;
+        }
+
+        saving = true;
+
         try{
-            // Save the new shipment document first.
             await saveArchiveShipment(newShipment);
 
-            // If the shipment number itself changed, rebuild the old
-            // shipment document too so no stale row is left behind.
+            // If the shipment number itself was changed, remove the
+            // row from the old shipment document as well.
             if(oldShipment !== newShipment){
                 await saveArchiveShipment(oldShipment);
             }
 
             row.dataset.archiveShipment = newShipment;
 
+            console.log("✓ archive row changes saved:", newShipment);
+
         }catch(error){
             console.error("Archive row save failed:", error);
+
             alert(
                 "Archive save failed.\n\n" +
-                "The original archive safety copy has not been deleted."
+                "Your existing archive safety copy has not been deleted."
             );
+
+        }finally{
+            saving = false;
+
+            if(saveAgain){
+                saveAgain = false;
+                persist();
+            }
         }
     };
 
+    const schedulePersist = ()=>{
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(persist, 300);
+    };
+
+    // Text fields save shortly after editing finishes.
     row.querySelectorAll('td[contenteditable="true"]').forEach(cell=>{
+
+        cell.addEventListener("input", ()=>{
+            refreshDashboard();
+            schedulePersist();
+        });
+
         cell.addEventListener("blur", persist);
+
     });
 
-    row.querySelectorAll("select, input").forEach(control=>{
-        control.addEventListener("change", persist);
+    // Selects (including Dispatch Week) save immediately when changed.
+    row.querySelectorAll("select").forEach(select=>{
+
+        select.addEventListener("change", ()=>{
+
+            refreshDashboard();
+            updateDispatchProjection();
+            persist();
+
+        });
+
+    });
+
+    // Any archive inputs, if added later, also persist automatically.
+    row.querySelectorAll("input").forEach(input=>{
+
+        input.addEventListener("change", ()=>{
+
+            refreshDashboard();
+            updateDispatchProjection();
+            persist();
+
+        });
+
     });
 }
-
 async function loadSplitArchive(splitSnap){
     archiveTable.innerHTML = archiveTable.rows[0].outerHTML;
 
