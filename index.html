@@ -2690,9 +2690,10 @@ saveAll();
 
 }
 
-function moveQCRejectedToArchive(btn){
+async function moveQCRejectedToArchive(btn){
 
     const row = btn.closest('tr');
+    if(!row) return;
 
     const archiveRow = archiveTable.insertRow(-1);
 
@@ -2709,34 +2710,66 @@ function moveQCRejectedToArchive(btn){
     archiveRow.insertCell(-1).innerHTML =
         '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
 
+    setupArchiveRow(archiveRow);
+
+    const shipment = archiveShipmentFromRow(archiveRow);
+
     row.remove();
 
     refreshDashboard();
-    saveAll();
-}
-  
 
-function moveToArchive(row){
-const archiveRow=archiveTable.insertRow(-1);
-
-for(let i=0;i<=19;i++){
- const c=archiveRow.insertCell(-1);
- c.innerHTML=row.cells[i].innerHTML;
-}
-
-archiveRow.cells[18].innerHTML='Arrived';
-
-archiveRow.insertCell(-1).innerHTML='<button class="restore-btn" onclick="restoreRow(this)">Restore</button>';
-archiveRow.insertCell(-1).innerHTML='<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
-
-row.remove();
-refreshDashboard();
+    // Save the shipment into its own archive document.
+    try{
+        await saveArchiveShipment(shipment);
+        await saveAll();
+    }catch(error){
+        console.error("Archive save failed:",error);
+        alert("Archive save failed. The existing legacy archive remains untouched.");
+    }
 }
 
+async function moveToArchive(row){
 
-function restoreRow(btn){
+    if(!row) return;
+
+    const archiveRow = archiveTable.insertRow(-1);
+
+    for(let i=0;i<=19;i++){
+        const c=archiveRow.insertCell(-1);
+        c.innerHTML=row.cells[i].innerHTML;
+    }
+
+    archiveRow.cells[18].innerHTML='Arrived';
+
+    archiveRow.insertCell(-1).innerHTML =
+        '<button class="restore-btn" onclick="restoreRow(this)">Restore</button>';
+
+    archiveRow.insertCell(-1).innerHTML =
+        '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
+
+    setupArchiveRow(archiveRow);
+
+    const shipment = archiveShipmentFromRow(archiveRow);
+
+    row.remove();
+
+    refreshDashboard();
+
+    try{
+        await saveArchiveShipment(shipment);
+        await saveAll();
+    }catch(error){
+        console.error("Archive save failed:",error);
+        alert("Archive save failed. The existing legacy archive remains untouched.");
+    }
+}
+
+async function restoreRow(btn){
 
     const row = btn.closest('tr');
+    if(!row) return;
+
+    const oldShipment = archiveShipmentFromRow(row);
 
     const data = {
       shipment: row.cells[0]?.innerText || '',
@@ -2766,7 +2799,19 @@ function restoreRow(btn){
     row.remove();
 
     refreshDashboard();
-    saveAll();
+    populateShipmentFilter();
+
+    try{
+        // Rebuild the affected archive shipment after the restore.
+        await saveArchiveShipment(oldShipment);
+        await saveAll();
+    }catch(error){
+        console.error("Archive restore save failed:",error);
+        alert(
+            "Archive restore save failed.\n\n" +
+            "The original archive safety copy remains untouched."
+        );
+    }
 }
 
 let allocationRow = null;
@@ -2832,14 +2877,38 @@ function saveAllocation(){
     saveAll();
 }
  
- function deleteRow(btn){
+ async function deleteRow(btn){
 
-btn.closest('tr').remove();
+    const row = btn.closest('tr');
+    if(!row) return;
 
-refreshDashboard();
- populateShipmentFilter();
-saveAll();
+    const table = row.closest('table');
+    const isArchiveRow = table && table.id === 'archiveTable';
+    const oldShipment = isArchiveRow
+        ? archiveShipmentFromRow(row)
+        : "";
 
+    row.remove();
+
+    refreshDashboard();
+    populateShipmentFilter();
+
+    if(isArchiveRow){
+
+        try{
+            await saveArchiveShipment(oldShipment);
+        }catch(error){
+            console.error("Archive delete save failed:",error);
+            alert(
+                "Archive delete could not be saved.\n\n" +
+                "The original archive safety copy remains untouched."
+            );
+        }
+
+        return;
+    }
+
+    await saveAll();
 }
 
 function clearAllRows(){
@@ -3851,12 +3920,329 @@ function updateDispatchWeekFromException(po, week){
 
 }
 
+
+/* =========================================================
+   SHIPMENT ARCHIVE STORAGE V2
+   - Existing planner/archive is NEVER deleted or overwritten.
+   - New/migrated archive data is stored per shipment in:
+       planner/archiveShipments/{shipmentId}
+   - Each shipment document contains only that shipment's rows.
+   ========================================================= */
+
+const ARCHIVE_STORAGE_COLLECTION = "archiveShipments";
+const ARCHIVE_META_DOC = "archiveStorageMeta";
+
+function archiveShipmentId(shipment){
+    const value = String(shipment || "").trim();
+    return value ? encodeURIComponent(value) : "__NO_SHIPMENT__";
+}
+
+function archiveShipmentFromRow(row){
+    return row?.cells?.[0]?.innerText?.trim() || "";
+}
+
+function archiveRowHTML(row){
+    const clone = row.cloneNode(true);
+
+    // Persist current input/select values into the HTML.
+    clone.querySelectorAll("input").forEach(input=>{
+        input.setAttribute("value", input.value);
+        if(input.checked){
+            input.setAttribute("checked","checked");
+        }else{
+            input.removeAttribute("checked");
+        }
+    });
+
+    clone.querySelectorAll("select").forEach(select=>{
+        Array.from(select.options).forEach(option=>{
+            if(option.selected){
+                option.setAttribute("selected","selected");
+            }else{
+                option.removeAttribute("selected");
+            }
+        });
+    });
+
+    return `<tr>${clone.innerHTML}</tr>`;
+}
+
+function archiveRowsByShipment(){
+    const grouped = {};
+
+    Array.from(archiveTable.rows)
+        .slice(1)
+        .forEach(row=>{
+            const shipment = archiveShipmentFromRow(row);
+            if(!grouped[shipment]) grouped[shipment] = [];
+            grouped[shipment].push(archiveRowHTML(row));
+        });
+
+    return grouped;
+}
+
+async function saveArchiveShipment(shipment){
+    shipment = String(shipment || "").trim();
+
+    const rows = Array.from(archiveTable.rows)
+        .slice(1)
+        .filter(row => archiveShipmentFromRow(row) === shipment);
+
+    const ref = db.collection(ARCHIVE_STORAGE_COLLECTION)
+        .doc(archiveShipmentId(shipment));
+
+    if(rows.length === 0){
+        try{
+            await ref.delete();
+            console.log("✓ archive shipment deleted:", shipment);
+        }catch(error){
+            // A missing document is harmless.
+            if(error.code !== "not-found"){
+                console.error("✗ archive shipment delete failed:", shipment, error);
+            }
+        }
+        return;
+    }
+
+    await ref.set({
+        shipment,
+        rows: rows.map(archiveRowHTML),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log("✓ archive shipment saved:", shipment, rows.length, "rows");
+}
+
+async function saveAllArchiveShipments(){
+    const grouped = archiveRowsByShipment();
+
+    const existing = await db.collection(ARCHIVE_STORAGE_COLLECTION).get();
+    const batch = db.batch();
+    let writes = 0;
+
+    Object.keys(grouped).forEach(shipment=>{
+        const ref = db.collection(ARCHIVE_STORAGE_COLLECTION)
+            .doc(archiveShipmentId(shipment));
+
+        batch.set(ref,{
+            shipment,
+            rows: grouped[shipment],
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        writes++;
+    });
+
+    existing.docs.forEach(doc=>{
+        const shipment = String(doc.data()?.shipment || "");
+        if(!Object.prototype.hasOwnProperty.call(grouped, shipment)){
+            batch.delete(doc.ref);
+            writes++;
+        }
+    });
+
+    if(writes > 0){
+        await batch.commit();
+    }
+
+    console.log("✓ archive storage synced:", Object.keys(grouped).length, "shipments");
+}
+
+async function migrateLegacyArchiveIfNeeded(){
+    const legacyRef = db.collection("planner").doc("archive");
+    const metaRef = db.collection("planner").doc(ARCHIVE_META_DOC);
+
+    const [legacySnap, metaSnap, splitSnap] = await Promise.all([
+        legacyRef.get(),
+        metaRef.get(),
+        db.collection(ARCHIVE_STORAGE_COLLECTION).get()
+    ]);
+
+    const legacyRows = legacySnap.exists && Array.isArray(legacySnap.data()?.archive)
+        ? legacySnap.data().archive
+        : [];
+
+    const meta = metaSnap.exists ? metaSnap.data() : {};
+
+    if(meta.version >= 2){
+        return splitSnap;
+    }
+
+    if(legacyRows.length === 0){
+        await metaRef.set({
+            version:2,
+            migratedAt:firebase.firestore.FieldValue.serverTimestamp(),
+            source:"planner/archive"
+        }, {merge:true});
+
+        return splitSnap;
+    }
+
+    const grouped = {};
+
+    legacyRows.forEach(html=>{
+        const temp = document.createElement("tbody");
+        temp.innerHTML = html;
+
+        const row = temp.querySelector("tr");
+        if(!row) return;
+
+        const shipment = archiveShipmentFromRow(row);
+
+        if(!grouped[shipment]) grouped[shipment] = [];
+        grouped[shipment].push(html);
+    });
+
+    const existing = {};
+    splitSnap.forEach(doc=>{
+        const d = doc.data() || {};
+        existing[d.shipment || ""] = {
+            ref:doc.ref,
+            rows:Array.isArray(d.rows) ? d.rows : []
+        };
+    });
+
+    const batch = db.batch();
+    let writes = 0;
+
+    Object.keys(grouped).forEach(shipment=>{
+        const current = existing[shipment];
+        const currentRows = current ? current.rows : [];
+
+        // Preserve anything already stored in the split archive.
+        const merged = [...currentRows];
+
+        grouped[shipment].forEach(html=>{
+            if(!merged.includes(html)){
+                merged.push(html);
+            }
+        });
+
+        const ref = current
+            ? current.ref
+            : db.collection(ARCHIVE_STORAGE_COLLECTION)
+                .doc(archiveShipmentId(shipment));
+
+        batch.set(ref,{
+            shipment,
+            rows:merged,
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+
+        writes++;
+    });
+
+    if(writes > 0){
+        await batch.commit();
+    }
+
+    // IMPORTANT: the legacy planner/archive document is deliberately
+    // left untouched as a permanent safety copy.
+    await metaRef.set({
+        version:2,
+        migratedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        source:"planner/archive",
+        legacyRowsMigrated:legacyRows.length
+    }, {merge:true});
+
+    console.log("✓ legacy archive migrated safely:", legacyRows.length, "rows");
+
+    return await db.collection(ARCHIVE_STORAGE_COLLECTION).get();
+}
+
+function setupArchiveRow(row){
+    if(!row) return;
+
+    row.dataset.archiveShipment = archiveShipmentFromRow(row);
+
+    const persist = async ()=>{
+        const oldShipment = row.dataset.archiveShipment || "";
+        const newShipment = archiveShipmentFromRow(row);
+
+        try{
+            // Save the new shipment document first.
+            await saveArchiveShipment(newShipment);
+
+            // If the shipment number itself changed, rebuild the old
+            // shipment document too so no stale row is left behind.
+            if(oldShipment !== newShipment){
+                await saveArchiveShipment(oldShipment);
+            }
+
+            row.dataset.archiveShipment = newShipment;
+
+        }catch(error){
+            console.error("Archive row save failed:", error);
+            alert(
+                "Archive save failed.\n\n" +
+                "The original archive safety copy has not been deleted."
+            );
+        }
+    };
+
+    row.querySelectorAll('td[contenteditable="true"]').forEach(cell=>{
+        cell.addEventListener("blur", persist);
+    });
+
+    row.querySelectorAll("select, input").forEach(control=>{
+        control.addEventListener("change", persist);
+    });
+}
+
+async function loadSplitArchive(splitSnap){
+    archiveTable.innerHTML = archiveTable.rows[0].outerHTML;
+
+    const docs = splitSnap.docs.sort((a,b)=>{
+        const sa = String(a.data()?.shipment || "");
+        const sb = String(b.data()?.shipment || "");
+        return sa.localeCompare(sb);
+    });
+
+    docs.forEach(doc=>{
+        const data = doc.data() || {};
+        const rows = Array.isArray(data.rows) ? data.rows : [];
+
+        rows.forEach(html=>{
+            const temp = document.createElement("tbody");
+            temp.innerHTML = html;
+
+            const row = temp.querySelector("tr");
+            if(!row) return;
+
+            archiveTable.appendChild(row);
+            setupArchiveRow(row);
+        });
+    });
+
+    console.log("✓ split archive loaded:", docs.length, "shipments");
+}
+
+async function loadLegacyArchiveOnly(legacyData){
+    archiveTable.innerHTML = archiveTable.rows[0].outerHTML;
+
+    const rows = Array.isArray(legacyData?.archive)
+        ? legacyData.archive
+        : [];
+
+    rows.forEach(html=>{
+        const temp = document.createElement("tbody");
+        temp.innerHTML = html;
+
+        const row = temp.querySelector("tr");
+        if(!row) return;
+
+        archiveTable.appendChild(row);
+        setupArchiveRow(row);
+    });
+
+    console.warn("Loaded legacy archive directly; split archive was unavailable.");
+}
+
 async function saveAll(){
 
 console.log('SAVE RUNNING');
 
- const active = [];
-const archive = [];
+const active = [];
 const qcRejected = [];
 const weeklyArchive=[];
 
@@ -3885,13 +4271,6 @@ action: row.cells[17].querySelector('select').value,
 status: row.cells[18].querySelector('select').value,
 notes: row.cells[19].innerText
 });
-
-});
-
-Array.from(archiveTable.rows)
-.slice(1)
-.forEach(row=>{
-archive.push(`<tr>${row.innerHTML}</tr>`);
 });
 
 Array.from(qcRejectedTable.rows)
@@ -3912,12 +4291,8 @@ Array.from(qcRejectedTable.rows)
     });
   });
 
-  qcRejected.push(
-    `<tr>${row.innerHTML}</tr>`
-  );
-
+  qcRejected.push(`<tr>${row.innerHTML}</tr>`);
 });
-
 
 document.querySelectorAll('#notesArchiveContainer .card').forEach(card=>{
 weeklyArchive.push(card.outerHTML);
@@ -3928,13 +4303,6 @@ try{
     console.log("✓ active saved");
 }catch(e){
     console.error("✗ active failed", e);
-}
-
-try{
-    await db.collection("planner").doc("archive").set({ archive });
-    console.log("✓ archive saved");
-}catch(e){
-    console.error("✗ archive failed", e);
 }
 
 try{
@@ -3986,7 +4354,7 @@ try{
 }catch(e){
     console.error("✗ settings failed", e);
 }
- 
+
 }
 
 let dataLoaded = false;
@@ -4000,165 +4368,237 @@ dataLoaded = true;
 shipmentTable.innerHTML = shipmentTable.rows[0].outerHTML;
 archiveTable.innerHTML = archiveTable.rows[0].outerHTML;
 qcRejectedTable.innerHTML = qcRejectedTable.rows[0].outerHTML;
- 
+
 const plannerRef = db.collection("planner");
 
-// Check if the new split documents exist
-const activeSnap = await plannerRef.doc("active").get();
+try{
 
-let data;
-
-if (activeSnap.exists) {
-
+    // Active / QC / notes / settings remain in their existing documents.
     const [
-        archiveSnap,
+        activeSnap,
         qcSnap,
         notesSnap,
         settingsSnap
     ] = await Promise.all([
-
-        plannerRef.doc("archive").get(),
+        plannerRef.doc("active").get(),
         plannerRef.doc("qcRejected").get(),
         plannerRef.doc("notes").get(),
         plannerRef.doc("settings").get()
-
     ]);
 
-    data = {
-        ...activeSnap.data(),
-        ...(archiveSnap.exists ? archiveSnap.data() : {}),
+    const data = {
+        ...(activeSnap.exists ? activeSnap.data() : {}),
         ...(qcSnap.exists ? qcSnap.data() : {}),
         ...(notesSnap.exists ? notesSnap.data() : {}),
         ...(settingsSnap.exists ? settingsSnap.data() : {})
     };
 
-} else {
+    virtualTaken.value =
+        data.virtualTaken || 0;
 
-    // Fallback to the old planner/main document
-    const mainSnap = await plannerRef.doc("main").get();
+    virtualCapacity.value =
+        data.virtualCapacity || 1200;
 
-    if (!mainSnap.exists) return;
+    sevenHillsTaken.value =
+        data.sevenTaken || 0;
 
-    data = mainSnap.data();
+    sevenHillsCapacity.value =
+        data.sevenCapacity || 1400;
+
+    mainWarehouseTaken.value =
+        data.mainTaken || 0;
+
+    mainWarehouseCapacity.value =
+        data.mainCapacity || 1000;
+
+    if(data.active){
+
+        data.active.forEach(item=>{
+
+            const row = createRow(item);
+
+            row.querySelectorAll('td').forEach((cell,index)=>{
+
+                if(
+                    index !== 1 &&
+                    index !== 9 &&
+                    index !== 10 &&
+                    index !== 13 &&
+                    index !== 14 &&
+                    index !== 16
+                ){
+                    cell.setAttribute('contenteditable','true');
+                }
+
+            });
+
+        });
+
+    }
+
+    if(data.qcRejected){
+
+        data.qcRejected.forEach(item=>{
+
+            const temp=document.createElement('tbody');
+            temp.innerHTML=item;
+
+            const row=temp.querySelector('tr');
+
+            if(!row) return;
+
+            qcRejectedTable.appendChild(row);
+
+            row.querySelectorAll('td').forEach((cell,index)=>{
+
+                if(
+                    index !== 1 &&
+                    index !== 9 &&
+                    index !== 10 &&
+                    index !== 13 &&
+                    index !== 14 &&
+                    index !== 16 &&
+                    index !== 20 &&
+                    index !== 21
+                ){
+                    cell.setAttribute('contenteditable','true');
+                }
+
+            });
+
+            setupRow(row);
+
+        });
+
+    }
+
+    if(data.dailyNotes){
+
+        if(window.sunNote) sunNote.value=data.dailyNotes.sun||'';
+        if(window.monNote) monNote.value=data.dailyNotes.mon||'';
+        if(window.tueNote) tueNote.value=data.dailyNotes.tue||'';
+        if(window.wedNote) wedNote.value=data.dailyNotes.wed||'';
+        if(window.thuNote) thuNote.value=data.dailyNotes.thu||'';
+        if(window.friNote) friNote.value=data.dailyNotes.fri||'';
+        if(window.satNote) satNote.value=data.dailyNotes.sat||'';
+
+    }
+
+    if(data.weeklyArchive && document.getElementById('notesArchiveContainer')){
+
+        data.weeklyArchive.forEach(item=>{
+            document.getElementById('notesArchiveContainer')
+                .insertAdjacentHTML('beforeend',item);
+        });
+
+    }
+
+    /*
+       ARCHIVE V2
+
+       First, make a safe copy of the old planner/archive data into
+       one Firestore document per shipment. The old document is NOT
+       deleted or modified, so it remains an untouched safety copy.
+
+       Once migration is complete, the live archive reads only from
+       archiveShipments/{shipmentId}.
+    */
+    let splitArchiveLoaded = false;
+
+    try{
+
+        const splitSnap = await migrateLegacyArchiveIfNeeded();
+
+        if(splitSnap && splitSnap.size > 0){
+
+            await loadSplitArchive(splitSnap);
+            splitArchiveLoaded = true;
+
+        }else{
+
+            // The migration may have created documents after the
+            // original snapshot was obtained.
+            const freshSplit =
+                await db.collection(ARCHIVE_STORAGE_COLLECTION).get();
+
+            if(freshSplit.size > 0){
+
+                await loadSplitArchive(freshSplit);
+                splitArchiveLoaded = true;
+
+            }
+
+        }
+
+    }catch(archiveError){
+
+        console.error("Archive V2 migration/load failed:",archiveError);
+
+        // SAFETY FALLBACK:
+        // If the new archive path cannot be read/written, load the
+        // original archive instead. Never overwrite it.
+        try{
+
+            const legacySnap =
+                await plannerRef.doc("archive").get();
+
+            if(legacySnap.exists){
+
+                await loadLegacyArchiveOnly(legacySnap.data());
+
+            }
+
+        }catch(legacyError){
+
+            console.error("Legacy archive fallback failed:",legacyError);
+
+        }
+
+    }
+
+    // If there was no split archive and no migration data, use the
+    // legacy archive as a read fallback.
+    if(!splitArchiveLoaded){
+
+        try{
+
+            const legacySnap =
+                await plannerRef.doc("archive").get();
+
+            if(legacySnap.exists){
+
+                const legacyRows =
+                    Array.isArray(legacySnap.data()?.archive)
+                    ? legacySnap.data().archive
+                    : [];
+
+                if(legacyRows.length > 0){
+
+                    await loadLegacyArchiveOnly(legacySnap.data());
+
+                }
+
+            }
+
+        }catch(e){
+
+            console.error("Archive fallback load failed:",e);
+
+        }
+
+    }
+
+    refreshDashboard();
+    populateShipmentFilter();
+
+}catch(error){
+
+    console.error("loadAll failed:",error);
+    alert("Some warehouse data could not be loaded. Check the browser console.");
 
 }
 
-virtualTaken.value =
-data.virtualTaken || 0;
-
-virtualCapacity.value =
-data.virtualCapacity || 1200;
-
-sevenHillsTaken.value =
-data.sevenTaken || 0;
-
-sevenHillsCapacity.value =
-data.sevenCapacity || 1400;
-
-mainWarehouseTaken.value =
-data.mainTaken || 0;
-
-mainWarehouseCapacity.value =
-data.mainCapacity || 1000;
-
-if(data.active){
-
-data.active.forEach(item=>{
-
-const row = createRow(item);
-
-row.querySelectorAll('td').forEach((cell,index)=>{
-
-if(
-index !== 1 &&   // PO
-index !== 9 &&
-index !== 10 &&
-index !== 13 &&
-index !== 14 &&
-index !== 16
-){
-cell.setAttribute('contenteditable','true');
 }
-
-});
-
-});
-
-}
-
-if(data.qcRejected){
-
-data.qcRejected.forEach(item=>{
-
-const temp=document.createElement('tbody');
-temp.innerHTML=item;
-
-const row=temp.querySelector('tr');
-
-qcRejectedTable.appendChild(row);
-
-row.querySelectorAll('td').forEach((cell,index)=>{
-
-if(
-index !== 1 &&   // PO
-index !== 9 &&
-index !== 10 &&
-index !== 13 &&
-index !== 14 &&
-index !== 16 &&
-index !== 20 &&
-index !== 21
-){
-cell.setAttribute('contenteditable','true');
-}
-
-});
-
-setupRow(row);
-
-});
-
-}
-  
-
-if(data.dailyNotes){
-if(window.sunNote) sunNote.value=data.dailyNotes.sun||'';
-if(window.monNote) monNote.value=data.dailyNotes.mon||'';
-if(window.tueNote) tueNote.value=data.dailyNotes.tue||'';
-if(window.wedNote) wedNote.value=data.dailyNotes.wed||'';
-if(window.thuNote) thuNote.value=data.dailyNotes.thu||'';
-if(window.friNote) friNote.value=data.dailyNotes.fri||'';
-if(window.satNote) satNote.value=data.dailyNotes.sat||'';
-}
-
-if(data.weeklyArchive && document.getElementById('notesArchiveContainer')){
-data.weeklyArchive.forEach(item=>{
-document.getElementById('notesArchiveContainer').insertAdjacentHTML('beforeend',item);
-});
-}
-
-if(data.archive){
-
-data.archive.forEach(item=>{
-
-const temp =
-document.createElement('tbody');
-
-temp.innerHTML = item;
-
-const row =
-temp.querySelector('tr');
-
-archiveTable.appendChild(row);
-
-});
-
-}
-refreshDashboard();
- populateShipmentFilter();
-
-}
-
 
 let currentSort = {
 index:null,
@@ -5349,6 +5789,7 @@ async function backupFirestore(){
 
     const collections = [
         "planner",
+        "archiveShipments",
         "dashboard",
         "dispatch_pickruns",
         "storeReturnsConsole"
