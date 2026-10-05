@@ -4434,63 +4434,98 @@ function setupArchiveRow(row){
     });
 }
 async function loadSplitArchive(splitSnap){
+    // Clear only the visible archive table. Firestore archive data is never deleted here.
     archiveTable.innerHTML = archiveTable.rows[0].outerHTML;
 
-    // V3 row storage is authoritative for shipments that have V3 rows.
-    // V2 shipment documents remain untouched as a safety copy.
-    const rowSnap = await db.collection(ARCHIVE_ROW_COLLECTION).get();
-    const v3Shipments = new Set();
+    let rowSnap;
+    try{
+        rowSnap = await db.collection(ARCHIVE_ROW_COLLECTION).get();
+    }catch(error){
+        console.error("Archive row collection read failed:", error);
+        throw error;
+    }
 
-    rowSnap.docs.forEach(doc=>{
-        const data = doc.data() || {};
-        if(data.shipment) v3Shipments.add(String(data.shipment));
-    });
+    const v3Shipments = new Set();
+    let loadedV3Rows = 0;
 
     const v3Docs = rowSnap.docs.sort((a,b)=>{
-        const sa = String(a.data()?.shipment || "");
-        const sb = String(b.data()?.shipment || "");
+        const da = a.data() || {};
+        const dbb = b.data() || {};
+        const sa = String(da.shipment || "");
+        const sb = String(dbb.shipment || "");
         return sa.localeCompare(sb) || a.id.localeCompare(b.id);
     });
 
     v3Docs.forEach(doc=>{
-        const html = doc.data()?.row;
-        if(!html) return;
+        const data = doc.data() || {};
+        const shipment = String(data.shipment || "").trim();
+        if(shipment) v3Shipments.add(shipment);
+
+        // V3 writes the complete HTML row in `row`. Accept the alternate
+        // field names too so an older/test document can still be displayed.
+        const html = data.row || data.rowHTML || data.html || "";
+        if(!html) {
+            console.warn("Archive row has no HTML payload:", doc.id, data);
+            return;
+        }
+
         const temp = document.createElement("tbody");
-        temp.innerHTML = html;
+        temp.innerHTML = String(html);
         const row = temp.querySelector("tr");
-        if(!row) return;
+        if(!row){
+            console.warn("Archive row HTML did not contain a <tr>:", doc.id);
+            return;
+        }
+
         row.dataset.archiveRowId = doc.id;
-        const rowData = doc.data() || {};
-        row.dataset.activeKey = String(rowData.activeKey || archiveActiveKeyFromRow(row));
+        row.dataset.archiveShipment = shipment || archiveShipmentFromRow(row);
+        row.dataset.activeKey = String(
+            data.activeKey || archiveActiveKeyFromRow(row)
+        );
+
         archiveTable.appendChild(row);
         setupArchiveRow(row);
+        loadedV3Rows++;
     });
 
-    // For older V2 shipments that have not yet been touched by V3, keep
-    // displaying the existing shipment document. Nothing is overwritten.
-    const docs = splitSnap.docs.sort((a,b)=>{
+    // Older V2 shipment documents remain as a read-only fallback for shipments
+    // that do not already have V3 rows. Nothing is overwritten.
+    const docs = Array.isArray(splitSnap?.docs) ? splitSnap.docs : [];
+
+    docs.sort((a,b)=>{
         const sa = String(a.data()?.shipment || "");
         const sb = String(b.data()?.shipment || "");
         return sa.localeCompare(sb);
-    });
-
-    docs.forEach(doc=>{
+    }).forEach(doc=>{
         const data = doc.data() || {};
-        const shipment = String(data.shipment || "");
+        const shipment = String(data.shipment || "").trim();
         if(v3Shipments.has(shipment)) return;
+
         const rows = Array.isArray(data.rows) ? data.rows : [];
         rows.forEach(html=>{
             const temp = document.createElement("tbody");
             temp.innerHTML = html;
             const row = temp.querySelector("tr");
             if(!row) return;
+            row.dataset.archiveShipment = shipment || archiveShipmentFromRow(row);
             row.dataset.activeKey = archiveActiveKeyFromRow(row);
             archiveTable.appendChild(row);
             setupArchiveRow(row);
         });
     });
 
-    console.log("✓ archive loaded:", v3Shipments.size, "V3 shipments /", v3Docs.length, "V3 rows");
+    console.log(
+        "✓ archive loaded directly from archiveRows:",
+        loadedV3Rows,
+        "rows /",
+        v3Shipments.size,
+        "shipments"
+    );
+
+    // Make sure the newly loaded rows are immediately reflected in all archive
+    // calculations and are not hidden by stale table state.
+    refreshDashboard();
+    populateShipmentFilter();
 }
 
 async function loadLegacyArchiveOnly(legacyData){
