@@ -2752,7 +2752,7 @@ async function moveQCRejectedToArchive(btn){
     }
 }
 
-async function moveToArchive(row, saveAfterMove = true){
+async function moveToArchive(row, saveAfterMove = true, refreshAfterMove = true){
 
     if(!row) return;
 
@@ -2778,7 +2778,9 @@ async function moveToArchive(row, saveAfterMove = true){
 
     row.remove();
 
-    refreshDashboard();
+    if(refreshAfterMove){
+        refreshDashboard();
+    }
 
     if(!saveAfterMove) return;
 
@@ -3012,13 +3014,17 @@ async function arriveShipment(shipment){
     }
 
     rows.forEach(row => {
-        moveToArchive(row, false);
+        // Do not refresh the dashboard for every row. A large shipment can
+        // contain hundreds of rows, and repeated dashboard rebuilds cause
+        // the browser to appear frozen.
+        moveToArchive(row, false, false);
     });
 
+    // Rebuild the dashboard once after the entire shipment has moved.
     refreshDashboard();
     populateShipmentFilter();
 
-    // One Firestore write for the complete shipment.
+    // One controlled archive save for the complete shipment.
     try{
         await saveArchiveShipment(shipment);
         console.log("✓ entire shipment archived:", shipment, rows.length, "rows");
