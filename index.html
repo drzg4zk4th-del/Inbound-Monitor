@@ -1295,6 +1295,7 @@ Export Dispatch Week
 Archive is editable. Change Dispatch Week, warehouse, priority, locations, notes or other editable fields and the change will automatically save to Firebase.
 </div>
 <button class="add-btn" onclick="exportTableCSV('archiveTable','Archive.csv')">Export Archive</button>
+<button class="add-btn" onclick="repairHistoricalArchiveV3()" style="margin-left:8px;">Repair Historical Archive</button>
 
 <div class="table-wrap">
 
@@ -4349,6 +4350,191 @@ async function migrateLegacyArchiveIfNeeded(){
     console.log("✓ legacy archive migrated safely:", legacyRows.length, "rows");
 
     return await db.collection(ARCHIVE_STORAGE_COLLECTION).get();
+}
+
+async function repairHistoricalArchiveV3(){
+    const confirmed = confirm(
+        "Repair the historical Archive now?\n\n" +
+        "This will read the older archiveShipments and planner/archive safety copies and add any rows missing from archiveRows.\n\n" +
+        "It will NOT delete or overwrite the older safety copies."
+    );
+    if(!confirmed) return;
+
+    console.log("=== Historical Archive V3 repair started ===");
+
+    try{
+        // Read the current V3 archive first. It is the authoritative live
+        // archive, so anything already present there is preserved.
+        const [v3Snap, v2Snap, legacySnap] = await Promise.all([
+            db.collection(ARCHIVE_ROW_COLLECTION).get(),
+            db.collection(ARCHIVE_STORAGE_COLLECTION).get(),
+            db.collection("planner").doc("archive").get()
+        ]);
+
+        const existingKeys = new Set();
+        const existingRowIds = new Set();
+        const writes = [];
+        let existingV3Rows = 0;
+
+        // Ensure every existing V3 row also has its marker. This is safe to
+        // run repeatedly and repairs marker gaps without touching row data.
+        v3Snap.docs.forEach(doc=>{
+            const data = doc.data() || {};
+            const html = data.row || data.rowHTML || data.html || "";
+            if(!html) return;
+
+            const temp = document.createElement("tbody");
+            temp.innerHTML = String(html);
+            const row = temp.querySelector("tr");
+            if(!row) return;
+
+            const shipment = String(data.shipment || archiveShipmentFromRow(row)).trim();
+            const activeKey = String(
+                data.activeKey || archiveActiveKeyFromRow(row)
+            );
+
+            if(activeKey) existingKeys.add(shipment + "¦" + activeKey);
+            existingRowIds.add(String(doc.id));
+            existingV3Rows++;
+
+            writes.push({
+                type:"marker",
+                id:String(doc.id),
+                data:{
+                    activeKey,
+                    archiveRowId:String(doc.id),
+                    shipment,
+                    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+                }
+            });
+        });
+
+        const candidates = [];
+
+        // V2 split archive safety copies.
+        v2Snap.docs.forEach(doc=>{
+            const data = doc.data() || {};
+            const shipment = String(data.shipment || "").trim();
+            if(!shipment || !Array.isArray(data.rows)) return;
+
+            data.rows.forEach(html=>{
+                candidates.push({shipment, html, source:"archiveShipments"});
+            });
+        });
+
+        // Original planner/archive safety copy.
+        if(legacySnap.exists){
+            const legacy = legacySnap.data() || {};
+            if(Array.isArray(legacy.archive)){
+                legacy.archive.forEach(html=>{
+                    candidates.push({html, source:"planner/archive"});
+                });
+            }
+        }
+
+        let recovered = 0;
+        let skippedExisting = 0;
+        let invalid = 0;
+
+        candidates.forEach(candidate=>{
+            const temp = document.createElement("tbody");
+            temp.innerHTML = String(candidate.html || "");
+            const row = temp.querySelector("tr");
+            if(!row){
+                invalid++;
+                return;
+            }
+
+            const shipment = String(
+                candidate.shipment || archiveShipmentFromRow(row)
+            ).trim();
+
+            if(!shipment){
+                invalid++;
+                return;
+            }
+
+            const activeKey = archiveActiveKeyFromRow(row);
+            const dedupeKey = shipment + "¦" + activeKey;
+
+            if(existingKeys.has(dedupeKey)){
+                skippedExisting++;
+                return;
+            }
+
+            // Give the recovered row a new permanent V3 document ID.
+            const id = archiveRowId(row);
+            existingKeys.add(dedupeKey);
+            existingRowIds.add(id);
+
+            writes.push({
+                type:"row",
+                id,
+                data:{
+                    shipment,
+                    row:archiveRowHTML(row),
+                    activeKey,
+                    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+                }
+            });
+
+            writes.push({
+                type:"marker",
+                id,
+                data:{
+                    activeKey,
+                    archiveRowId:id,
+                    shipment,
+                    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+                }
+            });
+
+            recovered++;
+        });
+
+        // Commit safely in batches. 400 is deliberately below Firestore's
+        // 500-write limit because each recovered row normally has two writes.
+        for(let i=0;i<writes.length;i+=400){
+            const batch = db.batch();
+            writes.slice(i,i+400).forEach(item=>{
+                const collection = item.type === "row"
+                    ? ARCHIVE_ROW_COLLECTION
+                    : ARCHIVED_ACTIVE_COLLECTION;
+
+                batch.set(
+                    db.collection(collection).doc(item.id),
+                    item.data,
+                    {merge:true}
+                );
+            });
+            await batch.commit();
+        }
+
+        console.log("=== Historical Archive V3 repair complete ===");
+        console.log("Existing V3 rows:", existingV3Rows);
+        console.log("Recovered missing rows:", recovered);
+        console.log("Already present / skipped:", skippedExisting);
+        console.log("Invalid rows skipped:", invalid);
+        console.log("V2/legacy safety copies were NOT changed.");
+
+        alert(
+            "Archive repair complete.\n\n" +
+            "Recovered missing rows: " + recovered + "\n" +
+            "Existing V3 rows preserved: " + existingV3Rows + "\n\n" +
+            "The older safety copies were not changed.\n\n" +
+            "The page will now refresh."
+        );
+
+        location.reload();
+
+    }catch(error){
+        console.error("✗ Historical Archive V3 repair failed:", error);
+        alert(
+            "Archive repair failed.\n\n" +
+            "No older archive safety copies were intentionally changed.\n\n" +
+            error.message
+        );
+    }
 }
 
 function setupArchiveRow(row){
