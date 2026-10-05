@@ -3995,6 +3995,7 @@ const ARCHIVE_META_DOC = "archiveStorageMeta";
 // ARCHIVE V3: one Firestore document per archive row.
 // This avoids the 1 MiB Firestore document limit even for very large shipments.
 const ARCHIVE_ROW_COLLECTION = "archiveRows";
+const ARCHIVED_ACTIVE_COLLECTION = "archivedActiveRows";
 
 
 function archiveActiveKeyFromRow(row){
@@ -4129,13 +4130,27 @@ async function saveArchiveShipment(shipment){
 
         rows.forEach(row=>{
             const id = archiveRowId(row);
+            const activeKey = archiveActiveKeyFromRow(row);
             desiredIds.add(id);
             batchWrites.push({
                 id,
                 data:{
                     shipment,
                     row: archiveRowHTML(row),
-                    activeKey: archiveActiveKeyFromRow(row),
+                    activeKey,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }
+            });
+
+            // Separate permanent marker used only to exclude this exact
+            // active row on reload. This avoids depending on reconstruction
+            // of the key from HTML/select values.
+            batchWrites.push({
+                markerId: encodeURIComponent(activeKey).slice(0, 150),
+                markerData:{
+                    activeKey,
+                    archiveRowId: id,
+                    shipment,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }
             });
@@ -4143,13 +4158,28 @@ async function saveArchiveShipment(shipment){
 
         // Delete V3 rows that were removed from the archive table.
         existingSnap.forEach(doc=>{
-            if(!desiredIds.has(doc.id)) batchWrites.push({id:doc.id, delete:true});
+            if(!desiredIds.has(doc.id)){
+                const oldData = doc.data() || {};
+                batchWrites.push({id:doc.id, delete:true});
+                if(oldData.activeKey){
+                    batchWrites.push({
+                        markerId: encodeURIComponent(String(oldData.activeKey)).slice(0,150),
+                        markerDelete: true
+                    });
+                }
+            }
         });
 
         // Firestore batches support max 500 writes.
-        for(let i=0;i<batchWrites.length;i+=450){
+        for(let i=0;i<batchWrites.length;i+=400){
             const batch = db.batch();
-            batchWrites.slice(i,i+450).forEach(item=>{
+            batchWrites.slice(i,i+400).forEach(item=>{
+                if(item.markerId){
+                    const ref = db.collection(ARCHIVED_ACTIVE_COLLECTION).doc(item.markerId);
+                    if(item.markerDelete) batch.delete(ref);
+                    else batch.set(ref,item.markerData,{merge:true});
+                    return;
+                }
                 const ref = db.collection(ARCHIVE_ROW_COLLECTION).doc(item.id);
                 if(item.delete) batch.delete(ref);
                 else batch.set(ref,item.data,{merge:true});
@@ -4665,6 +4695,16 @@ try{
         // remove one row. Exclude those rows when rebuilding the active table.
         let archivedActiveKeys = new Set();
         try{
+            // V4 markers are authoritative because they are written directly
+            // from the active row before it is moved to Archive.
+            const markerSnap = await db.collection(ARCHIVED_ACTIVE_COLLECTION).get();
+            markerSnap.docs.forEach(doc=>{
+                const marker = doc.data() || {};
+                if(marker.activeKey) archivedActiveKeys.add(String(marker.activeKey));
+            });
+
+            // Keep compatibility with V3 archive rows created before markers
+            // existed.
             const archivedSnap = await db.collection(ARCHIVE_ROW_COLLECTION).get();
             archivedSnap.docs.forEach(doc=>{
                 const archived = doc.data() || {};
