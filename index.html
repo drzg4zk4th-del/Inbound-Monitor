@@ -1296,6 +1296,7 @@ Archive is editable. Change Dispatch Week, warehouse, priority, locations, notes
 </div>
 <button class="add-btn" onclick="exportTableCSV('archiveTable','Archive.csv')">Export Archive</button>
 <button class="add-btn" onclick="repairHistoricalArchiveV3()" style="margin-left:8px;">Repair Historical Archive</button>
+<button class="add-btn" onclick="repairArchiveRowsFromArchivedActiveRows()" style="margin-left:8px;">Repair Missing Archive Rows</button>
 
 <div class="table-wrap">
 
@@ -4350,6 +4351,177 @@ async function migrateLegacyArchiveIfNeeded(){
     console.log("✓ legacy archive migrated safely:", legacyRows.length, "rows");
 
     return await db.collection(ARCHIVE_STORAGE_COLLECTION).get();
+}
+
+
+async function repairArchiveRowsFromArchivedActiveRows(){
+    const confirmed = confirm(
+        "Recreate missing archive rows from archivedActiveRows?\n\n" +
+        "This will find archivedActiveRows markers that do not have a matching archiveRows document and recreate the missing archive row.\n\n" +
+        "The original archivedActiveRows collection will NOT be changed."
+    );
+    if(!confirmed) return;
+
+    console.log("=== archivedActiveRows -> archiveRows repair started ===");
+
+    try{
+        const [markerSnap, rowSnap] = await Promise.all([
+            db.collection(ARCHIVED_ACTIVE_COLLECTION).get(),
+            db.collection(ARCHIVE_ROW_COLLECTION).get()
+        ]);
+
+        const existingRowIds = new Set(rowSnap.docs.map(doc => String(doc.id)));
+        const existingKeys = new Set();
+
+        rowSnap.docs.forEach(doc=>{
+            const data = doc.data() || {};
+            const shipment = String(data.shipment || "").trim();
+            const activeKey = String(data.activeKey || "").trim();
+            if(shipment && activeKey){
+                existingKeys.add(shipment + "¦" + activeKey);
+            }
+        });
+
+        const writes = [];
+        let missingMarkers = 0;
+        let recreated = 0;
+        let skipped = 0;
+        let invalid = 0;
+
+        markerSnap.docs.forEach(markerDoc=>{
+            const marker = markerDoc.data() || {};
+            const archiveRowId = String(marker.archiveRowId || "").trim();
+            const shipment = String(marker.shipment || "").trim();
+            const activeKey = String(marker.activeKey || "").trim();
+
+            if(!archiveRowId || !shipment || !activeKey){
+                invalid++;
+                return;
+            }
+
+            if(existingRowIds.has(archiveRowId)){
+                skipped++;
+                return;
+            }
+
+            missingMarkers++;
+
+            const parts = activeKey.split("¦");
+            if(parts.length < 10){
+                invalid++;
+                console.warn("Cannot reconstruct archive row from marker:", markerDoc.id, marker);
+                return;
+            }
+
+            // activeKey contains the core row identity/data used when the
+            // row was archived. Rebuild the missing archive row from it.
+            // Fields that were never stored in the marker are given the same
+            // safe defaults used when creating a new planner row.
+            const rowData = {
+                shipment: parts[0] || shipment,
+                po: parts[1] || "",
+                sku: parts[2] || "",
+                style: parts[3] || "",
+                colour: parts[4] || "",
+                eta: parts[5] || "",
+                dispatchWeek: parts[6] || "Week Not Assigned",
+                loosePallets: parts[7] || 0,
+                packPallets: parts[8] || 0,
+                unitsPerCarton: 0,
+                cartons: 0,
+                qty: parts[9] || 0,
+                totalPacks: 0,
+                warehouse: "Virtual Warehouse",
+                priority: "Normal",
+                location: "",
+                currentLocation: "",
+                action: "No Action Required",
+                status: "Arrived",
+                notes: ""
+            };
+
+            try{
+                const tempRow = createRow(rowData);
+                if(!tempRow){
+                    invalid++;
+                    return;
+                }
+
+                if(tempRow.parentNode) tempRow.parentNode.removeChild(tempRow);
+
+                const status = tempRow.cells[18]?.querySelector("select");
+                if(status) status.value = "Arrived";
+
+                tempRow.dataset.archiveRowId = archiveRowId;
+                tempRow.dataset.activeKey = activeKey;
+
+                const html = archiveRowHTML(tempRow);
+                const dedupeKey = shipment + "¦" + activeKey;
+
+                if(existingKeys.has(dedupeKey)){
+                    skipped++;
+                    return;
+                }
+
+                existingKeys.add(dedupeKey);
+                existingRowIds.add(archiveRowId);
+
+                writes.push({
+                    collection: ARCHIVE_ROW_COLLECTION,
+                    id: archiveRowId,
+                    data:{
+                        shipment,
+                        row: html,
+                        activeKey,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                });
+
+                recreated++;
+            }catch(e){
+                invalid++;
+                console.warn("Could not reconstruct archive row:", markerDoc.id, e);
+            }
+        });
+
+        for(let i=0;i<writes.length;i+=400){
+            const batch = db.batch();
+            writes.slice(i,i+400).forEach(item=>{
+                batch.set(
+                    db.collection(item.collection).doc(item.id),
+                    item.data,
+                    {merge:true}
+                );
+            });
+            await batch.commit();
+        }
+
+        console.log("=== archivedActiveRows -> archiveRows repair complete ===");
+        console.log("Markers checked:", markerSnap.size);
+        console.log("Missing archiveRows detected:", missingMarkers);
+        console.log("Recreated archiveRows:", recreated);
+        console.log("Already present / skipped:", skipped);
+        console.log("Invalid/unrecoverable markers:", invalid);
+
+        alert(
+            "Archive row repair complete.\n\n" +
+            "Missing archive rows found: " + missingMarkers + "\n" +
+            "Rows recreated: " + recreated + "\n" +
+            "Already present / skipped: " + skipped + "\n" +
+            "Invalid/unrecoverable: " + invalid + "\n\n" +
+            "The page will now refresh."
+        );
+
+        location.reload();
+
+    }catch(error){
+        console.error("✗ archivedActiveRows repair failed:", error);
+        alert(
+            "Archive row repair failed.\n\n" +
+            "No archivedActiveRows data was intentionally changed.\n\n" +
+            error.message
+        );
+    }
 }
 
 async function repairHistoricalArchiveV3(){
