@@ -4409,7 +4409,8 @@ async function loadSplitArchive(splitSnap){
         const row = temp.querySelector("tr");
         if(!row) return;
         row.dataset.archiveRowId = doc.id;
-        row.dataset.activeKey = String(data.activeKey || archiveActiveKeyFromRow(row));
+        const rowData = doc.data() || {};
+        row.dataset.activeKey = String(rowData.activeKey || archiveActiveKeyFromRow(row));
         archiveTable.appendChild(row);
         setupArchiveRow(row);
     });
