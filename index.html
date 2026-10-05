@@ -4365,10 +4365,11 @@ async function repairHistoricalArchiveV3(){
     try{
         // Read the current V3 archive first. It is the authoritative live
         // archive, so anything already present there is preserved.
-        const [v3Snap, v2Snap, legacySnap] = await Promise.all([
+        const [v3Snap, v2Snap, legacySnap, activeSnap] = await Promise.all([
             db.collection(ARCHIVE_ROW_COLLECTION).get(),
             db.collection(ARCHIVE_STORAGE_COLLECTION).get(),
-            db.collection("planner").doc("archive").get()
+            db.collection("planner").doc("archive").get(),
+            db.collection("planner").doc("active").get()
         ]);
 
         const existingKeys = new Set();
@@ -4432,7 +4433,75 @@ async function repairHistoricalArchiveV3(){
             }
         }
 
+        // IMPORTANT HISTORICAL RECOVERY:
+        // Before V3 was introduced, a shipment could be moved out of the
+        // visible Active table while the planner/active save failed because
+        // the document was over 1 MiB. In that case the missing archive rows
+        // can still be sitting in planner/active.
+        //
+        // Only consider Active rows whose shipment already has at least one
+        // archived row. This prevents us from treating ordinary active
+        // shipments as historical archive rows.
+        const archivedShipments = new Set();
+        v3Snap.docs.forEach(doc=>{
+            const shipment = String(doc.data()?.shipment || '').trim();
+            if(shipment) archivedShipments.add(shipment);
+        });
+        v2Snap.docs.forEach(doc=>{
+            const shipment = String(doc.data()?.shipment || '').trim();
+            if(shipment) archivedShipments.add(shipment);
+        });
+        if(legacySnap.exists){
+            const legacy = legacySnap.data() || {};
+            if(Array.isArray(legacy.archive)){
+                legacy.archive.forEach(html=>{
+                    const temp = document.createElement('tbody');
+                    temp.innerHTML = String(html || '');
+                    const row = temp.querySelector('tr');
+                    const shipment = row ? archiveShipmentFromRow(row) : '';
+                    if(shipment) archivedShipments.add(shipment);
+                });
+            }
+        }
+
+        let activeRecoveryCandidates = 0;
+        if(activeSnap.exists){
+            const activeData = activeSnap.data() || {};
+            const activeRows = Array.isArray(activeData.active) ? activeData.active : [];
+
+            activeRows.forEach(item=>{
+                const shipment = String(item?.shipment || '').trim();
+                if(!shipment || !archivedShipments.has(shipment)) return;
+
+                // Convert the stored Active object into the same HTML row
+                // format used by Archive. The temporary row is removed
+                // immediately and is never left in the Active table.
+                let tempRow = null;
+                try{
+                    tempRow = createRow({
+                        ...item,
+                        status:'Arrived'
+                    });
+                    if(tempRow?.parentNode) tempRow.parentNode.removeChild(tempRow);
+
+                    if(tempRow){
+                        const status = tempRow.cells[18]?.querySelector('select');
+                        if(status) status.value = 'Arrived';
+                        candidates.push({
+                            shipment,
+                            html: archiveRowHTML(tempRow),
+                            source:'planner/active'
+                        });
+                        activeRecoveryCandidates++;
+                    }
+                }catch(e){
+                    console.warn('Could not convert historical active row:', e, item);
+                }
+            });
+        }
+
         let recovered = 0;
+        let recoveredFromActive = 0;
         let skippedExisting = 0;
         let invalid = 0;
 
@@ -4490,6 +4559,9 @@ async function repairHistoricalArchiveV3(){
             });
 
             recovered++;
+            if(candidate.source === 'planner/active'){
+                recoveredFromActive++;
+            }
         });
 
         // Commit safely in batches. 400 is deliberately below Firestore's
@@ -4513,6 +4585,8 @@ async function repairHistoricalArchiveV3(){
         console.log("=== Historical Archive V3 repair complete ===");
         console.log("Existing V3 rows:", existingV3Rows);
         console.log("Recovered missing rows:", recovered);
+        console.log("Recovered from planner/active:", recoveredFromActive);
+        console.log("Active rows considered for historical recovery:", activeRecoveryCandidates);
         console.log("Already present / skipped:", skippedExisting);
         console.log("Invalid rows skipped:", invalid);
         console.log("V2/legacy safety copies were NOT changed.");
@@ -4520,6 +4594,7 @@ async function repairHistoricalArchiveV3(){
         alert(
             "Archive repair complete.\n\n" +
             "Recovered missing rows: " + recovered + "\n" +
+            "Recovered from old Active data: " + recoveredFromActive + "\n" +
             "Existing V3 rows preserved: " + existingV3Rows + "\n\n" +
             "The older safety copies were not changed.\n\n" +
             "The page will now refresh."
