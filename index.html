@@ -2287,6 +2287,12 @@ ${data.notes || ''}
 </td>
 `;
 
+// Give every active row a stable key as soon as it is created.
+// This is what lets archive persistence exclude the same row from
+// planner/active on the next page load without rewriting the oversized
+// planner/active document.
+row.dataset.activeKey = data.activeKey || archiveActiveKeyFromRow(row);
+
 setupRow(row);
 
 return row;
@@ -3993,7 +3999,15 @@ const ARCHIVE_ROW_COLLECTION = "archiveRows";
 
 function archiveActiveKeyFromRow(row){
     if(!row) return "";
-    if(row.dataset && row.dataset.activeKey) return row.dataset.activeKey;
+    if(row.dataset && row.dataset.activeKey) return String(row.dataset.activeKey);
+
+    // Always use the selected Dispatch Week value, not the innerText of the
+    // whole select element. This keeps the active key identical before and
+    // after the row is archived, including for bulk archive operations.
+    const dispatchWeek = row.cells?.[6]?.querySelector('select')?.value
+        || row.cells?.[6]?.innerText
+        || "";
+
     const values = [
         row.cells?.[0]?.innerText || "",
         row.cells?.[1]?.innerText || "",
@@ -4001,11 +4015,12 @@ function archiveActiveKeyFromRow(row){
         row.cells?.[3]?.innerText || "",
         row.cells?.[4]?.innerText || "",
         row.cells?.[5]?.innerText || "",
-        row.cells?.[6]?.innerText || "",
+        dispatchWeek,
         row.cells?.[7]?.innerText || "",
         row.cells?.[8]?.innerText || "",
         row.cells?.[11]?.innerText || ""
     ].map(v=>String(v).trim());
+
     return values.join("¦");
 }
 
@@ -4661,15 +4676,14 @@ try{
 
         data.active.forEach((item, index)=>{
 
-            const activeKey = item.activeKey || ("legacy-index-" + index);
+            const itemKey = item.activeKey || archiveActiveKeyFromItem(item);
 
-            if(archivedActiveKeys.has(String(activeKey)) ||
-               archivedActiveKeys.has(archiveActiveKeyFromItem(item))){
+            if(archivedActiveKeys.has(String(itemKey))){
                 return;
             }
 
             const row = createRow(item);
-            row.dataset.activeKey = activeKey;
+            row.dataset.activeKey = String(itemKey);
 
             row.querySelectorAll('td').forEach((cell,index)=>{
 
