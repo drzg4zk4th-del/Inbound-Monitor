@@ -2668,18 +2668,16 @@ row.querySelector('.status-select');
 
 if(statusSelect){
 
-statusSelect.addEventListener('change',()=>{
+statusSelect.addEventListener('change',async()=>{
 
 if(statusSelect.value === 'QC Rejected'){
-
-moveToQCRejected(row);
-
+    await moveToQCRejected(row);
+    return;
 }
 
 if(statusSelect.value === 'Arrived'){
-
-moveToArchive(row);
-
+    await moveToArchive(row);
+    return;
 }
 
 });
@@ -2732,6 +2730,7 @@ async function moveQCRejectedToArchive(btn){
     archiveRow.insertCell(-1).innerHTML =
         '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
 
+    archiveRowId(archiveRow);
     setupArchiveRow(archiveRow);
 
     const shipment = archiveShipmentFromRow(archiveRow);
@@ -3979,6 +3978,30 @@ function updateDispatchWeekFromException(po, week){
 const ARCHIVE_STORAGE_COLLECTION = "archiveShipments";
 const ARCHIVE_META_DOC = "archiveStorageMeta";
 
+// ARCHIVE V3: one Firestore document per archive row.
+// This avoids the 1 MiB Firestore document limit even for very large shipments.
+const ARCHIVE_ROW_COLLECTION = "archiveRows";
+
+
+function archiveRowId(row){
+    if(!row) return "row_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    if(!row.dataset.archiveRowId){
+        const parts = [
+            archiveShipmentFromRow(row),
+            row.cells?.[1]?.innerText || "",
+            row.cells?.[2]?.innerText || "",
+            row.cells?.[3]?.innerText || "",
+            row.cells?.[4]?.innerText || "",
+            row.cells?.[5]?.innerText || "",
+            Date.now(),
+            Math.random().toString(36).slice(2)
+        ];
+        row.dataset.archiveRowId = btoa(unescape(encodeURIComponent(parts.join("|"))))
+            .replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"").slice(0,120);
+    }
+    return row.dataset.archiveRowId;
+}
+
 function archiveShipmentId(shipment){
     const value = String(shipment || "").trim();
     return value ? encodeURIComponent(value) : "__NO_SHIPMENT__";
@@ -4030,34 +4053,60 @@ function archiveRowsByShipment(){
 
 async function saveArchiveShipment(shipment){
     shipment = String(shipment || "").trim();
+    if(!shipment) return;
 
     const rows = Array.from(archiveTable.rows)
         .slice(1)
         .filter(row => archiveShipmentFromRow(row) === shipment);
 
-    const ref = db.collection(ARCHIVE_STORAGE_COLLECTION)
-        .doc(archiveShipmentId(shipment));
+    // V3 stores each row separately. Existing V2/legacy archive data is never
+    // deleted or overwritten.
+    const desiredIds = new Set();
 
-    if(rows.length === 0){
-        try{
-            await ref.delete();
-            console.log("✓ archive shipment deleted:", shipment);
-        }catch(error){
-            // A missing document is harmless.
-            if(error.code !== "not-found"){
-                console.error("✗ archive shipment delete failed:", shipment, error);
-            }
+    try{
+        const existingSnap = await db.collection(ARCHIVE_ROW_COLLECTION)
+            .where("shipment", "==", shipment).get();
+
+        const batchWrites = [];
+
+        rows.forEach(row=>{
+            const id = archiveRowId(row);
+            desiredIds.add(id);
+            batchWrites.push({
+                id,
+                data:{
+                    shipment,
+                    row: archiveRowHTML(row),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }
+            });
+        });
+
+        // Delete V3 rows that were removed from the archive table.
+        existingSnap.forEach(doc=>{
+            if(!desiredIds.has(doc.id)) batchWrites.push({id:doc.id, delete:true});
+        });
+
+        // Firestore batches support max 500 writes.
+        for(let i=0;i<batchWrites.length;i+=450){
+            const batch = db.batch();
+            batchWrites.slice(i,i+450).forEach(item=>{
+                const ref = db.collection(ARCHIVE_ROW_COLLECTION).doc(item.id);
+                if(item.delete) batch.delete(ref);
+                else batch.set(ref,item.data,{merge:true});
+            });
+            await batch.commit();
         }
-        return;
+
+        if(rows.length === 0){
+            console.log("✓ archive shipment rows cleared:", shipment);
+        }else{
+            console.log("✓ archive shipment saved:", shipment, rows.length, "rows (V3 row storage)");
+        }
+    }catch(error){
+        console.error("✗ archive row storage failed:", shipment, error);
+        throw error;
     }
-
-    await ref.set({
-        shipment,
-        rows: rows.map(archiveRowHTML),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    console.log("✓ archive shipment saved:", shipment, rows.length, "rows");
 }
 
 async function saveAllArchiveShipments(){
@@ -4298,6 +4347,36 @@ function setupArchiveRow(row){
 async function loadSplitArchive(splitSnap){
     archiveTable.innerHTML = archiveTable.rows[0].outerHTML;
 
+    // V3 row storage is authoritative for shipments that have V3 rows.
+    // V2 shipment documents remain untouched as a safety copy.
+    const rowSnap = await db.collection(ARCHIVE_ROW_COLLECTION).get();
+    const v3Shipments = new Set();
+
+    rowSnap.docs.forEach(doc=>{
+        const data = doc.data() || {};
+        if(data.shipment) v3Shipments.add(String(data.shipment));
+    });
+
+    const v3Docs = rowSnap.docs.sort((a,b)=>{
+        const sa = String(a.data()?.shipment || "");
+        const sb = String(b.data()?.shipment || "");
+        return sa.localeCompare(sb) || a.id.localeCompare(b.id);
+    });
+
+    v3Docs.forEach(doc=>{
+        const html = doc.data()?.row;
+        if(!html) return;
+        const temp = document.createElement("tbody");
+        temp.innerHTML = html;
+        const row = temp.querySelector("tr");
+        if(!row) return;
+        row.dataset.archiveRowId = doc.id;
+        archiveTable.appendChild(row);
+        setupArchiveRow(row);
+    });
+
+    // For older V2 shipments that have not yet been touched by V3, keep
+    // displaying the existing shipment document. Nothing is overwritten.
     const docs = splitSnap.docs.sort((a,b)=>{
         const sa = String(a.data()?.shipment || "");
         const sb = String(b.data()?.shipment || "");
@@ -4306,21 +4385,20 @@ async function loadSplitArchive(splitSnap){
 
     docs.forEach(doc=>{
         const data = doc.data() || {};
+        const shipment = String(data.shipment || "");
+        if(v3Shipments.has(shipment)) return;
         const rows = Array.isArray(data.rows) ? data.rows : [];
-
         rows.forEach(html=>{
             const temp = document.createElement("tbody");
             temp.innerHTML = html;
-
             const row = temp.querySelector("tr");
             if(!row) return;
-
             archiveTable.appendChild(row);
             setupArchiveRow(row);
         });
     });
 
-    console.log("✓ split archive loaded:", docs.length, "shipments");
+    console.log("✓ archive loaded:", v3Shipments.size, "V3 shipments /", v3Docs.length, "V3 rows");
 }
 
 async function loadLegacyArchiveOnly(legacyData){
