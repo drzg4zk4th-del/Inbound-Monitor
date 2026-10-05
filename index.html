@@ -4817,25 +4817,14 @@ try{
 
         const splitSnap = await migrateLegacyArchiveIfNeeded();
 
-        if(splitSnap && splitSnap.size > 0){
+        // V3 archive rows are stored in archiveRows, so archiveShipments
+        // is no longer a reliable indicator of whether the live archive
+        // contains data. loadSplitArchive() reads both V3 row storage and
+        // the older V2 shipment storage.
+        await loadSplitArchive(splitSnap || { docs: [] });
 
-            await loadSplitArchive(splitSnap);
+        if(archiveTable.rows.length > 1){
             splitArchiveLoaded = true;
-
-        }else{
-
-            // The migration may have created documents after the
-            // original snapshot was obtained.
-            const freshSplit =
-                await db.collection(ARCHIVE_STORAGE_COLLECTION).get();
-
-            if(freshSplit.size > 0){
-
-                await loadSplitArchive(freshSplit);
-                splitArchiveLoaded = true;
-
-            }
-
         }
 
     }catch(archiveError){
