@@ -4356,13 +4356,13 @@ async function migrateLegacyArchiveIfNeeded(){
 
 async function repairArchiveRowsFromArchivedActiveRows(){
     const confirmed = confirm(
-        "Recreate missing archive rows from archivedActiveRows?\n\n" +
-        "This will find archivedActiveRows markers that do not have a matching archiveRows document and recreate the missing archive row.\n\n" +
-        "The original archivedActiveRows collection will NOT be changed."
+        "Rebuild missing archiveRows from archivedActiveRows?\n\n" +
+        "This will check EVERY archivedActiveRows marker. If the linked archiveRows document is missing, empty, or has no valid <tr> row, it will recreate it from the marker activeKey.\n\n" +
+        "archivedActiveRows will NOT be changed."
     );
     if(!confirmed) return;
 
-    console.log("=== archivedActiveRows -> archiveRows repair started ===");
+    console.log("=== archivedActiveRows -> archiveRows FULL REPAIR started ===");
 
     try{
         const [markerSnap, rowSnap] = await Promise.all([
@@ -4370,53 +4370,83 @@ async function repairArchiveRowsFromArchivedActiveRows(){
             db.collection(ARCHIVE_ROW_COLLECTION).get()
         ]);
 
-        const existingRowIds = new Set(rowSnap.docs.map(doc => String(doc.id)));
-        const existingKeys = new Set();
+        const existingById = new Map();
+        const existingByKey = new Map();
 
         rowSnap.docs.forEach(doc=>{
             const data = doc.data() || {};
             const shipment = String(data.shipment || "").trim();
             const activeKey = String(data.activeKey || "").trim();
+            const html = String(data.row || data.rowHTML || data.html || "");
+
+            existingById.set(String(doc.id), {
+                data,
+                validHtml: /<tr[\\s>]/i.test(html),
+                html
+            });
+
             if(shipment && activeKey){
-                existingKeys.add(shipment + "¦" + activeKey);
+                existingByKey.set(shipment + "¦" + activeKey, String(doc.id));
             }
         });
 
         const writes = [];
-        let missingMarkers = 0;
+        let missing = 0;
+        let malformed = 0;
         let recreated = 0;
-        let skipped = 0;
+        let alreadyGood = 0;
         let invalid = 0;
 
         markerSnap.docs.forEach(markerDoc=>{
             const marker = markerDoc.data() || {};
-            const archiveRowId = String(marker.archiveRowId || "").trim();
             const shipment = String(marker.shipment || "").trim();
             const activeKey = String(marker.activeKey || "").trim();
 
-            if(!archiveRowId || !shipment || !activeKey){
+            // Some old markers may not have archiveRowId. The marker document
+            // ID is still the encoded active key, so use it as a fallback ID.
+            const archiveRowId = String(
+                marker.archiveRowId || decodeURIComponent(markerDoc.id)
+            ).trim();
+
+            if(!shipment || !activeKey){
                 invalid++;
+                console.warn("Invalid archivedActiveRows marker:", markerDoc.id, marker);
                 return;
             }
 
-            if(existingRowIds.has(archiveRowId)){
-                skipped++;
+            const existing = existingById.get(archiveRowId);
+            const key = shipment + "¦" + activeKey;
+            const existingKeyId = existingByKey.get(key);
+
+            // A row is considered good only if the linked document exists and
+            // actually contains a usable row HTML payload.
+            if(existing && existing.validHtml){
+                alreadyGood++;
                 return;
             }
 
-            missingMarkers++;
+            if(existing){
+                malformed++;
+            }else if(existingKeyId){
+                // The same row may already exist under a different document ID.
+                // If that document has valid HTML, leave it alone.
+                const byKey = existingById.get(existingKeyId);
+                if(byKey && byKey.validHtml){
+                    alreadyGood++;
+                    return;
+                }
+                malformed++;
+            }else{
+                missing++;
+            }
 
             const parts = activeKey.split("¦");
             if(parts.length < 10){
                 invalid++;
-                console.warn("Cannot reconstruct archive row from marker:", markerDoc.id, marker);
+                console.warn("Cannot reconstruct activeKey:", activeKey);
                 return;
             }
 
-            // activeKey contains the core row identity/data used when the
-            // row was archived. Rebuild the missing archive row from it.
-            // Fields that were never stored in the marker are given the same
-            // safe defaults used when creating a new planner row.
             const rowData = {
                 shipment: parts[0] || shipment,
                 po: parts[1] || "",
@@ -4447,7 +4477,9 @@ async function repairArchiveRowsFromArchivedActiveRows(){
                     return;
                 }
 
-                if(tempRow.parentNode) tempRow.parentNode.removeChild(tempRow);
+                if(tempRow.parentNode){
+                    tempRow.parentNode.removeChild(tempRow);
+                }
 
                 const status = tempRow.cells[18]?.querySelector("select");
                 if(status) status.value = "Arrived";
@@ -4456,28 +4488,22 @@ async function repairArchiveRowsFromArchivedActiveRows(){
                 tempRow.dataset.activeKey = activeKey;
 
                 const html = archiveRowHTML(tempRow);
-                const dedupeKey = shipment + "¦" + activeKey;
-
-                if(existingKeys.has(dedupeKey)){
-                    skipped++;
-                    return;
-                }
-
-                existingKeys.add(dedupeKey);
-                existingRowIds.add(archiveRowId);
 
                 writes.push({
-                    collection: ARCHIVE_ROW_COLLECTION,
                     id: archiveRowId,
                     data:{
                         shipment,
                         row: html,
                         activeKey,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        repairedFrom: "archivedActiveRows"
                     }
                 });
 
+                existingById.set(archiveRowId, {validHtml:true, html});
+                existingByKey.set(key, archiveRowId);
                 recreated++;
+
             }catch(e){
                 invalid++;
                 console.warn("Could not reconstruct archive row:", markerDoc.id, e);
@@ -4488,7 +4514,7 @@ async function repairArchiveRowsFromArchivedActiveRows(){
             const batch = db.batch();
             writes.slice(i,i+400).forEach(item=>{
                 batch.set(
-                    db.collection(item.collection).doc(item.id),
+                    db.collection(ARCHIVE_ROW_COLLECTION).doc(item.id),
                     item.data,
                     {merge:true}
                 );
@@ -4496,18 +4522,21 @@ async function repairArchiveRowsFromArchivedActiveRows(){
             await batch.commit();
         }
 
-        console.log("=== archivedActiveRows -> archiveRows repair complete ===");
+        console.log("=== archivedActiveRows -> archiveRows FULL REPAIR complete ===");
         console.log("Markers checked:", markerSnap.size);
-        console.log("Missing archiveRows detected:", missingMarkers);
-        console.log("Recreated archiveRows:", recreated);
-        console.log("Already present / skipped:", skipped);
-        console.log("Invalid/unrecoverable markers:", invalid);
+        console.log("Missing archiveRows:", missing);
+        console.log("Malformed archiveRows repaired:", malformed);
+        console.log("Rows recreated/repaired:", recreated);
+        console.log("Already good:", alreadyGood);
+        console.log("Invalid/unrecoverable:", invalid);
 
         alert(
             "Archive row repair complete.\n\n" +
-            "Missing archive rows found: " + missingMarkers + "\n" +
-            "Rows recreated: " + recreated + "\n" +
-            "Already present / skipped: " + skipped + "\n" +
+            "Markers checked: " + markerSnap.size + "\n" +
+            "Missing archiveRows: " + missing + "\n" +
+            "Malformed archiveRows repaired: " + malformed + "\n" +
+            "Rows recreated/repaired: " + recreated + "\n" +
+            "Already good: " + alreadyGood + "\n" +
             "Invalid/unrecoverable: " + invalid + "\n\n" +
             "The page will now refresh."
         );
@@ -4515,7 +4544,7 @@ async function repairArchiveRowsFromArchivedActiveRows(){
         location.reload();
 
     }catch(error){
-        console.error("✗ archivedActiveRows repair failed:", error);
+        console.error("✗ archivedActiveRows FULL repair failed:", error);
         alert(
             "Archive row repair failed.\n\n" +
             "No archivedActiveRows data was intentionally changed.\n\n" +
