@@ -4488,6 +4488,78 @@ async function loadSplitArchive(splitSnap){
         loadedV3Rows++;
     });
 
+    // V4: also use archivedActiveRows as an archive display source.
+    // These marker documents contain the archiveRowId, so we can recover the
+    // corresponding archiveRows document if it was not already loaded above.
+    // This keeps archivedActiveRows useful as both the Active exclusion index
+    // and a reliable pointer into the visible Archive.
+    try{
+        const markerSnap = await db.collection(ARCHIVED_ACTIVE_COLLECTION).get();
+        const loadedArchiveRowIds = new Set(
+            v3Docs.map(doc => String(doc.id))
+        );
+        const markerRowIds = new Set();
+
+        markerSnap.docs.forEach(doc=>{
+            const marker = doc.data() || {};
+            if(marker.archiveRowId){
+                markerRowIds.add(String(marker.archiveRowId));
+            }
+        });
+
+        const missingRowIds = Array.from(markerRowIds)
+            .filter(id => !loadedArchiveRowIds.has(id));
+
+        let loadedFromMarkers = 0;
+
+        for(let i=0; i<missingRowIds.length; i += 10){
+            const chunk = missingRowIds.slice(i, i + 10);
+            const docs = await Promise.all(
+                chunk.map(id =>
+                    db.collection(ARCHIVE_ROW_COLLECTION).doc(id).get()
+                )
+            );
+
+            docs.forEach(doc=>{
+                if(!doc.exists) return;
+
+                const data = doc.data() || {};
+                const shipment = String(data.shipment || '').trim();
+                const html = data.row || data.rowHTML || data.html || '';
+                if(!html) return;
+
+                const temp = document.createElement('tbody');
+                temp.innerHTML = String(html);
+                const row = temp.querySelector('tr');
+                if(!row) return;
+
+                row.dataset.archiveRowId = doc.id;
+                row.dataset.archiveShipment =
+                    shipment || archiveShipmentFromRow(row);
+                row.dataset.activeKey = String(
+                    data.activeKey || archiveActiveKeyFromRow(row)
+                );
+
+                archiveTable.appendChild(row);
+                setupArchiveRow(row);
+                loadedFromMarkers++;
+            });
+        }
+
+        console.log(
+            '✓ archivedActiveRows checked for Archive display:',
+            markerSnap.size,
+            'markers /',
+            loadedFromMarkers,
+            'additional rows loaded'
+        );
+    }catch(markerError){
+        console.warn(
+            'Could not load archivedActiveRows for Archive display:',
+            markerError
+        );
+    }
+
     // Older V2 shipment documents remain as a read-only fallback for shipments
     // that do not already have V3 rows. Nothing is overwritten.
     const docs = Array.isArray(splitSnap?.docs) ? splitSnap.docs : [];
