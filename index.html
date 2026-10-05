@@ -2731,6 +2731,7 @@ async function moveQCRejectedToArchive(btn){
         '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
 
     archiveRowId(archiveRow);
+    archiveRow.dataset.activeKey = archiveActiveKeyFromRow(row);
     setupArchiveRow(archiveRow);
 
     const shipment = archiveShipmentFromRow(archiveRow);
@@ -2770,6 +2771,7 @@ async function moveToArchive(row, saveAfterMove = true){
     archiveRow.insertCell(-1).innerHTML =
         '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
 
+    archiveRow.dataset.activeKey = archiveActiveKeyFromRow(row);
     setupArchiveRow(archiveRow);
 
     const shipment = archiveShipmentFromRow(archiveRow);
@@ -3983,6 +3985,41 @@ const ARCHIVE_META_DOC = "archiveStorageMeta";
 const ARCHIVE_ROW_COLLECTION = "archiveRows";
 
 
+function archiveActiveKeyFromRow(row){
+    if(!row) return "";
+    if(row.dataset && row.dataset.activeKey) return row.dataset.activeKey;
+    const values = [
+        row.cells?.[0]?.innerText || "",
+        row.cells?.[1]?.innerText || "",
+        row.cells?.[2]?.innerText || "",
+        row.cells?.[3]?.innerText || "",
+        row.cells?.[4]?.innerText || "",
+        row.cells?.[5]?.innerText || "",
+        row.cells?.[6]?.innerText || "",
+        row.cells?.[7]?.innerText || "",
+        row.cells?.[8]?.innerText || "",
+        row.cells?.[11]?.innerText || ""
+    ].map(v=>String(v).trim());
+    return values.join("¦");
+}
+
+function archiveActiveKeyFromItem(item){
+    if(!item) return "";
+    if(item.activeKey) return String(item.activeKey);
+    return [
+        item.shipment || "",
+        item.po || "",
+        item.sku || "",
+        item.style || "",
+        item.colour || "",
+        item.eta || "",
+        item.dispatchWeek || "",
+        item.loosePallets || "",
+        item.packPallets || "",
+        item.qty || ""
+    ].map(v=>String(v).trim()).join("¦");
+}
+
 function archiveRowId(row){
     if(!row) return "row_" + Date.now() + "_" + Math.random().toString(36).slice(2);
     if(!row.dataset.archiveRowId){
@@ -4077,6 +4114,7 @@ async function saveArchiveShipment(shipment){
                 data:{
                     shipment,
                     row: archiveRowHTML(row),
+                    activeKey: archiveActiveKeyFromRow(row),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }
             });
@@ -4371,6 +4409,7 @@ async function loadSplitArchive(splitSnap){
         const row = temp.querySelector("tr");
         if(!row) return;
         row.dataset.archiveRowId = doc.id;
+        row.dataset.activeKey = String(data.activeKey || archiveActiveKeyFromRow(row));
         archiveTable.appendChild(row);
         setupArchiveRow(row);
     });
@@ -4393,6 +4432,7 @@ async function loadSplitArchive(splitSnap){
             temp.innerHTML = html;
             const row = temp.querySelector("tr");
             if(!row) return;
+            row.dataset.activeKey = archiveActiveKeyFromRow(row);
             archiveTable.appendChild(row);
             setupArchiveRow(row);
         });
@@ -4434,6 +4474,7 @@ Array.from(shipmentTable.rows)
 .slice(1)
 .forEach(row=>{
 active.push({
+activeKey: row.dataset.activeKey || archiveActiveKeyFromRow(row),
 shipment: row.cells[0].innerText,
 po: row.cells[1].innerText,
 sku: row.cells[2].innerText,
@@ -4597,9 +4638,31 @@ try{
 
     if(data.active){
 
-        data.active.forEach(item=>{
+        // Rows that have been archived are recorded separately so we do not
+        // have to rewrite the oversized planner/active document just to
+        // remove one row. Exclude those rows when rebuilding the active table.
+        let archivedActiveKeys = new Set();
+        try{
+            const archivedSnap = await db.collection(ARCHIVE_ROW_COLLECTION).get();
+            archivedSnap.docs.forEach(doc=>{
+                const archived = doc.data() || {};
+                if(archived.activeKey) archivedActiveKeys.add(String(archived.activeKey));
+            });
+        }catch(e){
+            console.warn("Could not load archived active-row keys:", e);
+        }
+
+        data.active.forEach((item, index)=>{
+
+            const activeKey = item.activeKey || ("legacy-index-" + index);
+
+            if(archivedActiveKeys.has(String(activeKey)) ||
+               archivedActiveKeys.has(archiveActiveKeyFromItem(item))){
+                return;
+            }
 
             const row = createRow(item);
+            row.dataset.activeKey = activeKey;
 
             row.querySelectorAll('td').forEach((cell,index)=>{
 
