@@ -2646,6 +2646,11 @@ saveAll();
 
 row.querySelectorAll('select').forEach(select=>{
 
+// The status dropdown has its own archive/QC handler below.
+// Do not call saveAll() for it because planner/active can exceed
+// Firestore's 1 MiB document limit. Other selects still save normally.
+if(select.classList.contains('status-select')) return;
+
 select.addEventListener('change',()=>{
 
 applyRowColours();
