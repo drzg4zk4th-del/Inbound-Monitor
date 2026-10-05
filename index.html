@@ -2737,11 +2737,13 @@ async function moveQCRejectedToArchive(btn){
 
     // Save the shipment into its own archive document.
     try{
+        // Archive is stored separately, one document per shipment.
+        // Do NOT call saveAll() here because it rewrites planner/active,
+        // which can exceed Firestore's 1 MiB document limit.
         await saveArchiveShipment(shipment);
-        await saveAll();
     }catch(error){
         console.error("Archive save failed:",error);
-        alert("Archive save failed. The existing legacy archive remains untouched.");
+        alert("Archive save failed. Your existing archive data was not intentionally deleted or overwritten.");
     }
 }
 
@@ -2773,11 +2775,13 @@ async function moveToArchive(row){
     refreshDashboard();
 
     try{
+        // Archive is stored separately, one document per shipment.
+        // Do NOT call saveAll() here because it rewrites planner/active,
+        // which can exceed Firestore's 1 MiB document limit.
         await saveArchiveShipment(shipment);
-        await saveAll();
     }catch(error){
         console.error("Archive save failed:",error);
-        alert("Archive save failed. The existing legacy archive remains untouched.");
+        alert("Archive save failed. Your existing archive data was not intentionally deleted or overwritten.");
     }
 }
 
