@@ -2747,7 +2747,7 @@ async function moveQCRejectedToArchive(btn){
     }
 }
 
-async function moveToArchive(row){
+async function moveToArchive(row, saveAfterMove = true){
 
     if(!row) return;
 
@@ -2773,6 +2773,8 @@ async function moveToArchive(row){
     row.remove();
 
     refreshDashboard();
+
+    if(!saveAfterMove) return;
 
     try{
         // Archive is stored separately, one document per shipment.
@@ -2986,23 +2988,42 @@ function updateShipmentETA(shipment, newDate){
     refreshDashboard();
 
 }
-function arriveShipment(shipment){
+async function arriveShipment(shipment){
 
-const rows =
-Array.from(shipmentTable.rows).slice(1);
+    shipment = String(shipment || "").trim();
+    if(!shipment) return;
 
-rows.forEach(row=>{
+    // Move every row for this shipment into the archive table first.
+    // Do not save each row individually. That causes many concurrent
+    // Firestore writes and makes the page lag on large shipments.
+    const rows = Array.from(shipmentTable.rows)
+        .slice(1)
+        .filter(row => row.cells[0].innerText.trim() === shipment);
 
-if(row.cells[0].innerText === shipment){
+    if(!rows.length){
+        console.warn("No active rows found for shipment:", shipment);
+        return;
+    }
 
-moveToArchive(row);
+    rows.forEach(row => {
+        moveToArchive(row, false);
+    });
 
-}
+    refreshDashboard();
+    populateShipmentFilter();
 
-});
-
-refreshDashboard();
-saveAll();
+    // One Firestore write for the complete shipment.
+    try{
+        await saveArchiveShipment(shipment);
+        console.log("✓ entire shipment archived:", shipment, rows.length, "rows");
+    }catch(error){
+        console.error("Bulk archive save failed:", error);
+        alert(
+            "The shipment was moved on screen, but the archive save failed.\n\n" +
+            "Your existing archive data was not intentionally deleted or overwritten.\n\n" +
+            "Check the browser console for the Firebase error."
+        );
+    }
 
 }
 
