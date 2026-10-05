@@ -2737,6 +2737,9 @@ async function moveQCRejectedToArchive(btn){
         '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
 
     archiveRowId(archiveRow);
+    // Assign the permanent Firestore row ID immediately, before any save can run.
+    // This prevents bulk archive rows from ever sharing/losing an ID.
+    archiveRowId(archiveRow);
     archiveRow.dataset.activeKey = archiveActiveKeyFromRow(row);
     setupArchiveRow(archiveRow);
 
@@ -2777,6 +2780,9 @@ async function moveToArchive(row, saveAfterMove = true, refreshAfterMove = true)
     archiveRow.insertCell(-1).innerHTML =
         '<button class="delete-btn" onclick="deleteRow(this)"><i class="fa-solid fa-trash"></i></button>';
 
+    // Assign the permanent Firestore row ID immediately, before any save can run.
+    // This prevents bulk archive rows from ever sharing/losing an ID.
+    archiveRowId(archiveRow);
     archiveRow.dataset.activeKey = archiveActiveKeyFromRow(row);
     setupArchiveRow(archiveRow);
 
@@ -2933,6 +2939,18 @@ function saveAllocation(){
     if(isArchiveRow){
 
         try{
+            // Explicitly delete the row that was removed. Normal archive saves
+            // never delete rows, which prevents accidental loss during saves.
+            const archiveId = row.dataset.archiveRowId;
+            const activeKey = row.dataset.activeKey || archiveActiveKeyFromRow(row);
+
+            if(archiveId){
+                const batch = db.batch();
+                batch.delete(db.collection(ARCHIVE_ROW_COLLECTION).doc(archiveId));
+                batch.delete(db.collection(ARCHIVED_ACTIVE_COLLECTION).doc(archiveId));
+                await batch.commit();
+            }
+
             await saveArchiveShipment(oldShipment);
         }catch(error){
             console.error("Archive delete save failed:",error);
@@ -4114,25 +4132,30 @@ async function saveArchiveShipment(shipment){
     shipment = String(shipment || "").trim();
     if(!shipment) return;
 
+    // V3 is row-based. Every archive row has its own Firestore document.
+    // IMPORTANT: a normal archive save only UPSERTS the rows currently being
+    // archived. It does not delete other rows for the shipment. Deletion is
+    // handled explicitly by delete/restore operations. This prevents a
+    // concurrent save from one row from accidentally deleting the rest.
     const rows = Array.from(archiveTable.rows)
         .slice(1)
         .filter(row => archiveShipmentFromRow(row) === shipment);
 
-    // V3 stores each row separately. Existing V2/legacy archive data is never
-    // deleted or overwritten.
-    const desiredIds = new Set();
+    if(!rows.length){
+        console.log("No archive rows to save for shipment:", shipment);
+        return;
+    }
 
     try{
-        const existingSnap = await db.collection(ARCHIVE_ROW_COLLECTION)
-            .where("shipment", "==", shipment).get();
-
         const batchWrites = [];
 
         rows.forEach(row=>{
+            // Lock in a permanent ID before writing.
             const id = archiveRowId(row);
             const activeKey = archiveActiveKeyFromRow(row);
-            desiredIds.add(id);
+
             batchWrites.push({
+                type:"row",
                 id,
                 data:{
                     shipment,
@@ -4142,11 +4165,12 @@ async function saveArchiveShipment(shipment){
                 }
             });
 
-            // Separate permanent marker used only to exclude this exact
-            // active row on reload. This avoids depending on reconstruction
-            // of the key from HTML/select values.
+            // Keep the active exclusion marker as a separate document.
+            // Marker IDs are based on the archive row ID, so duplicate rows
+            // can never overwrite each other's marker.
             batchWrites.push({
-                markerId: encodeURIComponent(activeKey).slice(0, 150),
+                type:"marker",
+                id: id,
                 markerData:{
                     activeKey,
                     archiveRowId: id,
@@ -4156,48 +4180,40 @@ async function saveArchiveShipment(shipment){
             });
         });
 
-        // Delete V3 rows that were removed from the archive table.
-        existingSnap.forEach(doc=>{
-            if(!desiredIds.has(doc.id)){
-                const oldData = doc.data() || {};
-                batchWrites.push({id:doc.id, delete:true});
-                if(oldData.activeKey){
-                    batchWrites.push({
-                        markerId: encodeURIComponent(String(oldData.activeKey)).slice(0,150),
-                        markerDelete: true
-                    });
-                }
-            }
-        });
-
-        // Firestore batches support max 500 writes.
+        // Firestore batches support a maximum of 500 writes. Use 400 so the
+        // row + marker pair always stays comfortably below the limit.
         for(let i=0;i<batchWrites.length;i+=400){
             const batch = db.batch();
-            batchWrites.slice(i,i+400).forEach(item=>{
-                if(item.markerId){
-                    const ref = db.collection(ARCHIVED_ACTIVE_COLLECTION).doc(item.markerId);
-                    if(item.markerDelete) batch.delete(ref);
-                    else batch.set(ref,item.markerData,{merge:true});
-                    return;
+            const chunk = batchWrites.slice(i, i+400);
+
+            chunk.forEach(item=>{
+                if(item.type === "row"){
+                    batch.set(
+                        db.collection(ARCHIVE_ROW_COLLECTION).doc(item.id),
+                        item.data,
+                        {merge:true}
+                    );
+                }else{
+                    // Marker is keyed by archiveRowId, not activeKey. This
+                    // guarantees one marker per archived row.
+                    batch.set(
+                        db.collection(ARCHIVED_ACTIVE_COLLECTION).doc(item.id),
+                        item.markerData,
+                        {merge:true}
+                    );
                 }
-                const ref = db.collection(ARCHIVE_ROW_COLLECTION).doc(item.id);
-                if(item.delete) batch.delete(ref);
-                else batch.set(ref,item.data,{merge:true});
             });
+
             await batch.commit();
         }
 
-        if(rows.length === 0){
-            console.log("✓ archive shipment rows cleared:", shipment);
-        }else{
-            console.log("✓ archive shipment saved:", shipment, rows.length, "rows (V3 row storage)");
-        }
+        console.log("✓ archive shipment saved:", shipment, rows.length, "rows (V3 row storage)");
+
     }catch(error){
         console.error("✗ archive row storage failed:", shipment, error);
         throw error;
     }
 }
-
 async function saveAllArchiveShipments(){
     const grouped = archiveRowsByShipment();
 
